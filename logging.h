@@ -16,8 +16,13 @@
 void tgvoip_log_file_printf(char level, const char* msg, ...);
 void tgvoip_log_file_write_header();
 
-#if !defined(snprintf) && defined(_WIN32)
+#ifdef _WIN32
+// The snprintf function is checked for redifinition in stdio.h, so we
+// should include this header before we decide to redefine it.
+#include <stdio.h>
+#ifndef snprintf
 #define snprintf _snprintf
+#endif
 #endif
 
 #if defined(__ANDROID__)
