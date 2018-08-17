@@ -2233,7 +2233,7 @@ string VoIPController::GetDebugString(){
 				type="UNKNOWN";
 				break;
 		}
-		snprintf(buffer, sizeof(buffer), "%s:%u %dms %d 0x%lx [%s%s]\n", endpoint->address.IsEmpty() ? ("["+endpoint->v6address.ToString()+"]").c_str() : endpoint->address.ToString().c_str(), endpoint->port, (int)(endpoint->averageRTT*1000), endpoint->udpPongCount, (uint64_t)endpoint->id, type, currentEndpoint==endpoint ? ", IN_USE" : "");
+		snprintf(buffer, sizeof(buffer), "%s:%u %dms %d 0x%llx [%s%s]\n", endpoint->address.IsEmpty() ? ("["+endpoint->v6address.ToString()+"]").c_str() : endpoint->address.ToString().c_str(), endpoint->port, (int)(endpoint->averageRTT*1000), endpoint->udpPongCount, (uint64_t)endpoint->id, type, currentEndpoint==endpoint ? ", IN_USE" : "");
 		r+=buffer;
 	}
 	if(shittyInternetMode){
