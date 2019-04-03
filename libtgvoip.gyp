@@ -809,7 +809,7 @@
           ],
           [
             '"<(OS)" == "win"', {
-              'msbuild_toolset': 'v141',
+              'msbuild_toolset': 'v142',
               'defines': [
                 'NOMINMAX',
                 '_USING_V110_SDK71_',
