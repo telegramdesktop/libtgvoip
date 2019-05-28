@@ -773,6 +773,7 @@
                     '<(DEPTH)/../../../Libraries/macold/openssl/include',
                   ],
                   'defines': [
+                    'TARGET_OSX',
                     'TARGET_OSX32',
                   ],
                 }, {
@@ -788,15 +789,18 @@
                       '-framework VideoToolbox',
                     ],
                   },
+                  'defines': [
+                    'TARGET_OSX',
+                  ],
                   'sources': [
-                   '<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.mm',
-                   '<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.h',
-                   '<(tgvoip_src_loc)/os/darwin/TGVVideoSource.mm',
-                   '<(tgvoip_src_loc)/os/darwin/TGVVideoSource.h',
-                   '<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.mm',
-                   '<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.h',
-                   '<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.mm',
-                   '<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.h',
+                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.mm',
+                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.h',
+                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoSource.mm',
+                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoSource.h',
+                   #'<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.mm',
+                   #'<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.h',
+                   #'<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.mm',
+                   #'<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.h',
                   ],
                 }],
                 ['"<(official_build_target)" == "macstore"', {
