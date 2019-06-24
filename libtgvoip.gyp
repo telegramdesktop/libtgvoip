@@ -852,7 +852,7 @@
                     '_DEBUG',
                   ],
                   'include_dirs': [
-                    '<(DEPTH)/../../../Libraries/openssl/Debug/include',
+                    '<(DEPTH)/../../../Libraries/openssl/inc32',
                   ],
                   'msvs_settings': {
                     'VCCLCompilerTool': {
@@ -872,7 +872,7 @@
                     'NDEBUG',
                   ],
                   'include_dirs': [
-                     '<(DEPTH)/../../../Libraries/openssl/Release/include',
+                     '<(DEPTH)/../../../Libraries/openssl/inc32',
                   ],
                   'msvs_settings': {
                     'VCCLCompilerTool': {
