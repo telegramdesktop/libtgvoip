@@ -2389,8 +2389,8 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 					stm->decoder=NULL;
 				}else if(stm->type==STREAM_TYPE_VIDEO){
 					if(!stm->packetReassembler){
-						stm->packetReassembler=make_shared<PacketReassembler>();
-						stm->packetReassembler->SetCallback(bind(&VoIPController::ProcessIncomingVideoFrame, this, placeholders::_1, placeholders::_2, placeholders::_3));
+						//stm->packetReassembler=make_shared<PacketReassembler>();
+						//stm->packetReassembler->SetCallback(bind(&VoIPController::ProcessIncomingVideoFrame, this, placeholders::_1, placeholders::_2, placeholders::_3));
 					}
 				}else{
 					LOGW("Unknown incoming stream type: %d", stm->type);
