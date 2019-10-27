@@ -773,10 +773,10 @@ string VoIPController::GetCurrentAudioOutputID(){
 
 void VoIPController::SetProxy(int protocol, string address, uint16_t port, string username, string password){
 	proxyProtocol=protocol;
-	proxyAddress=address;
+	proxyAddress=std::move(address);
 	proxyPort=port;
-	proxyUsername=username;
-	proxyPassword=password;
+	proxyUsername=std::move(username);
+	proxyPassword=std::move(password);
 }
 
 int VoIPController::GetSignalBarsCount(){
@@ -1116,10 +1116,11 @@ void VoIPController::HandleAudioInput(unsigned char *data, size_t len, unsigned 
 	}
 
 	unsentStreamPackets++;
+	size_t pktLength = pkt.GetLength();
 	PendingOutgoingPacket p{
 			/*.seq=*/GenerateOutSeq(),
 			/*.type=*/PKT_STREAM_DATA,
-			/*.len=*/pkt.GetLength(),
+			/*.len=*/pktLength,
 			/*.data=*/Buffer(move(pkt)),
 			/*.endpoint=*/0,
 	};
@@ -1142,10 +1143,11 @@ void VoIPController::HandleAudioInput(unsigned char *data, size_t len, unsigned 
 			pkt.WriteBytes(*ecData);
 		}
 
+		pktLength = pkt.GetLength();
 		PendingOutgoingPacket p{
 				GenerateOutSeq(),
 				PKT_STREAM_EC,
-				pkt.GetLength(),
+				pktLength,
 				Buffer(move(pkt)),
 				0
 		};
@@ -1486,10 +1488,11 @@ void VoIPController::SendInit(){
 					out.WriteInt32(id);
 				}*/
 			}
+			size_t outLength = out.GetLength();
 			SendOrEnqueuePacket(PendingOutgoingPacket{
 					/*.seq=*/initSeq,
 					/*.type=*/PKT_INIT,
-					/*.len=*/out.GetLength(),
+					/*.len=*/outLength,
 					/*.data=*/Buffer(move(out)),
 					/*.endpoint=*/e.id
 			});
@@ -2310,10 +2313,11 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 			out.WriteByte((unsigned char) ((*s)->enabled ? 1 : 0));
 		}
 		LOGI("Sending init ack");
+		size_t outLength = out.GetLength();
 		SendOrEnqueuePacket(PendingOutgoingPacket{
 				/*.seq=*/GenerateOutSeq(),
 				/*.type=*/PKT_INIT_ACK,
-				/*.len=*/out.GetLength(),
+				/*.len=*/outLength,
 				/*.data=*/Buffer(move(out)),
 				/*.endpoint=*/0
 		});
@@ -2517,10 +2521,11 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 		}
 		BufferOutputStream pkt(128);
 		pkt.WriteInt32(pseq);
+		size_t pktLength = pkt.GetLength();
 		SendOrEnqueuePacket(PendingOutgoingPacket{
 				/*.seq=*/GenerateOutSeq(),
 				/*.type=*/PKT_PONG,
-				/*.len=*/pkt.GetLength(),
+				/*.len=*/pktLength,
 				/*.data=*/Buffer(move(pkt)),
 				/*.endpoint=*/srcEndpoint.id,
 		});
@@ -3031,7 +3036,7 @@ void VoIPController::AddTCPRelays(){
 			relays.push_back(tcpRelay);
 		}
 		for(Endpoint& e:relays){
-			endpoints[e.id]=move(e);
+			endpoints[e.id]=e;
 		}
 		didAddTcpRelays=true;
 	}
@@ -3437,16 +3442,17 @@ void VoIPController::SendVideoFrame(const Buffer &frame, uint32_t flags){
 			pkt.WriteBytes(frame, offset, len);
 
 			uint32_t seq=GenerateOutSeq();
+			size_t pktLength = pkt.GetLength();
 			PendingOutgoingPacket p{
 					/*.seq=*/seq,
 					/*.type=*/PKT_STREAM_DATA,
-					/*.len=*/pkt.GetLength(),
+					/*.len=*/pktLength,
 					/*.data=*/Buffer(move(pkt)),
 					/*.endpoint=*/0,
 			};
 			unsentStreamPackets++;
 			SendOrEnqueuePacket(move(p));
-			videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pkt.GetLength()));
+			videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pktLength));
 			sentFrame.unacknowledgedPackets.push_back(seq);
 		}
 		MutexGuard m(sentVideoFramesMutex);
@@ -3973,7 +3979,7 @@ Endpoint::~Endpoint(){
 
 #pragma mark - AudioInputTester
 
-AudioInputTester::AudioInputTester(std::string deviceID) : deviceID(deviceID){
+AudioInputTester::AudioInputTester(std::string deviceID) : deviceID(std::move(deviceID)){
 	io=audio::AudioIO::Create(deviceID, "default");
 	if(io->Failed()){
 		LOGE("Audio IO failed");
