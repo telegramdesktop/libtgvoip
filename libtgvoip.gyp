@@ -13,7 +13,7 @@
         ],
         'variables': {
           'tgvoip_src_loc': '.',
-          'official_build_target%': '',
+          'special_build_target%': '',
           'linux_path_opus_include%': '<(DEPTH)/../../../Libraries/opus/include',
         },
         'include_dirs': [
@@ -763,26 +763,29 @@
                 '<(tgvoip_src_loc)/webrtc_dsp/rtc_base/logging_mac.h',
               ],
               'conditions': [
-                [ '"<(official_build_target)" == "mac32"', {
+                [ '"<(special_build_target)" == "osx"', {
                   'xcode_settings': {
-                    'MACOSX_DEPLOYMENT_TARGET': '10.6',
-                    'OTHER_CPLUSPLUSFLAGS': [ '-nostdinc++' ],
-                  },
-                  'include_dirs': [
-                    '/usr/local/macold/include/c++/v1',
-                    '<(DEPTH)/../../../Libraries/macold/openssl/include',
-                  ],
-                  'defines': [
-                    'TARGET_OSX',
-                    'TARGET_OSX32',
-                  ],
-                }, {
-                  'xcode_settings': {
-                    'MACOSX_DEPLOYMENT_TARGET': '10.8',
+                    'MACOSX_DEPLOYMENT_TARGET': '10.10',
                     'CLANG_CXX_LIBRARY': 'libc++',
                   },
                   'include_dirs': [
                     '<(DEPTH)/../../../Libraries/openssl/include',
+                  ],
+                  'direct_dependent_settings': {
+                    'linkflags': [
+                      '-framework VideoToolbox',
+                    ],
+                  },
+                  'defines': [
+                    'TARGET_OSX',
+                  ],
+                }, {
+                  'xcode_settings': {
+                    'MACOSX_DEPLOYMENT_TARGET': '10.12',
+                    'CLANG_CXX_LIBRARY': 'libc++',
+                  },
+                  'include_dirs': [
+                    '<(DEPTH)/../../../Libraries/macos/openssl_1_1_1/include',
                   ],
                   'direct_dependent_settings': {
                     'linkflags': [
@@ -803,7 +806,7 @@
                    #'<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.h',
                   ],
                 }],
-                ['"<(official_build_target)" == "macstore"', {
+                ['"<(special_build_target)" == "macstore"', {
                  'defines': [
                   'TGVOIP_NO_OSX_PRIVATE_API',
                  ],
