@@ -333,8 +333,6 @@
 		69DF157C2237DFE100C1F8ED /* SampleBufferDisplayLayerRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DF157A2237DFE100C1F8ED /* SampleBufferDisplayLayerRenderer.mm */; };
 		69DF157E2237DFE700C1F8ED /* SampleBufferDisplayLayerRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 69DF157D2237DFE700C1F8ED /* SampleBufferDisplayLayerRenderer.h */; };
 		69DF15802237E96E00C1F8ED /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69DF157F2237E96E00C1F8ED /* VideoToolbox.framework */; };
-		69EBC7912136D220003CFE90 /* AudioInputAudioUnitOSX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DDC1F4B6A61002D3F73 /* AudioInputAudioUnitOSX.cpp */; };
-		69EBC7922136D220003CFE90 /* AudioOutputAudioUnitOSX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DDE1F4B6A61002D3F73 /* AudioOutputAudioUnitOSX.cpp */; };
 		69EBC7942136D277003CFE90 /* DarwinSpecific.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69EBC7932136D277003CFE90 /* DarwinSpecific.mm */; };
 		C2A87DD81F4B6A33002D3F73 /* Resampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DD71F4B6A33002D3F73 /* Resampler.cpp */; };
 		C2A87DDF1F4B6A61002D3F73 /* AudioInputAudioUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DDB1F4B6A61002D3F73 /* AudioInputAudioUnit.cpp */; };
@@ -2671,7 +2669,6 @@
 				691E05E921A4FD7600F838EF /* channel_buffer.cc in Sources */,
 				691E078721A4FD7700F838EF /* echo_audibility.cc in Sources */,
 				691E068921A4FD7600F838EF /* entropy_coding.c in Sources */,
-				69EBC7922136D220003CFE90 /* AudioOutputAudioUnitOSX.cpp in Sources */,
 				691E061821A4FD7600F838EF /* filter_ma_fast_q12.c in Sources */,
 				691E05D921A4FD7600F838EF /* raw_logging.cc in Sources */,
 				691E079A21A4FD7700F838EF /* suppression_gain_limiter.cc in Sources */,
@@ -2694,7 +2691,6 @@
 				691E07DB21A4FD7700F838EF /* block_mean_calculator.cc in Sources */,
 				692AB9041E6759DD00706ACC /* VoIPServerConfig.cpp in Sources */,
 				691E066A21A4FD7600F838EF /* lpc_shape_swb16_tables.c in Sources */,
-				69EBC7912136D220003CFE90 /* AudioInputAudioUnitOSX.cpp in Sources */,
 				691E071021A4FD7700F838EF /* wpd_node.cc in Sources */,
 				691E062621A4FD7600F838EF /* cross_correlation.c in Sources */,
 				691E07EE21A4FD7700F838EF /* platform_file.cc in Sources */,
