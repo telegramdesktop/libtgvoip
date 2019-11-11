@@ -53,7 +53,7 @@ NetworkSocketWinsock::~NetworkSocketWinsock(){
 }
 
 void NetworkSocketWinsock::SetMaxPriority(){
-	
+
 }
 
 void NetworkSocketWinsock::Send(NetworkPacket *packet){
@@ -73,7 +73,7 @@ void NetworkSocketWinsock::Send(NetworkPacket *packet){
 					addrinfo *addr0;
 					int res=getaddrinfo("ipv4only.arpa", NULL, NULL, &addr0);
 					if(res!=0){
-						LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerror(res));
+						LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerrorA(res));
 					}else{
 						addrinfo *addrPtr;
 						unsigned char *addr170=NULL;
@@ -243,7 +243,7 @@ void NetworkSocketWinsock::Open(){
 			failed=true;
 			return;
 		}
-		
+
 		int res;
 		if(isAtLeastVista){
 			DWORD flag=0;
@@ -362,7 +362,7 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(IPv4Address *v4addr, IPv
 	IP_ADAPTER_ADDRESSES* addrs=(IP_ADAPTER_ADDRESSES*)malloc(15*1024);
 	ULONG size=15*1024;
 	ULONG flags=GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
-	
+
 	ULONG res=GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &size);
 	if(res==ERROR_BUFFER_OVERFLOW){
 		addrs=(IP_ADAPTER_ADDRESSES*)realloc(addrs, size);
@@ -565,7 +565,7 @@ IPv4Address *NetworkSocketWinsock::ResolveDomainName(std::string name){
 	IPv4Address* ret=NULL;
 	int res=getaddrinfo(name.c_str(), NULL, NULL, &addr0);
 	if(res!=0){
-		LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerror(res));
+		LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerrorA(res));
 	}else{
 		addrinfo* addrPtr;
 		for(addrPtr=addr0;addrPtr;addrPtr=addrPtr->ai_next){
