@@ -107,7 +107,9 @@ namespace tgvoip{
 		std::function<void()> entry;
 		pthread_t thread;
 		const char* name;
+#ifdef __APPLE__
 		bool maxPriority=false;
+#endif
 		bool valid=false;
 	};
 }
