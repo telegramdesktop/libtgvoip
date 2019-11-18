@@ -14,11 +14,9 @@
         'variables': {
           'tgvoip_src_loc': '.',
           'special_build_target%': '',
-          'linux_path_opus_include%': '<(DEPTH)/../../../Libraries/opus/include',
         },
         'include_dirs': [
           '<(tgvoip_src_loc)/webrtc_dsp',
-          '<(linux_path_opus_include)',
         ],
         'direct_dependent_settings': {
           'include_dirs': [
@@ -817,6 +815,9 @@
           [
             '"<(OS)" == "win"', {
               'msbuild_toolset': 'v142',
+              'include_dirs': [
+                '<(DEPTH)/../../../Libraries/opus/include',
+              ],
               'defines': [
                 'NOMINMAX',
                 '_USING_V110_SDK71_',
@@ -895,7 +896,11 @@
                   },
                 },
               },
-            },
+            }, {
+              'defines': [
+                'TGVOIP_USE_INSTALLED_OPUS',
+              ],
+            }
           ],
           [
             '"<(OS)" == "linux"', {
