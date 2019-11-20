@@ -768,6 +768,7 @@
                   },
                   'include_dirs': [
                     '<(DEPTH)/../../../Libraries/openssl/include',
+                    '/usr/local/include',
                   ],
                   'direct_dependent_settings': {
                     'linkflags': [
@@ -784,6 +785,7 @@
                   },
                   'include_dirs': [
                     '<(DEPTH)/../../../Libraries/macos/openssl_1_1_1/include',
+                    '/usr/local/macos/include',
                   ],
                   'direct_dependent_settings': {
                     'linkflags': [
