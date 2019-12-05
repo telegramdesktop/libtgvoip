@@ -894,7 +894,7 @@ void VoIPController::SetConfig(const Config& cfg){
 
 void VoIPController::SetPersistentState(vector<uint8_t> state){
 	using namespace json11;
-	
+
 	if(state.empty())
 		return;
 	string jsonErr;
@@ -915,7 +915,7 @@ void VoIPController::SetPersistentState(vector<uint8_t> state){
 
 vector<uint8_t> VoIPController::GetPersistentState(){
 	using namespace json11;
-	
+
 	Json::object obj=Json::object{
 		{"ver", 1},
 	};
@@ -1326,7 +1326,7 @@ void VoIPController::WritePacketHeader(uint32_t pseq, BufferOutputStream *s, uns
 		if(!currentExtras.empty()){
 			s->WriteByte(static_cast<unsigned char>(currentExtras.size()));
 			for(vector<UnacknowledgedExtraData>::iterator x=currentExtras.begin(); x!=currentExtras.end(); ++x){
-				LOGV("Writing extra into header: type %u, length %lu", x->type, x->data.Length());
+				LOGV("Writing extra into header: type %u, length %d", x->type, int(x->data.Length()));
 				assert(x->data.Length()<=254);
 				s->WriteByte(static_cast<unsigned char>(x->data.Length()+1));
 				s->WriteByte(x->type);
@@ -1408,7 +1408,7 @@ void VoIPController::WritePacketHeader(uint32_t pseq, BufferOutputStream *s, uns
 					s->WriteByte(XPFLAG_HAS_EXTRA);
 					s->WriteByte(static_cast<unsigned char>(currentExtras.size()));
 					for(vector<UnacknowledgedExtraData>::iterator x=currentExtras.begin(); x!=currentExtras.end(); ++x){
-						LOGV("Writing extra into header: type %u, length %lu", x->type, x->data.Length());
+						LOGV("Writing extra into header: type %u, length %d", x->type, int(x->data.Length()));
 						assert(x->data.Length()<=254);
 						s->WriteByte(static_cast<unsigned char>(x->data.Length()+1));
 						s->WriteByte(x->type);
@@ -1521,14 +1521,14 @@ void VoIPController::InitUDPProxy(){
 		ResetUdpAvailability();
 		return;
 	}
-	
+
 	NetworkSocket* tcp=NetworkSocket::Create(PROTO_TCP);
 	tcp->Connect(resolvedProxyAddress, proxyPort);
-	
+
 	vector<NetworkSocket*> writeSockets;
 	vector<NetworkSocket*> readSockets;
 	vector<NetworkSocket*> errorSockets;
-	
+
 	while(!tcp->IsFailed() && !tcp->IsReadyToSend()){
 		writeSockets.push_back(tcp);
 		if(!NetworkSocket::Select(readSockets, writeSockets, errorSockets, selectCanceller)){
@@ -1582,12 +1582,12 @@ void VoIPController::RunRecvThread(){
 		udpPingTimeoutID=messageThread.Post(std::bind(&VoIPController::SendUdpPings, this), 0.0, 0.5);
 	}
 	while(runReceiver){
-		
+
 		if(proxyProtocol==PROXY_SOCKS5 && needReInitUdpProxy){
 			InitUDPProxy();
 			needReInitUdpProxy=false;
 		}
-		
+
 		packet.data=*buffer;
 		packet.length=buffer.Length();
 
@@ -1598,7 +1598,7 @@ void VoIPController::RunRecvThread(){
 		errorSockets.push_back(realUdpSocket);
 		if(!realUdpSocket->IsReadyToSend())
 			writeSockets.push_back(realUdpSocket);
-		
+
 		{
 			MutexGuard m(endpointsMutex);
 			for(pair<const int64_t, Endpoint>& _e:endpoints){
@@ -2135,7 +2135,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 		}
 		for(vector<UnacknowledgedExtraData>::iterator x=currentExtras.begin();x!=currentExtras.end();){
 			if(x->firstContainingSeq!=0 && (lastRemoteAckSeq==x->firstContainingSeq || seqgt(lastRemoteAckSeq, x->firstContainingSeq))){
-				LOGV("Peer acknowledged extra type %u length %lu", x->type, x->data.Length());
+				LOGV("Peer acknowledged extra type %u length %d", x->type, int(x->data.Length()));
 				ProcessAcknowledgedOutgoingExtra(*x);
 				x=currentExtras.erase(x);
 				continue;
@@ -2780,7 +2780,7 @@ bool VoIPController::SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue
 		abort();
 		return false;
 	}
-	
+
 
 	bool canSend;
 	if(endpoint->type!=Endpoint::Type::TCP_RELAY){
@@ -3187,7 +3187,7 @@ void VoIPController::SendPacketReliably(unsigned char type, unsigned char *data,
 
 void VoIPController::SendExtra(Buffer &data, unsigned char type){
 	MutexGuard m(queuedPacketsMutex);
-	LOGV("Sending extra type %u length %lu", type, data.Length());
+	LOGV("Sending extra type %u length %d", type, int(data.Length()));
 	for(vector<UnacknowledgedExtraData>::iterator x=currentExtras.begin();x!=currentExtras.end();++x){
 		if(x->type==type){
 			x->firstContainingSeq=0;
@@ -3710,7 +3710,7 @@ void VoIPController::UpdateCongestion(){
 				wasExtraEC=true;
 			}
 		}
-		
+
 		if(avgSendLossCount>0.08){
 			extraEcLevel=4;
 		}else if(avgSendLossCount>0.05){
