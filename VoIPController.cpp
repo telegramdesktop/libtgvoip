@@ -40,7 +40,7 @@ inline int pad4(int x){
 
 
 using namespace tgvoip;
-using namespace std;
+// using namespace std; // Already used in BlockingQueue.h.
 
 #ifdef __APPLE__
 #include "os/darwin/AudioUnitIO.h"
