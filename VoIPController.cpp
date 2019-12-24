@@ -29,6 +29,11 @@
 #include <sstream>
 #include <inttypes.h>
 #include <float.h>
+#ifdef HAVE_CONFIG_H
+#include <opus/opus.h>
+#else
+#include "opus.h"
+#endif
 
 
 inline int pad4(int x){
@@ -294,6 +299,12 @@ VoIPController::~VoIPController(){
 		tgvoipLogFile=NULL;
 		fclose(log);
 	}
+#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+	if (preprocDecoder) {
+        opus_decoder_destroy(preprocDecoder);
+        preprocDecoder=nullptr;
+	}
+#endif
 }
 
 void VoIPController::Stop(){
@@ -841,9 +852,11 @@ void VoIPController::SetEchoCancellationStrength(int strength){
 }
 
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
-void VoIPController::SetAudioDataCallbacks(std::function<void(int16_t*, size_t)> input, std::function<void(int16_t*, size_t)> output){
+void VoIPController::SetAudioDataCallbacks(std::function<void(int16_t*, size_t)> input, std::function<void(int16_t*, size_t)> output, std::function<void(int16_t*, size_t)> preproc=nullptr){
 	audioInputDataCallback=input;
 	audioOutputDataCallback=output;
+    audioPreprocDataCallback=preproc;
+    preprocDecoder=preprocDecoder ? preprocDecoder : opus_decoder_create(48000, 1, NULL);
 }
 #endif
 
@@ -1153,6 +1166,13 @@ void VoIPController::HandleAudioInput(unsigned char *data, size_t len, unsigned 
 	}
 
 	audioTimestampOut+=outgoingStreams[0]->frameDuration;
+
+#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+	if (audioPreprocDataCallback && preprocDecoder) {
+        int size=opus_decode(preprocDecoder, data, len, preprocBuffer, 4096, 0);
+        audioPreprocDataCallback(preprocBuffer, size);
+	}
+#endif
 }
 
 void VoIPController::InitializeAudio(){
