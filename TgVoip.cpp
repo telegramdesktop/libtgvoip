@@ -1,7 +1,85 @@
-#import "TgVoip.h"
+#include "TgVoip.h"
 
-#import "VoIPController.h"
-#import "VoIPServerConfig.h"
+#include "VoIPController.h"
+#include "VoIPServerConfig.h"
+
+#include <stdarg.h>
+
+#ifndef TGVOIP_USE_CUSTOM_CRYPTO
+extern "C" {
+#include <openssl/sha.h>
+#include <openssl/aes.h>
+#include <openssl/modes.h>
+#include <openssl/rand.h>
+}
+
+void tgvoip_openssl_aes_ige_encrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv){
+  AES_KEY akey;
+  AES_set_encrypt_key(key, 32*8, &akey);
+  AES_ige_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
+}
+
+void tgvoip_openssl_aes_ige_decrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv){
+  AES_KEY akey;
+  AES_set_decrypt_key(key, 32*8, &akey);
+  AES_ige_encrypt(in, out, length, &akey, iv, AES_DECRYPT);
+}
+
+void tgvoip_openssl_rand_bytes(uint8_t* buffer, size_t len){
+  RAND_bytes(buffer, len);
+}
+
+void tgvoip_openssl_sha1(uint8_t* msg, size_t len, uint8_t* output){
+  SHA1(msg, len, output);
+}
+
+void tgvoip_openssl_sha256(uint8_t* msg, size_t len, uint8_t* output){
+  SHA256(msg, len, output);
+}
+
+void tgvoip_openssl_aes_ctr_encrypt(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num){
+  AES_KEY akey;
+  AES_set_encrypt_key(key, 32*8, &akey);
+  CRYPTO_ctr128_encrypt(inout, inout, length, &akey, iv, ecount, num, (block128_f) AES_encrypt);
+}
+
+void tgvoip_openssl_aes_cbc_encrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv){
+  AES_KEY akey;
+  AES_set_encrypt_key(key, 256, &akey);
+  AES_cbc_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
+}
+
+void tgvoip_openssl_aes_cbc_decrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv){
+  AES_KEY akey;
+  AES_set_decrypt_key(key, 256, &akey);
+  AES_cbc_encrypt(in, out, length, &akey, iv, AES_DECRYPT);
+}
+
+
+tgvoip::CryptoFunctions tgvoip::VoIPController::crypto={
+    tgvoip_openssl_rand_bytes,
+    tgvoip_openssl_sha1,
+    tgvoip_openssl_sha256,
+    tgvoip_openssl_aes_ige_encrypt,
+    tgvoip_openssl_aes_ige_decrypt,
+    tgvoip_openssl_aes_ctr_encrypt,
+    tgvoip_openssl_aes_cbc_encrypt,
+    tgvoip_openssl_aes_cbc_decrypt
+};
+#else
+struct TgVoipCrypto {
+    void (*rand_bytes)(uint8_t* buffer, size_t length);
+    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output);
+    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output);
+    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
+    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+};
+CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon initialization
+#endif
+
 
 class TgVoipImpl : public TgVoip {
 public:
@@ -10,29 +88,34 @@ public:
     std::function<void(int)> onSignalBarsUpdated_;
     
     TgVoipImpl(
-        TgVoipCrypto const &crypto,
         std::vector<TgVoipEndpoint> const &endpoints,
         TgVoipPersistentState const &persistentState,
         std::unique_ptr<TgVoipProxy> const &proxy,
         TgVoipConfig const &config,
         TgVoipEncryptionKey const &encryptionKey,
         TgVoipNetworkType initialNetworkType
-#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+#ifdef TGVOIP_USE_CUSTOM_CRYPTO
+        ,
+        TgVoipCrypto const &crypto
+#endif
+#ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
         ,
         TgVoipAudioDataCallbacks const &audioDataCallbacks
 #endif
     ) {
+#ifdef TGVOIP_USE_CUSTOM_CRYPTO
         tgvoip::VoIPController::crypto.sha1 = crypto.sha1;
         tgvoip::VoIPController::crypto.sha256 = crypto.sha256;
         tgvoip::VoIPController::crypto.rand_bytes = crypto.rand_bytes;
         tgvoip::VoIPController::crypto.aes_ige_encrypt = crypto.aes_ige_encrypt;
         tgvoip::VoIPController::crypto.aes_ige_decrypt = crypto.aes_ige_decrypt;
         tgvoip::VoIPController::crypto.aes_ctr_encrypt = crypto.aes_ctr_encrypt;
+#endif
         
         controller_ = new tgvoip::VoIPController();
         controller_->implData = this;
         
-#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+#ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
         controller_->SetAudioDataCallbacks(audioDataCallbacks.input, audioDataCallbacks.output, audioDataCallbacks.preprocessed);
 #endif
         
@@ -301,27 +384,33 @@ void TgVoip::setGlobalServerConfig(const std::string &serverConfig) {
 }
 
 TgVoip *TgVoip::makeInstance(
-    TgVoipCrypto const &crypto,
     TgVoipConfig const &config,
     TgVoipPersistentState const &persistentState,
     std::vector<TgVoipEndpoint> const &endpoints,
     std::unique_ptr<TgVoipProxy> const &proxy,
     TgVoipNetworkType initialNetworkType,
     TgVoipEncryptionKey const &encryptionKey
-#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+#ifdef TGVOIP_USE_CUSTOM_CRYPTO
+    ,
+    TgVoipCrypto const &crypto
+#endif
+#ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
     ,
     TgVoipAudioDataCallbacks const &audioDataCallbacks
 #endif
 ) {
     return new TgVoipImpl(
-        crypto,
         endpoints,
         persistentState,
         proxy,
         config,
         encryptionKey,
         initialNetworkType
-#if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
+#ifdef TGVOIP_USE_CUSTOM_CRYPTO
+        ,
+        crypto
+#endif
+#ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
         ,
         audioDataCallbacks
 #endif
