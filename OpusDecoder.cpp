@@ -13,7 +13,7 @@
 #ifdef HAVE_CONFIG_H
 #include <opus/opus.h>
 #else
-#include "opus.h"
+#include <opus/opus.h>
 #endif
 
 #include "VoIPController.h"
