@@ -77,7 +77,7 @@ struct TgVoipCrypto {
     void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
     void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
 };
-CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon initialization
+tgvoip::CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon initialization
 #endif
 
 
