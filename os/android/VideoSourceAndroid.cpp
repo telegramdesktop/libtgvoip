@@ -44,7 +44,7 @@ void VideoSourceAndroid::Stop(){
 }
 
 void VideoSourceAndroid::SendFrame(Buffer frame, uint32_t flags){
-	callback(frame, flags);
+	callback(frame, flags, rotation);
 }
 
 void VideoSourceAndroid::SetStreamParameters(std::vector<Buffer> csd, unsigned int width, unsigned int height){
@@ -85,4 +85,8 @@ void VideoSourceAndroid::SetBitrate(uint32_t bitrate){
 	jni::DoWithJNI([&](JNIEnv* env){
 		env->CallVoidMethod(javaObject, setBitrateMethod, (jint)bitrate);
 	});
+}
+
+void VideoSourceAndroid::SetStreamPaused(bool paused){
+	streamStateCallback(paused);
 }
