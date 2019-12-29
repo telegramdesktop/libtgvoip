@@ -13,7 +13,9 @@
         ],
         'variables': {
           'tgvoip_src_loc': '.',
-          'special_build_target%': '',
+          'official_build_target%': '',
+          'linux_path_opus_include%': '<(DEPTH)/../../../Libraries/opus/include',
+          'dynamic_msvc_runtime%': 0,
         },
         'include_dirs': [
           '<(tgvoip_src_loc)/webrtc_dsp',
@@ -64,12 +66,18 @@
           '<(tgvoip_src_loc)/MessageThread.h',
           '<(tgvoip_src_loc)/audio/AudioIO.cpp',
           '<(tgvoip_src_loc)/audio/AudioIO.h',
+          '<(tgvoip_src_loc)/audio/AudioIOCallback.cpp',
+          '<(tgvoip_src_loc)/audio/AudioIOCallback.h',
           '<(tgvoip_src_loc)/video/ScreamCongestionController.cpp',
           '<(tgvoip_src_loc)/video/ScreamCongestionController.h',
           '<(tgvoip_src_loc)/video/VideoSource.cpp',
           '<(tgvoip_src_loc)/video/VideoSource.h',
           '<(tgvoip_src_loc)/video/VideoRenderer.cpp',
           '<(tgvoip_src_loc)/video/VideoRenderer.h',
+          '<(tgvoip_src_loc)/video/VideoPacketSender.cpp',
+          '<(tgvoip_src_loc)/video/VideoPacketSender.h',
+          '<(tgvoip_src_loc)/video/VideoFEC.cpp',
+          '<(tgvoip_src_loc)/video/VideoFEC.h',
           '<(tgvoip_src_loc)/json11.cpp',
           '<(tgvoip_src_loc)/json11.hpp',
 
@@ -700,7 +708,7 @@
           '<(tgvoip_src_loc)/webrtc_dsp/common_audio/vad/vad_core.c',
           '<(tgvoip_src_loc)/webrtc_dsp/common_audio/vad/vad_sp.h',
           '<(tgvoip_src_loc)/webrtc_dsp/common_audio/vad/vad_filterbank.h',
-          '<(tgvoip_src_loc)/webrtc_dsp/common_audio/vad/vad_gmm.c', 
+          '<(tgvoip_src_loc)/webrtc_dsp/common_audio/vad/vad_gmm.c',
 
           # ARM/NEON sources
           # TODO check if there's a good way to make these compile with ARM ports of TDesktop
@@ -796,20 +804,20 @@
                     'TARGET_OSX',
                   ],
                   'sources': [
-                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.mm',
-                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.h',
-                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoSource.mm',
-                   #'<(tgvoip_src_loc)/os/darwin/TGVVideoSource.h',
-                   #'<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.mm',
-                   #'<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.h',
-                   #'<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.mm',
-                   #'<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.h',
+                    '<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.mm',
+                    '<(tgvoip_src_loc)/os/darwin/TGVVideoRenderer.h',
+                    '<(tgvoip_src_loc)/os/darwin/TGVVideoSource.mm',
+                    '<(tgvoip_src_loc)/os/darwin/TGVVideoSource.h',
+                    '<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.mm',
+                    '<(tgvoip_src_loc)/os/darwin/VideoToolboxEncoderSource.h',
+                    '<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.mm',
+                    '<(tgvoip_src_loc)/os/darwin/SampleBufferDisplayLayerRenderer.h',
                   ],
                 }],
-                ['"<(special_build_target)" == "macstore"', {
-                 'defines': [
-                  'TGVOIP_NO_OSX_PRIVATE_API',
-                 ],
+                ['"<(official_build_target)" == "macstore"', {
+                  'defines': [
+                    'TGVOIP_NO_OSX_PRIVATE_API',
+                  ],
                 }],
               ],
             },
@@ -829,6 +837,7 @@
               'libraries': [
                 'winmm',
                 'ws2_32',
+                'iphlpapi',
                 'kernel32',
                 'user32',
               ],
@@ -836,11 +845,11 @@
               'msvs_settings': {
                 'VCCLCompilerTool': {
                   'ProgramDataBaseFileName': '$(OutDir)\\$(ProjectName).pdb',
-                  'DebugInformationFormat': '3',          # Program Database (/Zi)
+                  'DebugInformationFormat': '3',  # Program Database (/Zi)
                   'AdditionalOptions': [
-                    '/MP',   # Enable multi process build.
-                    '/EHsc', # Catch C++ exceptions only, extern C functions never throw a C++ exception.
-                    '/wd4068', # Disable "warning C4068: unknown pragma"
+                    '/MP',      # Enable multi process build.
+                    '/EHsc',    # Catch C++ exceptions only, extern C functions never throw a C++ exception.
+                    '/wd4068',  # Disable "warning C4068: unknown pragma"
                   ],
                   'TreatWChar_tAsBuiltInType': 'false',
                 },
@@ -862,15 +871,22 @@
                   ],
                   'msvs_settings': {
                     'VCCLCompilerTool': {
-                      'Optimization': '0',                # Disabled (/Od)
-                      'RuntimeLibrary': '1',              # Multi-threaded Debug (/MTd)
+                      'Optimization': '0',        # Disabled (/Od)
                       'RuntimeTypeInfo': 'true',
+
+                      'conditions': [
+                        [ '<(dynamic_msvc_runtime) == 0', {
+                          'RuntimeLibrary': 1,  # Multi-threaded Debug, static (/MTd)
+                        }, {
+                          'RuntimeLibrary': 3,  # Multi-threaded Debug, dynamic (/MDd)
+                        }],
+                      ],
                     },
                     'VCLibrarianTool': {
                       'AdditionalOptions': [
-                        '/NODEFAULTLIB:LIBCMT'
-                      ]
-                    }
+                        '/NODEFAULTLIB:LIBCMT',
+                      ],
+                    },
                   },
                 },
                 'Release': {
@@ -882,18 +898,25 @@
                   ],
                   'msvs_settings': {
                     'VCCLCompilerTool': {
-                      'Optimization': '2',                 # Maximize Speed (/O2)
-                      'InlineFunctionExpansion': '2',      # Any suitable (/Ob2)
-                      'EnableIntrinsicFunctions': 'true',  # Yes (/Oi)
-                      'FavorSizeOrSpeed': '1',             # Favor fast code (/Ot)
-                      'RuntimeLibrary': '0',               # Multi-threaded (/MT)
-                      'EnableEnhancedInstructionSet': '2', # Streaming SIMD Extensions 2 (/arch:SSE2)
-                      'WholeProgramOptimization': 'true',  # /GL
+                      'Optimization': '2',                  # Maximize Speed (/O2)
+                      'InlineFunctionExpansion': '2',       # Any suitable (/Ob2)
+                      'EnableIntrinsicFunctions': 'true',   # Yes (/Oi)
+                      'FavorSizeOrSpeed': '1',              # Favor fast code (/Ot)
+                      'EnableEnhancedInstructionSet': '2',  # Streaming SIMD Extensions 2 (/arch:SSE2)
+                      'WholeProgramOptimization': 'true',   # /GL
+
+                      'conditions': [
+                        [ '<(dynamic_msvc_runtime) == 0', {
+                          'RuntimeLibrary': 0,  # Multi-threaded, static (/MT)
+                        }, {
+                          'RuntimeLibrary': 2,  # Multi-threaded, dynamic (/MD)
+                        }],
+                      ],
                     },
                     'VCLibrarianTool': {
                       'AdditionalOptions': [
                         '/LTCG',
-                      ]
+                      ],
                     },
                   },
                 },
@@ -912,10 +935,10 @@
               ],
               'conditions': [
                 [ '"<!(uname -m)" == "i686"', {
-                  'cflags_cc': [
+                  'cflags': [
                     '-msse2',
                   ],
-                }]
+                }],
               ],
               'direct_dependent_settings': {
                 'libraries': [
@@ -927,4 +950,4 @@
         ],
       },
     ],
-  }
+}
