@@ -27,7 +27,7 @@ os/posix/NetworkSocketPosix.cpp \
 video/VideoSource.cpp \
 video/VideoRenderer.cpp \
 video/VideoPacketSender.cpp \
-video/VideoFEC.h \
+video/VideoFEC.cpp \
 video/ScreamCongestionController.cpp \
 json11.cpp
 
@@ -55,9 +55,9 @@ audio/AudioOutput.h \
 audio/Resampler.h \
 os/posix/NetworkSocketPosix.h \
 video/VideoSource.h \
-video/VideoRenderer.h \
 video/VideoPacketSender.h \
 video/VideoFEC.h \
+video/VideoRenderer.h \
 video/ScreamCongestionController.h \
 json11.hpp \
 utils.h
