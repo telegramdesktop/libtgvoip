@@ -816,7 +816,8 @@ am__libtgvoip_la_SOURCES_DIST = TgVoip.cpp VoIPController.cpp \
 	VoIPServerConfig.cpp audio/AudioIO.cpp audio/AudioInput.cpp \
 	audio/AudioOutput.cpp audio/Resampler.cpp \
 	os/posix/NetworkSocketPosix.cpp video/VideoSource.cpp \
-	video/VideoRenderer.cpp video/ScreamCongestionController.cpp \
+	video/VideoRenderer.cpp video/VideoPacketSender.cpp \
+	video/VideoFEC.h video/ScreamCongestionController.cpp \
 	json11.cpp os/darwin/AudioInputAudioUnit.cpp \
 	os/darwin/AudioOutputAudioUnit.cpp os/darwin/AudioUnitIO.cpp \
 	os/darwin/AudioInputAudioUnitOSX.cpp \
@@ -1429,8 +1430,9 @@ am__libtgvoip_la_SOURCES_DIST = TgVoip.cpp VoIPController.cpp \
 	VoIPServerConfig.h audio/AudioIO.h audio/AudioInput.h \
 	audio/AudioOutput.h audio/Resampler.h \
 	os/posix/NetworkSocketPosix.h video/VideoSource.h \
-	video/VideoRenderer.h video/ScreamCongestionController.h \
-	json11.hpp utils.h os/darwin/AudioInputAudioUnit.h \
+	video/VideoRenderer.h video/VideoPacketSender.h \
+	video/ScreamCongestionController.h json11.hpp utils.h \
+	os/darwin/AudioInputAudioUnit.h \
 	os/darwin/AudioOutputAudioUnit.h os/darwin/AudioUnitIO.h \
 	os/darwin/AudioInputAudioUnitOSX.h \
 	os/darwin/AudioOutputAudioUnitOSX.h os/darwin/DarwinSpecific.h \
@@ -1743,11 +1745,12 @@ am__objects_12 = TgVoip.lo VoIPController.lo Buffers.lo \
 	VoIPGroupController.lo VoIPServerConfig.lo audio/AudioIO.lo \
 	audio/AudioInput.lo audio/AudioOutput.lo audio/Resampler.lo \
 	os/posix/NetworkSocketPosix.lo video/VideoSource.lo \
-	video/VideoRenderer.lo video/ScreamCongestionController.lo \
-	json11.lo $(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
-	$(am__objects_10) $(am__objects_11)
+	video/VideoRenderer.lo video/VideoPacketSender.lo \
+	video/ScreamCongestionController.lo json11.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5) $(am__objects_6) $(am__objects_7) \
+	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
+	$(am__objects_11)
 am__objects_13 = $(am__objects_11) $(am__objects_11) $(am__objects_11) \
 	$(am__objects_11)
 am_libtgvoip_la_OBJECTS = $(am__objects_12) $(am__objects_13)
@@ -2065,6 +2068,7 @@ am__depfiles_remade = ./$(DEPDIR)/Buffers.Plo \
 	os/linux/$(DEPDIR)/AudioPulse.Plo \
 	os/posix/$(DEPDIR)/NetworkSocketPosix.Plo \
 	video/$(DEPDIR)/ScreamCongestionController.Plo \
+	video/$(DEPDIR)/VideoPacketSender.Plo \
 	video/$(DEPDIR)/VideoRenderer.Plo \
 	video/$(DEPDIR)/VideoSource.Plo \
 	webrtc_dsp/common_audio/signal_processing/$(DEPDIR)/complex_bit_reverse.Plo \
@@ -2161,6 +2165,7 @@ am__nobase_tgvoipinclude_HEADERS_DIST = TgVoip.h VoIPController.h \
 	audio/AudioIO.h audio/AudioInput.h audio/AudioOutput.h \
 	audio/Resampler.h os/posix/NetworkSocketPosix.h \
 	video/VideoSource.h video/VideoRenderer.h \
+	video/VideoPacketSender.h video/VideoFEC.h \
 	video/ScreamCongestionController.h json11.hpp utils.h \
 	os/darwin/AudioInputAudioUnit.h \
 	os/darwin/AudioOutputAudioUnit.h os/darwin/AudioUnitIO.h \
@@ -2354,7 +2359,8 @@ SRC = TgVoip.cpp VoIPController.cpp Buffers.cpp CongestionControl.cpp \
 	VoIPGroupController.cpp VoIPServerConfig.cpp audio/AudioIO.cpp \
 	audio/AudioInput.cpp audio/AudioOutput.cpp audio/Resampler.cpp \
 	os/posix/NetworkSocketPosix.cpp video/VideoSource.cpp \
-	video/VideoRenderer.cpp video/ScreamCongestionController.cpp \
+	video/VideoRenderer.cpp video/VideoPacketSender.cpp \
+	video/VideoFEC.h video/ScreamCongestionController.cpp \
 	json11.cpp $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_10) $(am__append_12) $(am__append_14) \
 	$(am__append_16) $(am__append_18) $(am__append_21) \
@@ -2366,9 +2372,10 @@ TGVOIP_HDRS = TgVoip.h VoIPController.h Buffers.h BlockingQueue.h \
 	PacketReassembler.h VoIPServerConfig.h audio/AudioIO.h \
 	audio/AudioInput.h audio/AudioOutput.h audio/Resampler.h \
 	os/posix/NetworkSocketPosix.h video/VideoSource.h \
-	video/VideoRenderer.h video/ScreamCongestionController.h \
-	json11.hpp utils.h $(am__append_2) $(am__append_5) \
-	$(am__append_7) $(am__append_17)
+	video/VideoRenderer.h video/VideoPacketSender.h \
+	video/VideoFEC.h video/ScreamCongestionController.h json11.hpp \
+	utils.h $(am__append_2) $(am__append_5) $(am__append_7) \
+	$(am__append_17)
 libtgvoip_la_SOURCES = $(SRC) $(TGVOIP_HDRS)
 tgvoipincludedir = $(includedir)/tgvoip
 nobase_tgvoipinclude_HEADERS = $(TGVOIP_HDRS)
@@ -2492,6 +2499,8 @@ video/$(DEPDIR)/$(am__dirstamp):
 video/VideoSource.lo: video/$(am__dirstamp) \
 	video/$(DEPDIR)/$(am__dirstamp)
 video/VideoRenderer.lo: video/$(am__dirstamp) \
+	video/$(DEPDIR)/$(am__dirstamp)
+video/VideoPacketSender.lo: video/$(am__dirstamp) \
 	video/$(DEPDIR)/$(am__dirstamp)
 video/ScreamCongestionController.lo: video/$(am__dirstamp) \
 	video/$(DEPDIR)/$(am__dirstamp)
@@ -3929,6 +3938,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@os/linux/$(DEPDIR)/AudioPulse.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@os/posix/$(DEPDIR)/NetworkSocketPosix.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@video/$(DEPDIR)/ScreamCongestionController.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@video/$(DEPDIR)/VideoPacketSender.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@video/$(DEPDIR)/VideoRenderer.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@video/$(DEPDIR)/VideoSource.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@webrtc_dsp/common_audio/signal_processing/$(DEPDIR)/complex_bit_reverse.Plo@am__quote@ # am--include-marker
@@ -4798,6 +4808,7 @@ distclean: distclean-am
 	-rm -f os/linux/$(DEPDIR)/AudioPulse.Plo
 	-rm -f os/posix/$(DEPDIR)/NetworkSocketPosix.Plo
 	-rm -f video/$(DEPDIR)/ScreamCongestionController.Plo
+	-rm -f video/$(DEPDIR)/VideoPacketSender.Plo
 	-rm -f video/$(DEPDIR)/VideoRenderer.Plo
 	-rm -f video/$(DEPDIR)/VideoSource.Plo
 	-rm -f webrtc_dsp/common_audio/signal_processing/$(DEPDIR)/complex_bit_reverse.Plo
@@ -5162,6 +5173,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f os/linux/$(DEPDIR)/AudioPulse.Plo
 	-rm -f os/posix/$(DEPDIR)/NetworkSocketPosix.Plo
 	-rm -f video/$(DEPDIR)/ScreamCongestionController.Plo
+	-rm -f video/$(DEPDIR)/VideoPacketSender.Plo
 	-rm -f video/$(DEPDIR)/VideoRenderer.Plo
 	-rm -f video/$(DEPDIR)/VideoSource.Plo
 	-rm -f webrtc_dsp/common_audio/signal_processing/$(DEPDIR)/complex_bit_reverse.Plo
