@@ -755,6 +755,8 @@ libtgvoip_la_SOURCES = $(SRC) $(TGVOIP_HDRS)
 tgvoipincludedir = $(includedir)/tgvoip
 nobase_tgvoipinclude_HEADERS = $(TGVOIP_HDRS)
 
+pkgconfig_DATA = tgvoip.pc
+
 CXXFLAGS += -std=gnu++0x $(CFLAGS)
 if TARGET_OS_OSX
 OBJCFLAGS = $(CFLAGS)

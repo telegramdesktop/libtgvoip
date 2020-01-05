@@ -9,6 +9,8 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AM_SILENT_RULES([yes])
 LT_INIT
 
+PKG_INSTALLDIR
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -109,5 +111,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime floor gettimeofday inet_ntoa memmove memset select socket sqrt strcasecmp strchr strerror strncasecmp strstr strtol strtoul uname])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile tgvoip.pc])
 AC_OUTPUT
