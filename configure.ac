@@ -1,8 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+# Define version information
+m4_define([libtgvoip_major_version], 2)
+m4_define([libtgvoip_minor_version], 4)
+m4_define([libtgvoip_patch_version], 4)
+m4_define([libtgvoip_version],[libtgvoip_major_version.libtgvoip_minor_version.libtgvoip_patch_version])
+
 AC_PREREQ([2.69])
-AC_INIT([libtgvoip], [2.4.4], [https://github.com/grishka/libtgvoip/issues])
+AC_INIT([libtgvoip], [libtgvoip_version], [https://github.com/grishka/libtgvoip/issues])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([subdir-objects])
@@ -25,6 +31,10 @@ AC_CHECK_LIB([opus], [opus_decoder_create], [], [AC_MSG_FAILURE([libopus-dev is 
 AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_CANONICAL_HOST
+
+AC_SUBST(LIBTGVOIP_MAJOR_VERSION, libtgvoip_major_version)
+AC_SUBST(LIBTGVOIP_MINOR_VERSION, libtgvoip_minor_version)
+AC_SUBST(LIBTGVOIP_PATCH_VERSION, libtgvoip_patch_version)
 
 AS_CASE([$host_cpu],
 	[i?86], [cpu_x86=yes],
