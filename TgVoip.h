@@ -119,6 +119,8 @@ protected:
 public:
     static void setLoggingFunction(std::function<void(std::string const &)> loggingFunction);
     static void setGlobalServerConfig(std::string const &serverConfig);
+    static int getConnectionMaxLayer();
+    static std::string getVersion();
     static TgVoip *makeInstance(
         TgVoipConfig const &config,
         TgVoipPersistentState const &persistentState,
@@ -140,11 +142,15 @@ public:
     
     virtual void setNetworkType(TgVoipNetworkType networkType) = 0;
     virtual void setMuteMicrophone(bool muteMicrophone) = 0;
-    
-    virtual std::string getVersion() = 0;
-    virtual TgVoipPersistentState getPersistentState() = 0;
+    virtual void setAudioOutputGainControlEnabled(bool enabled) = 0;
+    virtual void setEchoCancellationStrength(int strength) = 0;
+
+    virtual std::string getLastError() = 0;
     virtual std::string getDebugInfo() = 0;
-    
+    virtual int64_t getPreferredRelayId() = 0;
+    virtual TgVoipTrafficStats getTrafficStats() = 0;
+    virtual TgVoipPersistentState getPersistentState() = 0;
+
     virtual void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) = 0;
     virtual void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) = 0;
     
