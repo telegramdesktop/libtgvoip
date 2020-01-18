@@ -75,7 +75,11 @@ struct TgVoipConfig {
     bool enableNS;
     bool enableAGC;
     bool enableCallUpgrade;
+#ifndef _WIN32
     std::string logPath;
+#else
+    std::wstring logPath;
+#endif
     int maxApiLayer;
 };
 
@@ -115,7 +119,7 @@ struct TgVoipAudioDataCallbacks {
 class TgVoip {
 protected:
     TgVoip() = default;
-    
+
 public:
     static void setLoggingFunction(std::function<void(std::string const &)> loggingFunction);
     static void setGlobalServerConfig(std::string const &serverConfig);
@@ -131,15 +135,15 @@ public:
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
         ,
         TgVoipCrypto const &crypto
-#endif 
+#endif
 #ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
         ,
         TgVoipAudioDataCallbacks const &audioDataCallbacks
 #endif
     );
-    
+
     virtual ~TgVoip();
-    
+
     virtual void setNetworkType(TgVoipNetworkType networkType) = 0;
     virtual void setMuteMicrophone(bool muteMicrophone) = 0;
     virtual void setAudioOutputGainControlEnabled(bool enabled) = 0;
@@ -153,7 +157,7 @@ public:
 
     virtual void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) = 0;
     virtual void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) = 0;
-    
+
     virtual TgVoipFinalState stop() = 0;
 };
 

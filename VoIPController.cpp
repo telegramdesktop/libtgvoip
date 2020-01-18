@@ -29,10 +29,10 @@
 #include <sstream>
 #include <inttypes.h>
 #include <float.h>
-#ifdef HAVE_CONFIG_H
+#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
-#include <opus/opus.h>
+#include "opus.h"
 #endif
 
 
