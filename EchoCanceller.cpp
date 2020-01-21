@@ -44,7 +44,7 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC){
 	config.high_pass_filter.enabled = enableAEC;
 	config.gain_controller2.enabled = enableAGC;
 	apm->ApplyConfig(config);
-	
+
 	webrtc::NoiseSuppression::Level nsLevel;
 #ifdef __APPLE__
 	switch(ServerConfig::GetSharedInstance()->GetInt("webrtc_ns_level_vpio", 0)){

@@ -66,7 +66,7 @@ namespace tgvoip{
 		size_t GetLength();
 		void Reset();
 		void Rewind(size_t numBytes);
-		
+
 		BufferOutputStream& operator=(BufferOutputStream&& other){
 			if(this!=&other){
 				if(!bufferProvided && buffer)

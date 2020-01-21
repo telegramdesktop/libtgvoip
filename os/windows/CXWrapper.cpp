@@ -5,8 +5,8 @@
 #include <string>
 #include <collection.h>
 #include "CXWrapper.h"
-#include <wrl.h>  
-#include <robuffer.h>  
+#include <wrl.h>
+#include <robuffer.h>
 
 using namespace Windows::Storage::Streams;
 using namespace Microsoft::WRL;
@@ -437,8 +437,8 @@ IBuffer^ MicrosoftCryptoImpl::IBufferFromPtr(uint8_t* msg, size_t len)
 	Platform::Array<uint8>^ out=ref new Platform::Array<uint8>(32);
 	Platform::Array<uint8>^ key=ref new Platform::Array<uint8>(16);
 	Platform::Array<uint8>^ iv=ref new Platform::Array<uint8>(32);
-	
-	
+
+
 	CryptographicBuffer::CopyToByteArray(CryptographicBuffer::DecodeFromHexString("0000000000000000000000000000000000000000000000000000000000000000"), &data);
 	CryptographicBuffer::CopyToByteArray(CryptographicBuffer::DecodeFromHexString("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"), &iv);
 	CryptographicBuffer::CopyToByteArray(CryptographicBuffer::DecodeFromHexString("000102030405060708090a0b0c0d0e0f"), &key);
