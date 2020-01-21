@@ -94,7 +94,7 @@ void VideoToolboxEncoderSource::Reset(uint32_t codec, int maxResolution){
 	status=VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
 	CHECK_ERR(status, "VTSessionSetProperty(RealTime)");
 	LOGD("VTCompressionSession initialized");
-	
+
 	// TODO change camera frame rate dynamically based on resolution + codec
 }
 
@@ -125,7 +125,7 @@ void VideoToolboxEncoderSource::EncodeFrame(CMSampleBufferRef frame){
 		frameProps=CFDictionaryCreate(NULL, keys, values, 1, NULL, NULL);
 		keyframeRequested=false;
 	}
-	
+
 	//CMVideoDimensions size=CMVideoFormatDescriptionGetDimensions(format);
 	//LOGD("EncodeFrame %d x %d", size.width, size.height);
 	CVImageBufferRef imgBuffer=CMSampleBufferGetImageBuffer(frame);
@@ -202,7 +202,7 @@ void VideoToolboxEncoderSource::EncoderCallback(OSStatus status, CMSampleBufferR
 	}else{
 		frameFlags |= VIDEO_FRAME_FLAG_KEYFRAME;
 	}
-	
+
 	Buffer frame(len);
 	CMBlockBufferCopyDataBytes(blockBuffer, 0, len, *frame);
 	uint32_t offset=0;
@@ -213,14 +213,14 @@ void VideoToolboxEncoderSource::EncoderCallback(OSStatus status, CMSampleBufferR
 		offset+=nalLen+4;
 	}
 	callback(std::move(frame), frameFlags);
-	
+
 	//LOGV("EncoderCallback: %u bytes total", (unsigned int)len);
 }
 
 void VideoToolboxEncoderSource::SetEncoderBitrateAndLimit(uint32_t bitrate){
 	OSStatus status=VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(bitrate));
 	CHECK_ERR(status, "VTSessionSetProperty(AverageBitRate)");
-	
+
 	int64_t dataLimitValue=(int64_t)(bitrate/8);
 	CFNumberRef bytesPerSecond=CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &dataLimitValue);
 	int64_t oneValue=1;

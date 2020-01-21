@@ -105,7 +105,7 @@ void SampleBufferDisplayLayerRenderer::DecodeAndDisplay(Buffer frame, uint32_t p
 	CFArrayRef attachments=CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
 	CFMutableDictionaryRef dict=(CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
 	CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-	
+
 	[renderer _enqueueBuffer:sampleBuffer reset:needReset];
 	needReset=false;
 	CFRelease(sampleBuffer);

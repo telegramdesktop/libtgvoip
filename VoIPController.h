@@ -106,7 +106,7 @@ namespace tgvoip{
 		void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
 		void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
 	};
-	
+
 	struct CellularCarrierInfo{
 		std::string name;
 		std::string mcc;
@@ -159,9 +159,9 @@ namespace tgvoip{
 	};
 
 	class AudioInputDevice : public AudioDevice{
-	
+
 	};
-	
+
 	class AudioInputTester{
 	public:
 		AudioInputTester(const std::string deviceID);
@@ -415,14 +415,14 @@ namespace tgvoip{
 			void (*upgradeToGroupCallRequested)(VoIPController*);
 		};
 		void SetCallbacks(Callbacks callbacks);
-		
+
 		float GetOutputLevel(){
 			return 0.0f;
 		};
 		int GetVideoResolutionForCurrentBitrate();
 		void SetVideoSource(video::VideoSource* source);
 		void SetVideoRenderer(video::VideoRenderer* renderer);
-		
+
 		void SetInputVolume(float level);
 		void SetOutputVolume(float level);
 #if defined(__APPLE__) && defined(TARGET_OS_OSX)
@@ -739,7 +739,7 @@ namespace tgvoip{
 		uint32_t initTimeoutID=MessageThread::INVALID_ID;
 		uint32_t noStreamsNopID=MessageThread::INVALID_ID;
 		uint32_t udpPingTimeoutID=MessageThread::INVALID_ID;
-		
+
 		effects::Volume outputVolume;
 		effects::Volume inputVolume;
 
@@ -756,7 +756,7 @@ namespace tgvoip{
 #if defined(__APPLE__) && defined(TARGET_OS_OSX)
 		bool macAudioDuckingEnabled=true;
 #endif
-		
+
 		video::VideoSource* videoSource=NULL;
 		video::VideoRenderer* videoRenderer=NULL;
 		double firstVideoFrameTime=0.0;
