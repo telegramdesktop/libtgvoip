@@ -20,9 +20,14 @@ enum class TgVoipEndpointType {
     TcpRelay
 };
 
+struct TgVoipEdpointHost {
+    std::string ipv4;
+    std::string ipv6;
+};
+
 struct TgVoipEndpoint {
     int64_t endpointId;
-    std::string host;
+    TgVoipEdpointHost host;
     uint16_t port;
     TgVoipEndpointType type;
     unsigned char peerTag[16];
