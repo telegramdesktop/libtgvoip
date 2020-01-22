@@ -67,16 +67,6 @@ tgvoip::CryptoFunctions tgvoip::VoIPController::crypto={
     tgvoip_openssl_aes_cbc_decrypt
 };
 #else
-struct TgVoipCrypto {
-    void (*rand_bytes)(uint8_t* buffer, size_t length);
-    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
-    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-};
 tgvoip::CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon initialization
 #endif
 
