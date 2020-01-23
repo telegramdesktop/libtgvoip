@@ -67,16 +67,6 @@ tgvoip::CryptoFunctions tgvoip::VoIPController::crypto={
     tgvoip_openssl_aes_cbc_decrypt
 };
 #else
-struct TgVoipCrypto {
-    void (*rand_bytes)(uint8_t* buffer, size_t length);
-    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
-    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-};
 tgvoip::CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon initialization
 #endif
 
@@ -135,13 +125,6 @@ public:
 
         std::vector<tgvoip::Endpoint> mappedEndpoints;
         for (auto endpoint : endpoints) {
-            bool isIpv6 = false;
-#ifndef _WIN32 // #TODO impl
-            struct in6_addr addrIpV6;
-            if (inet_pton(AF_INET6, endpoint.host.c_str(), &addrIpV6)) {
-                isIpv6 = true;
-            }
-#endif
             tgvoip::Endpoint::Type mappedType;
             switch (endpoint.type) {
                 case TgVoipEndpointType::UdpRelay:
@@ -161,8 +144,8 @@ public:
                     break;
             }
 
-            tgvoip::IPv4Address address(isIpv6 ? std::string() : endpoint.host);
-            tgvoip::IPv6Address addressv6(isIpv6 ? endpoint.host : std::string());
+            tgvoip::IPv4Address address(endpoint.host.ipv4);
+            tgvoip::IPv6Address addressv6(endpoint.host.ipv6);
 
             mappedEndpoints.emplace_back(endpoint.endpointId, endpoint.port, address, addressv6, mappedType, endpoint.peerTag);
         }
