@@ -6,6 +6,7 @@
 
 #include "AudioPulse.h"
 #include <dlfcn.h>
+#include <libgen.h>
 #include "../../logging.h"
 
 #define DECLARE_DL_FUNCTION(name) typeof(name)* AudioPulse::_import_##name=NULL
