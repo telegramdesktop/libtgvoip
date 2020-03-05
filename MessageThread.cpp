@@ -58,7 +58,11 @@ void MessageThread::Run(){
 	queueMutex.Lock();
 	while(running){
 		double currentTime=VoIPController::GetCurrentTime();
-		double waitTimeout=queue.empty() ? DBL_MAX : (queue[0].deliverAt-currentTime);
+    double waitTimeout;
+    {
+            MutexGuard _m(queueAccessMutex);
+            waitTimeout=queue.empty() ? DBL_MAX : (queue[0].deliverAt-currentTime);
+    }
 		//LOGW("MessageThread wait timeout %f", waitTimeout);
 		if(waitTimeout>0.0){
 #ifdef _WIN32
@@ -93,14 +97,17 @@ void MessageThread::Run(){
 		}
 		currentTime=VoIPController::GetCurrentTime();
 		std::vector<Message> msgsToDeliverNow;
-		for(std::vector<Message>::iterator m=queue.begin();m!=queue.end();){
-			if(m->deliverAt==0.0 || currentTime>=m->deliverAt){
-				msgsToDeliverNow.push_back(*m);
-				m=queue.erase(m);
-				continue;
-			}
-			++m;
-		}
+    {
+      MutexGuard _m(queueAccessMutex);
+  		for(std::vector<Message>::iterator m=queue.begin();m!=queue.end();){
+  			if(m->deliverAt==0.0 || currentTime>=m->deliverAt){
+  				msgsToDeliverNow.push_back(*m);
+  				m=queue.erase(m);
+  				continue;
+  			}
+  			++m;
+  		}
+    }
 
 		for(Message& m:msgsToDeliverNow){
 			//LOGI("MessageThread delivering %u", m.msg);
@@ -123,9 +130,6 @@ void MessageThread::Run(){
 uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval){
 	assert(delay>=0);
 	//LOGI("MessageThread post [function] delay %f", delay);
-	if(!IsCurrent()){
-		queueMutex.Lock();
-	}
 	double currentTime=VoIPController::GetCurrentTime();
 	Message m{lastMessageID++, delay==0.0 ? 0.0 : (currentTime+delay), interval, func};
 	InsertMessageInternal(m);
@@ -135,12 +139,12 @@ uint32_t MessageThread::Post(std::function<void()> func, double delay, double in
 #else
 		pthread_cond_signal(&cond);
 #endif
-		queueMutex.Unlock();
 	}
 	return m.id;
 }
 
 void MessageThread::InsertMessageInternal(MessageThread::Message &m){
+  MutexGuard _m(queueAccessMutex);
 	if(queue.empty()){
 		queue.push_back(m);
 	}else{
@@ -160,9 +164,7 @@ void MessageThread::InsertMessageInternal(MessageThread::Message &m){
 }
 
 void MessageThread::Cancel(uint32_t id){
-	if(!IsCurrent()){
-		queueMutex.Lock();
-	}
+  MutexGuard _m(queueAccessMutex);
 
 	for(std::vector<Message>::iterator m=queue.begin();m!=queue.end();){
 		if(m->id==id){
@@ -171,10 +173,7 @@ void MessageThread::Cancel(uint32_t id){
 			++m;
 		}
 	}
-
-	if(!IsCurrent()){
-		queueMutex.Unlock();
-	}
+  
 }
 
 void MessageThread::CancelSelf(){

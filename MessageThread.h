@@ -39,6 +39,7 @@ namespace tgvoip{
 		std::atomic<bool> running;
 		std::vector<Message> queue;
 		Mutex queueMutex;
+    Mutex queueAccessMutex;
 		uint32_t lastMessageID=1;
 		bool cancelCurrent=false;
 

@@ -1143,16 +1143,16 @@ void VoIPController::HandleAudioInput(unsigned char *data, size_t len, unsigned 
 		pkt.WriteBytes(*dataBufPtr, 0, len);
 
 		if(hasExtraFEC){
-			Buffer ecBuf(secondaryLen);
-			ecBuf.CopyFrom(*secondaryDataBufPtr, 0, secondaryLen);
-			ecAudioPackets.push_back(move(ecBuf));
-			while(ecAudioPackets.size()>4)
-				ecAudioPackets.erase(ecAudioPackets.begin());
 			pkt.WriteByte((unsigned char) std::min((int) ecAudioPackets.size(), extraEcLevel));
 			for(vector<Buffer>::iterator ecData=ecAudioPackets.begin()+std::max(0, (int) ecAudioPackets.size()-extraEcLevel); ecData!=ecAudioPackets.end(); ++ecData){
 				pkt.WriteByte((unsigned char) ecData->Length());
 				pkt.WriteBytes(*ecData);
 			}
+      Buffer ecBuf(secondaryLen);
+      ecBuf.CopyFrom(**secondaryDataBufPtr, 0, secondaryLen);
+      ecAudioPackets.push_back(move(ecBuf));
+      while(ecAudioPackets.size()>4)
+              ecAudioPackets.erase(ecAudioPackets.begin());
 		}
 
 		unsentStreamPackets++;
@@ -2499,7 +2499,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 							unsigned char dlen=in.ReadByte();
 							unsigned char data[256];
 							in.ReadBytes(data, dlen);
-							stm->jitterBuffer->HandleInput(data, dlen, pts-(fecCount-j-1)*stm->frameDuration, true);
+              stm->jitterBuffer->HandleInput(data, dlen, pts-(fecCount-j)*stm->frameDuration, true);
 						}
 					}
 				}
