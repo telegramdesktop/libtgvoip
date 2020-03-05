@@ -134,10 +134,13 @@ void NetworkSocketPosix::Send(NetworkPacket packet){
 			memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
 			addr.sin6_family=AF_INET6;
 		}
-		addr.sin6_port=htons(packet.port);
-		res=(int)sendto(fd, *packet.data, packet.data.Length(), 0, (const sockaddr *) &addr, sizeof(addr));
-	}else{
-		res=(int)send(fd, *packet.data, packet.data.Length(), 0);
+        addr.sin6_port=htons(packet.port);
+        std::lock_guard<std::mutex> lock(m_fd);
+        res = static_cast<int>(sendto(fd, *packet.data, packet.data.Length(), 0,
+                                      reinterpret_cast<sockaddr*>(&addr), sizeof(addr)));
+    } else {
+        std::lock_guard<std::mutex> lock(m_fd);
+        res = static_cast<int>(send(fd, *packet.data, packet.data.Length(), 0));
 	}
 	if(res<=0){
 		if(errno==EAGAIN || errno==EWOULDBLOCK){
@@ -145,7 +148,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet){
 				LOGE("Got EAGAIN but there's already a pending packet");
 				failed=true;
 			}else{
-				LOGV("Socket %d not ready to send", (int)fd);
+                LOGV("Socket %d not ready to send", int(fd));
 				pendingOutgoingPacket=std::move(packet);
 				readyToSend=false;
 			}
@@ -161,7 +164,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet){
 			LOGE("send returned less than packet length but there's already a pending packet");
 			failed=true;
 		}else{
-			LOGV("Socket %d not ready to send", (int)fd);
+            LOGV("Socket %d not ready to send", int(fd));
 			pendingOutgoingPacket=std::move(packet);
 			readyToSend=false;
 		}
@@ -169,44 +172,44 @@ void NetworkSocketPosix::Send(NetworkPacket packet){
 }
 
 bool NetworkSocketPosix::OnReadyToSend(){
-	if(!pendingOutgoingPacket.IsEmpty()){
+    if (!pendingOutgoingPacket.IsEmpty()) {
 		Send(std::move(pendingOutgoingPacket));
-		pendingOutgoingPacket=std::move(NetworkPacket::Empty());
+        pendingOutgoingPacket = NetworkPacket::Empty();
 		return false;
 	}
-	readyToSend=true;
+    readyToSend = true;
 	return true;
 }
 
-NetworkPacket NetworkSocketPosix::Receive(size_t maxLen){
-	if(maxLen==0)
-		maxLen=INT32_MAX;
-	if(failed){
+NetworkPacket NetworkSocketPosix::Receive(size_t maxLen) {
+    if (maxLen == 0)
+        maxLen = INT32_MAX;
+    if (failed) {
 		return NetworkPacket::Empty();
 	}
-	if(protocol==NetworkProtocol::UDP){
-		int addrLen=sizeof(sockaddr_in6);
+    if (protocol == NetworkProtocol::UDP) {
+        int addrLen = sizeof(sockaddr_in6);
 		sockaddr_in6 srcAddr;
-		ssize_t len=recvfrom(fd, *recvBuffer, std::min(recvBuffer.Length(), maxLen), 0, (sockaddr *) &srcAddr, (socklen_t *) &addrLen);
-		if(len>0){
-			if(!isV4Available && IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr)){
-				isV4Available=true;
+        ssize_t len = recvfrom(fd, *recvBuffer, std::min(recvBuffer.Length(), maxLen), 0, (sockaddr *) &srcAddr, (socklen_t *) &addrLen);
+        if (len > 0) {
+            if (!isV4Available && IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr)) {
+                isV4Available = true;
 				LOGI("Detected IPv4 connectivity, will not try IPv6");
 			}
-			NetworkAddress addr=NetworkAddress::Empty();
-			if(IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(nat64Prefix, srcAddr.sin6_addr.s6_addr, 12)==0)){
-				in_addr v4addr=*((in_addr *) &srcAddr.sin6_addr.s6_addr[12]);
-				addr=NetworkAddress::IPv4(v4addr.s_addr);
-			}else{
-				addr=NetworkAddress::IPv6(srcAddr.sin6_addr.s6_addr);
+            NetworkAddress addr = NetworkAddress::Empty();
+            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0)) {
+                in_addr v4addr = *(reinterpret_cast<in_addr*>(&srcAddr.sin6_addr.s6_addr[12]));
+                addr = NetworkAddress::IPv4(v4addr.s_addr);
+            } else {
+                addr = NetworkAddress::IPv6(srcAddr.sin6_addr.s6_addr);
 			}
-			return NetworkPacket{
+			return NetworkPacket {
 				Buffer::CopyOf(recvBuffer, 0, (size_t)len),
 				addr,
 				ntohs(srcAddr.sin6_port),
 				NetworkProtocol::UDP
 			};
-		}else{
+        } else {
 			LOGE("error receiving %d / %s", errno, strerror(errno));
 			return NetworkPacket::Empty();
 		}
@@ -294,16 +297,16 @@ void NetworkSocketPosix::Open(){
 }
 
 void NetworkSocketPosix::Close(){
-	if(closing){
+    if (closing) {
 		return;
 	}
-	closing=true;
-	failed=true;
-	
-    if (fd>=0) {
+    closing = true;
+    failed = true;
+
+    if (fd >= 0) {
         shutdown(fd, SHUT_RDWR);
         close(fd);
-		fd=-1;
+        fd = -1;
     }
 }
 

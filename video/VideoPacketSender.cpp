@@ -24,7 +24,7 @@ void VideoPacketSender::PacketAcknowledged(uint32_t seq, double sendTime, double
 		// video frames are stored in sentVideoFrames in order of increasing numbers
 		// so if a frame (or part of it) is acknowledged but isn't sentVideoFrames[0], we know there was a packet loss
 		for(SentVideoFrame& f:sentVideoFrames){
-			for(vector<uint32_t>::iterator s=f.unacknowledgedPackets.begin(); s!=f.unacknowledgedPackets.end();){
+            for(std::vector<uint32_t>::iterator s=f.unacknowledgedPackets.begin(); s!=f.unacknowledgedPackets.end();){
 				//RecentOutgoingPacket* opkt=GetRecentOutgoingPacket(*s);
 				if(/*opkt && opkt->ackTime!=0.0*/*s==seq){
 					s=f.unacknowledgedPackets.erase(s);
@@ -36,7 +36,7 @@ void VideoPacketSender::PacketAcknowledged(uint32_t seq, double sendTime, double
 				}
 			}
 		}
-		for(vector<SentVideoFrame>::iterator f=sentVideoFrames.begin();f!=sentVideoFrames.end();){
+        for(std::vector<SentVideoFrame>::iterator f=sentVideoFrames.begin();f!=sentVideoFrames.end();){
 			if(f->unacknowledgedPackets.empty() && f->fragmentsInQueue==0){
 					f=sentVideoFrames.erase(f);
 					continue;
@@ -100,7 +100,7 @@ void VideoPacketSender::SetSource(VideoSource *source){
 	source->SetBitrate(bitrate);
 	source->Reset(stm->codec, stm->resolution=GetVideoResolutionForCurrentBitrate());
 	source->Start();
-	source->SetCallback(std::bind(&VideoPacketSender::SendFrame, this, placeholders::_1, placeholders::_2, placeholders::_3));
+    source->SetCallback(std::bind(&VideoPacketSender::SendFrame, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	source->SetStreamStateCallback([this](bool paused){
 		stm->paused=paused;
 		GetMessageThread().Post([this]{
@@ -150,7 +150,7 @@ void VideoPacketSender::SendFrame(const Buffer &_frame, uint32_t flags, uint32_t
 		uint32_t pts=videoFrameCount++;
 		bool csdInvalidated=!stm->csdIsValid;
 		if(!stm->csdIsValid){
-			vector<Buffer> &csd=source->GetCodecSpecificData();
+            std::vector<Buffer> &csd=source->GetCodecSpecificData();
 			stm->codecSpecificData.clear();
 			for(Buffer &b:csd){
 				stm->codecSpecificData.push_back(Buffer::CopyOf(b));

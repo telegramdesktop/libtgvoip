@@ -10,12 +10,13 @@
 #include "../../NetworkSocket.h"
 #include "../../Buffers.h"
 #include <vector>
+#include <mutex>
 #include <sys/select.h>
 #include <pthread.h>
 
 namespace tgvoip {
 
-class SocketSelectCancellerPosix : public SocketSelectCanceller{
+class SocketSelectCancellerPosix : public SocketSelectCanceller {
 friend class NetworkSocketPosix;
 public:
 	SocketSelectCancellerPosix();
@@ -26,10 +27,10 @@ private:
 	int pipeWrite;
 };
 
-class NetworkSocketPosix : public NetworkSocket{
+class NetworkSocketPosix : public NetworkSocket {
 public:
 	NetworkSocketPosix(NetworkProtocol protocol);
-	virtual ~NetworkSocketPosix();
+    virtual ~NetworkSocketPosix() override;
 	virtual void Send(NetworkPacket packet) override;
 	virtual NetworkPacket Receive(size_t maxLen) override;
 	virtual void Open() override;
@@ -58,16 +59,17 @@ protected:
 
 private:
 	static int GetDescriptorFromSocket(NetworkSocket* socket);
-	std::atomic<int> fd;
+    std::atomic<int> fd;
+    std::mutex m_fd;
 	bool needUpdateNat64Prefix;
 	bool nat64Present;
 	double switchToV6at;
-	bool isV4Available;
+    std::atomic<bool> isV4Available;
 	std::atomic<bool> closing;
-	NetworkAddress tcpConnectedAddress=NetworkAddress::Empty();
-	uint16_t tcpConnectedPort;
-    NetworkPacket pendingOutgoingPacket=NetworkPacket::Empty();
-    Buffer recvBuffer=Buffer(2048);
+    NetworkAddress tcpConnectedAddress = NetworkAddress::Empty();
+    uint16_t tcpConnectedPort;
+    NetworkPacket pendingOutgoingPacket = NetworkPacket::Empty();
+    Buffer recvBuffer = Buffer(2048);
 };
 
 }

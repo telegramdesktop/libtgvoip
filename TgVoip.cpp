@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include "TgVoip.h"
 
 #include "VoIPController.h"
@@ -82,11 +84,7 @@ tgvoip::CryptoFunctions tgvoip::VoIPController::crypto; // set it yourself upon 
 
 
 class TgVoipImpl : public TgVoip {
-public:
-    tgvoip::VoIPController *controller_;
-    std::function<void(TgVoipState)> onStateUpdated_;
-    std::function<void(int)> onSignalBarsUpdated_;
-    
+public:    
     TgVoipImpl(
         std::vector<TgVoipEndpoint> const &endpoints,
         TgVoipPersistentState const &persistentState,
@@ -196,7 +194,7 @@ public:
         setNetworkType(initialNetworkType);
         
         std::vector<uint8_t> encryptionKeyValue = encryptionKey.value;
-        controller_->SetEncryptionKey((char *)(encryptionKeyValue.data()), encryptionKey.isOutgoing);
+        controller_->SetEncryptionKey(reinterpret_cast<char*>(encryptionKeyValue.data()), encryptionKey.isOutgoing);
         controller_->SetRemoteEndpoints(mappedEndpoints, config.enableP2P, config.maxApiLayer);
         
         controller_->Start();
@@ -209,10 +207,12 @@ public:
     }
     
     void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) {
+        std::lock_guard<std::mutex> lock(m_onStateUpdated);
         onStateUpdated_ = onStateUpdated;
     }
     
     void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) {
+        std::lock_guard<std::mutex> lock(m_onSignalBarsUpdated);
         onSignalBarsUpdated_ = onSignalBarsUpdated;
     }
     
@@ -318,8 +318,9 @@ public:
         return finalState;
     }
     
-    static void controllerStateCallback(tgvoip::VoIPController *controller, int state) {
-        TgVoipImpl *self = (TgVoipImpl *)controller->implData;
+    static void controllerStateCallback(tgvoip::VoIPController* controller, int state) {
+        TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
+        std::lock_guard<std::mutex> lock(self->m_onStateUpdated);
         if (self->onStateUpdated_) {
             TgVoipState mappedState;
             switch (state) {
@@ -347,12 +348,19 @@ public:
         }
     }
 
-    static void signalBarsCallback(tgvoip::VoIPController *controller, int signalBars) {
-        TgVoipImpl *self = (TgVoipImpl *)controller->implData;
+    static void signalBarsCallback(tgvoip::VoIPController* controller, int signalBars) {
+        TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
+        std::lock_guard<std::mutex> lock(self->m_onSignalBarsUpdated);
         if (self->onSignalBarsUpdated_) {
             self->onSignalBarsUpdated_(signalBars);
         }
     }
+
+private:
+    tgvoip::VoIPController *controller_;
+    std::function<void(TgVoipState)> onStateUpdated_;
+    std::function<void(int)> onSignalBarsUpdated_;
+    std::mutex m_onStateUpdated, m_onSignalBarsUpdated;
 };
 
 std::function<void(std::string const &)> globalLoggingFunction;

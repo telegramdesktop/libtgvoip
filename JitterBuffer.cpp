@@ -241,7 +241,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting){
 		outstandingDelayChange=0;
 		nextTimestamp=(int64_t)(((int64_t)pkt->timestamp)-step*minDelay);
 		first=true;
-		LOGI("jitter: resyncing, next timestamp = %lld (step=%d, minDelay=%f)", (long long int)nextTimestamp, step, minDelay);
+        LOGI("jitter: resyncing, next timestamp = %lld (step=%d, minDelay=%f)", (long long int)nextTimestamp, step, double(minDelay));
 	}
 	
 	for(i=0;i<JITTER_SLOT_COUNT;i++){
@@ -374,7 +374,7 @@ void JitterBuffer::Tick(){
 			diff=1;
 		if((diff>0 && dontIncMinDelay==0) || (diff<0 && dontDecMinDelay==0)){
 			//nextTimestamp+=diff*(int32_t)step;
-			minDelay+=diff;
+            minDelay.store(minDelay + diff);
 			outstandingDelayChange+=diff*60;
 			dontChangeDelay+=32;
 			//LOGD("new delay from stddev %f", minDelay);

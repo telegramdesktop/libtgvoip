@@ -1929,7 +1929,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket &packet, Endpoint& srcE
 		uint32_t _len=(uint32_t) _in.ReadInt32();
 		if(_len>_in.Remaining())
 			_len=(uint32_t) _in.Remaining();
-		crypto.sha1((uint8_t *) (aesOut), (size_t) (_len+4), sha);
+        crypto.sha1((uint8_t *) (aesOut), static_cast<size_t>(_len)+4, sha);
 		if(memcmp(msgHash, sha+(SHA1_LENGTH-16), 16)!=0){
 			LOGW("Received packet has wrong hash after decryption");
 			if(state==STATE_WAIT_INIT || state==STATE_WAIT_INIT_ACK)

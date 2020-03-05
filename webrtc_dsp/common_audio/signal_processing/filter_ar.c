@@ -47,7 +47,7 @@ size_t WebRtcSpl_FilterAR(const int16_t* a,
         // because of this.
         int filtered_ix = (int)i - 1;
         int16_t* state_ptr = &state[state_length - 1];
-        int16_t* state_low_ptr = &state_low[state_length - 1];
+        int16_t* state_low_ptr = &state_low[state_low_length - 1];
 
         o = (int32_t)(*x_ptr++) * (1 << 12);
         oLOW = (int32_t)0;
@@ -87,7 +87,7 @@ size_t WebRtcSpl_FilterAR(const int16_t* a,
         for (i = 0; i < x_length; i++)
         {
             state[state_length - x_length + i] = filtered[i];
-            state[state_length - x_length + i] = filtered_low[i];
+            state_low[state_low_length - x_length + i] = filtered_low[i];
         }
     }
 

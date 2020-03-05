@@ -54,7 +54,7 @@ private:
 	BufferPool<960*2, 32> bufferPool;
 	unsigned char* buffer;
 	unsigned char* lastDecoded;
-	unsigned char* processedBuffer;
+    unsigned char* processedBuffer;
 	size_t outputBufferSize;
 	std::atomic<bool> running;
     Thread* thread;
@@ -67,9 +67,9 @@ private:
 	bool enableDTX;
 	size_t silentPacketCount;
 	std::vector<effects::AudioEffect*> postProcEffects;
-	bool async;
-	unsigned char nextBuffer[8192];
-	unsigned char decodeBuffer[8192];
+    std::atomic<bool> async;
+    alignas(2) unsigned char nextBuffer[8192];
+    alignas(2) unsigned char decodeBuffer[8192];
 	size_t nextLen;
 	unsigned int packetsPerFrame;
 	ptrdiff_t remainingDataLen;

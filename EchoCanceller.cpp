@@ -94,11 +94,12 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC){
 
 EchoCanceller::~EchoCanceller(){
 #ifndef TGVOIP_NO_DSP
-	delete apm;
-	delete audioFrame;
-	farendQueue->Put(Buffer());
-	bufferFarendThread->Join();
-	delete bufferFarendThread;
+    farendQueue->Put(Buffer());
+    bufferFarendThread->Join();
+    delete bufferFarendThread;
+    delete farendQueue;
+    delete audioFrame;
+    delete apm;
 #endif
 }
 

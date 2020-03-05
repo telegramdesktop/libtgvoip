@@ -12,8 +12,6 @@
 #include "threading.h"
 #include "utils.h"
 
-using namespace std;
-
 namespace tgvoip{
 
 template<typename T>
@@ -22,7 +20,7 @@ public:
 	TGVOIP_DISALLOW_COPY_AND_ASSIGN(BlockingQueue);
 	BlockingQueue(size_t capacity) : semaphore(capacity, 0){
 		this->capacity=capacity;
-		overflowCallback=NULL;
+        overflowCallback=NULL;
 	};
 
 	~BlockingQueue(){
@@ -74,13 +72,13 @@ public:
 private:
 	T GetInternal(){
 		//if(queue.size()==0)
-		//	return NULL;
+        //	return NULL;
 		T r=std::move(queue.front());
 		queue.pop_front();
 		return r;
 	}
 
-	list<T> queue;
+    std::list<T> queue;
 	size_t capacity;
 	//tgvoip_lock_t lock;
 	Semaphore semaphore;

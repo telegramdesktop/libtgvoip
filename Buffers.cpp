@@ -207,20 +207,21 @@ size_t BufferOutputStream::GetLength(){
 	return offset;
 }
 
-void BufferOutputStream::ExpandBufferIfNeeded(size_t need){
-	if(offset+need>size){
-		if(bufferProvided){
+void BufferOutputStream::ExpandBufferIfNeeded(size_t need) {
+    if (offset + need > size) {
+        if (bufferProvided) {
 			throw std::out_of_range("buffer overflow");
 		}
-		if(need<1024){
-			buffer=(unsigned char *) realloc(buffer, size+1024);
-			size+=1024;
-		}else{
-			buffer=(unsigned char *) realloc(buffer, size+need);
-			size+=need;
-		}
-		if(!buffer)
-			throw std::bad_alloc();
+        unsigned char* new_buffer;
+        need = std::max(need, size_t{1024});
+        new_buffer = reinterpret_cast<unsigned char*>(std::realloc(buffer, size + need));
+        if (new_buffer == NULL) {
+            std::free(buffer);
+            buffer = NULL;
+            throw std::bad_alloc();
+        }
+        buffer = new_buffer;
+        size += need;
 	}
 }
 

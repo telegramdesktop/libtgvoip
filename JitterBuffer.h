@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <atomic>
 #include <stdio.h>
 #include "MediaStreamItf.h"
 #include "BlockingQueue.h"
@@ -59,8 +60,8 @@ private:
 	jitter_packet_t slots[JITTER_SLOT_COUNT];
 	int64_t nextTimestamp=0;
 	uint32_t step;
-	double minDelay=6;
-	uint32_t minMinDelay;
+    std::atomic<double> minDelay{6};
+    uint32_t minMinDelay;
 	uint32_t maxMinDelay;
 	uint32_t maxUsedSlots;
 	uint32_t lastPutTimestamp;

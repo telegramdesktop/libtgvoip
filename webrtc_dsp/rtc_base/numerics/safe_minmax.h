@@ -182,7 +182,7 @@ struct TypeOr {
                 "The specified type isn't large enough");
   static_assert(IsIntlike<type>::value == IsIntlike<B>::value &&
                     std::is_floating_point<type>::value ==
-                        std::is_floating_point<type>::value,
+                        std::is_floating_point<B>::value,
                 "float<->int conversions not allowed");
 };
 

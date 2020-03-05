@@ -10,6 +10,7 @@
 #include <string.h>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <stdint.h>
 #include "threading.h"
 #include "BlockingQueue.h"
@@ -19,17 +20,19 @@ namespace tgvoip{
 
 	class EchoCanceller;
 
-class MediaStreamItf{
+class MediaStreamItf {
 public:
-	virtual void Start()=0;
-	virtual void Stop()=0;
+    virtual void Start() = 0;
+    virtual void Stop() = 0;
 	void SetCallback(size_t (*f)(unsigned char*, size_t, void*), void* param);
 
 //protected:
 	size_t InvokeCallback(unsigned char* data, size_t length);
 
+    virtual ~MediaStreamItf() = default;
 private:
-	size_t (*callback)(unsigned char*, size_t, void*)=NULL;
+    size_t (*callback)(unsigned char*, size_t, void*) = NULL;
+    std::mutex m_callback;
 	void* callbackParam;
 };
 
