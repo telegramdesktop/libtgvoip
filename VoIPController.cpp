@@ -31,10 +31,10 @@
 #include <sstream>
 #include <inttypes.h>
 #include <float.h>
-#ifdef HAVE_CONFIG_H
+#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
-#include <opus/opus.h>
+#include "opus.h"
 #endif
 
 inline int pad4(int x){
@@ -46,7 +46,7 @@ inline int pad4(int x){
 
 
 using namespace tgvoip;
-using namespace std;
+// using namespace std; // Already used in BlockingQueue.h.
 
 #ifdef __APPLE__
 #include "os/darwin/AudioUnitIO.h"

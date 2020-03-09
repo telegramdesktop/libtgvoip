@@ -37,7 +37,7 @@ namespace{
 }
 
 ScreamCongestionController::ScreamCongestionController() : qdelayTarget(QDELAY_TARGET_LO), cwnd(MIN_CWND) {
-	
+
 }
 
 void ScreamCongestionController::UpdateVariables(float qdelay){

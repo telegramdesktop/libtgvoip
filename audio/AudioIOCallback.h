@@ -29,7 +29,7 @@ namespace tgvoip{
 			Thread* thread;
 			std::function<void(int16_t*, size_t)> dataCallback;
 		};
-		
+
 		class AudioOutputCallback : public AudioOutput{
 		public:
 			AudioOutputCallback();
@@ -45,7 +45,7 @@ namespace tgvoip{
 			Thread* thread;
 			std::function<void(int16_t*, size_t)> dataCallback;
 		};
-		
+
 		class AudioIOCallback : public AudioIO{
 		public:
 			AudioIOCallback();
