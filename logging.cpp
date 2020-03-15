@@ -21,20 +21,20 @@
 #include <TargetConditionals.h>
 #endif
 
-FILE* tgvoipLogFile = nullptr;
+static FILE* tgvoipLogFile = nullptr;
 
 void tgvoip_log_file_printf(char level, const char* msg, ...)
 {
-    if (tgvoipLogFile)
+    if (tgvoipLogFile != nullptr)
     {
-        va_list argptr;
+        std::va_list argptr;
         va_start(argptr, msg);
-        time_t t = time(0);
-        struct tm* now = localtime(&t);
-        fprintf(tgvoipLogFile, "%02d-%02d %02d:%02d:%02d %c: ", now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, level);
-        vfprintf(tgvoipLogFile, msg, argptr);
-        fprintf(tgvoipLogFile, "\n");
-        fflush(tgvoipLogFile);
+        std::time_t t = std::time(nullptr);
+        struct std::tm* now = std::localtime(&t);
+        std::fprintf(tgvoipLogFile, "%02d-%02d %02d:%02d:%02d %c: ", now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, level);
+        std::vfprintf(tgvoipLogFile, msg, argptr);
+        std::fprintf(tgvoipLogFile, "\n");
+        std::fflush(tgvoipLogFile);
     }
 }
 
@@ -42,8 +42,8 @@ void tgvoip_log_file_write_header(FILE* file)
 {
     if (file != nullptr)
     {
-        time_t t = time(0);
-        struct tm* now = localtime(&t);
+        std::time_t t = std::time(nullptr);
+        struct std::tm* now = std::localtime(&t);
 #if defined(_WIN32)
 #if WINAPI_PARTITION_DESKTOP
         char systemVersion[64];
@@ -102,6 +102,6 @@ void tgvoip_log_file_write_header(FILE* file)
         const char* cpuArch = "Unknown CPU";
 #endif
 
-        fprintf(file, "---------------\nlibtgvoip v" LIBTGVOIP_VERSION " on %s %s\nLog started on %d/%02d/%d at %d:%02d:%02d\n---------------\n", systemVersion, cpuArch, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
+        std::fprintf(file, "---------------\nlibtgvoip v" LIBTGVOIP_VERSION " on %s %s\nLog started on %d/%02d/%d at %d:%02d:%02d\n---------------\n", systemVersion, cpuArch, now->tm_mday, now->tm_mon + 1, now->tm_year + 1900, now->tm_hour, now->tm_min, now->tm_sec);
     }
 }

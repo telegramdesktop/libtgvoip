@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <cstring>
 #include <vector>
+#include <functional>
 
 namespace tgvoip
 {
@@ -26,7 +27,7 @@ class MediaStreamItf
 public:
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    void SetCallback(std::size_t (*f)(unsigned char*, std::size_t, void*), void* param);
+    void SetCallback(std::function<std::size_t(unsigned char*, std::size_t, void*)> f, void* param);
 
     //protected:
     std::size_t InvokeCallback(unsigned char* data, std::size_t length);
@@ -34,50 +35,51 @@ public:
     virtual ~MediaStreamItf() = default;
 
 private:
-    std::size_t (*callback)(unsigned char*, std::size_t, void*) = NULL;
-    std::mutex m_callback;
-    void* callbackParam;
+    std::function<std::size_t(unsigned char*, std::size_t, void*)> m_callback = nullptr;
+    std::mutex m_mutexCallback;
+    void* m_callbackParam;
 };
 
 class AudioMixer : public MediaStreamItf
 {
 public:
     AudioMixer();
-    virtual ~AudioMixer();
+    ~AudioMixer() override;
     void SetOutput(MediaStreamItf* output);
-    virtual void Start();
-    virtual void Stop();
+    void Start() override;
+    void Stop() override;
     void AddInput(std::shared_ptr<MediaStreamItf> input);
     void RemoveInput(std::shared_ptr<MediaStreamItf> input);
     void SetInputVolume(std::shared_ptr<MediaStreamItf> input, float volumeDB);
     void SetEchoCanceller(EchoCanceller* aec);
 
 private:
-    void RunThread();
     struct MixerInput
     {
         std::shared_ptr<MediaStreamItf> source;
         float multiplier;
     };
-    Mutex inputsMutex;
+    mutable Mutex m_inputsMutex;
+    std::vector<MixerInput> m_inputs;
+    Thread* m_thread;
+    BufferPool<960 * 2, 16> m_bufferPool;
+    BlockingQueue<Buffer> m_processedQueue;
+    Semaphore m_semaphore;
+    EchoCanceller* m_echoCanceller;
+    bool m_running;
+
+    void RunThread();
     void DoCallback(unsigned char* data, std::size_t length);
     static std::size_t OutputCallback(unsigned char* data, std::size_t length, void* arg);
-    std::vector<MixerInput> inputs;
-    Thread* thread;
-    BufferPool<960 * 2, 16> bufferPool;
-    BlockingQueue<Buffer> processedQueue;
-    Semaphore semaphore;
-    EchoCanceller* echoCanceller;
-    bool running;
 };
 
 class CallbackWrapper : public MediaStreamItf
 {
 public:
-    CallbackWrapper() {};
-    virtual ~CallbackWrapper() {};
-    virtual void Start() {};
-    virtual void Stop() {};
+    CallbackWrapper();
+    ~CallbackWrapper() override;
+    void Start() override;
+    void Stop() override;
 };
 
 class AudioLevelMeter
@@ -85,13 +87,13 @@ class AudioLevelMeter
 public:
     AudioLevelMeter();
     float GetLevel();
-    void Update(std::int16_t* samples, std::size_t count);
+    void Update(std::int16_t* samples, std::size_t m_count);
 
 private:
-    std::int16_t absMax;
-    std::int16_t count;
-    std::int8_t currentLevel;
-    std::int16_t currentLevelFullRange;
+    std::int16_t m_absMax;
+    std::int16_t m_count;
+    std::int8_t m_currentLevel;
+    std::int16_t m_currentLevelFullRange;
 };
 };
 
