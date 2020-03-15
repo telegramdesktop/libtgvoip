@@ -12,10 +12,6 @@
 #include <cstdint>
 #include <cstdlib>
 
-//#define TGVOIP_CONCTL_ACT_INCREASE 1
-//#define TGVOIP_CONCTL_ACT_DECREASE 2
-//#define TGVOIP_CONCTL_ACT_NONE 0
-
 namespace tgvoip
 {
 
