@@ -119,7 +119,9 @@
 
 #define SEQ_MAX 0xFFFFFFFF
 
-inline bool seqgt(uint32_t s1, uint32_t s2)
+#include <cstdint>
+
+inline bool seqgt(std::uint32_t s1, std::uint32_t s2)
 {
     return ((s1 > s2) && (s1 - s2 <= SEQ_MAX / 2)) || ((s1 < s2) && (s2 - s1 > SEQ_MAX / 2));
 }

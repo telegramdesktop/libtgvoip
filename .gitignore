@@ -24,3 +24,11 @@ DerivedData/
 
 xcuserdata/
 autom4te.cache/
+
+# Qt Creator files
+*.cflags
+*.config
+*.creator
+*.cxxflags
+*.files
+*.includes
