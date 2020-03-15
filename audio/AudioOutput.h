@@ -9,7 +9,7 @@
 
 #include "../MediaStreamItf.h"
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -28,7 +28,7 @@ namespace audio
         AudioOutput(std::string deviceID);
         virtual ~AudioOutput();
         virtual bool IsPlaying() = 0;
-        static int32_t GetEstimatedDelay();
+        static std::int32_t GetEstimatedDelay();
         virtual std::string GetCurrentDevice();
         virtual void SetCurrentDevice(std::string deviceID);
         //static std::unique_ptr<AudioOutput> Create(std::string deviceID, void* platformSpecific);
@@ -38,7 +38,7 @@ namespace audio
     protected:
         std::string currentDevice;
         bool failed;
-        static int32_t estimatedDelay;
+        static std::int32_t estimatedDelay;
     };
 }
 }

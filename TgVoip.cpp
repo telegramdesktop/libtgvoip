@@ -1,11 +1,10 @@
 #include <mutex>
+#include <cstdarg>
 
 #include "TgVoip.h"
 
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
-
-#include <stdarg.h>
 
 #ifndef TGVOIP_USE_CUSTOM_CRYPTO
 extern "C"
@@ -16,50 +15,50 @@ extern "C"
 #include <openssl/sha.h>
 }
 
-void tgvoip_openssl_aes_ige_encrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv)
+void tgvoip_openssl_aes_ige_encrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 32 * 8, &akey);
     AES_ige_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
 }
 
-void tgvoip_openssl_aes_ige_decrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv)
+void tgvoip_openssl_aes_ige_decrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_decrypt_key(key, 32 * 8, &akey);
     AES_ige_encrypt(in, out, length, &akey, iv, AES_DECRYPT);
 }
 
-void tgvoip_openssl_rand_bytes(uint8_t* buffer, size_t len)
+void tgvoip_openssl_rand_bytes(std::uint8_t* buffer, std::size_t len)
 {
     RAND_bytes(buffer, len);
 }
 
-void tgvoip_openssl_sha1(uint8_t* msg, size_t len, uint8_t* output)
+void tgvoip_openssl_sha1(std::uint8_t* msg, std::size_t len, std::uint8_t* output)
 {
     SHA1(msg, len, output);
 }
 
-void tgvoip_openssl_sha256(uint8_t* msg, size_t len, uint8_t* output)
+void tgvoip_openssl_sha256(std::uint8_t* msg, std::size_t len, std::uint8_t* output)
 {
     SHA256(msg, len, output);
 }
 
-void tgvoip_openssl_aes_ctr_encrypt(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num)
+void tgvoip_openssl_aes_ctr_encrypt(std::uint8_t* inout, std::size_t length, std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 32 * 8, &akey);
     CRYPTO_ctr128_encrypt(inout, inout, length, &akey, iv, ecount, num, (block128_f)AES_encrypt);
 }
 
-void tgvoip_openssl_aes_cbc_encrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv)
+void tgvoip_openssl_aes_cbc_encrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 256, &akey);
     AES_cbc_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
 }
 
-void tgvoip_openssl_aes_cbc_decrypt(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv)
+void tgvoip_openssl_aes_cbc_decrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_decrypt_key(key, 256, &akey);
@@ -186,7 +185,7 @@ public:
 
         setNetworkType(initialNetworkType);
 
-        std::vector<uint8_t> encryptionKeyValue = encryptionKey.value;
+        std::vector<std::uint8_t> encryptionKeyValue = encryptionKey.value;
         controller_->SetEncryptionKey(reinterpret_cast<char*>(encryptionKeyValue.data()), encryptionKey.isOutgoing);
         controller_->SetRemoteEndpoints(mappedEndpoints, config.enableP2P, config.maxApiLayer);
 
@@ -298,7 +297,7 @@ public:
         return controller_->GetDebugString();
     }
 
-    int64_t getPreferredRelayId() override
+    std::int64_t getPreferredRelayId() override
     {
         return controller_->GetPreferredRelayID();
     }

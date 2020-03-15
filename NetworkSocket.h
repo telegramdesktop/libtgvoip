@@ -9,7 +9,7 @@
 #include "utils.h"
 #include <atomic>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -27,7 +27,7 @@ struct TCPO2State
     unsigned char key[32];
     unsigned char iv[16];
     unsigned char ecount[16];
-    uint32_t num;
+    std::uint32_t num;
 };
 
 class NetworkAddress
@@ -42,14 +42,14 @@ public:
 
     static NetworkAddress Empty();
     static NetworkAddress IPv4(std::string str);
-    static NetworkAddress IPv4(uint32_t addr);
+    static NetworkAddress IPv4(std::uint32_t addr);
     static NetworkAddress IPv6(std::string str);
-    static NetworkAddress IPv6(const uint8_t addr[16]);
+    static NetworkAddress IPv6(const std::uint8_t addr[16]);
 
     bool isIPv6 = false;
     union {
-        uint32_t ipv4;
-        uint8_t ipv6[16];
+        std::uint32_t ipv4;
+        std::uint8_t ipv6[16];
     } addr;
 
 private:
@@ -61,7 +61,7 @@ struct NetworkPacket
     TGVOIP_MOVE_ONLY(NetworkPacket);
     Buffer data;
     NetworkAddress address;
-    uint16_t port;
+    std::uint16_t port;
     NetworkProtocol protocol;
 
     static NetworkPacket Empty()
@@ -93,16 +93,16 @@ public:
     NetworkSocket(NetworkProtocol protocol);
     virtual ~NetworkSocket();
     virtual void Send(NetworkPacket packet) = 0;
-    virtual NetworkPacket Receive(size_t maxLen = 0) = 0;
-    size_t Receive(unsigned char* buffer, size_t len);
+    virtual NetworkPacket Receive(std::size_t maxLen = 0) = 0;
+    std::size_t Receive(unsigned char* buffer, std::size_t len);
     virtual void Open() = 0;
     virtual void Close() = 0;
-    virtual uint16_t GetLocalPort() { return 0; };
-    virtual void Connect(const NetworkAddress address, uint16_t port) = 0;
+    virtual std::uint16_t GetLocalPort() { return 0; };
+    virtual void Connect(const NetworkAddress address, std::uint16_t port) = 0;
     virtual std::string GetLocalInterfaceInfo(NetworkAddress* inet4addr, NetworkAddress* inet6addr);
     virtual void OnActiveInterfaceChanged() {};
     virtual NetworkAddress GetConnectedAddress() { return NetworkAddress::Empty(); };
-    virtual uint16_t GetConnectedPort() { return 0; };
+    virtual std::uint16_t GetConnectedPort() { return 0; };
     virtual void SetTimeouts(int sendTimeout, int recvTimeout) {};
 
     virtual bool IsFailed();
@@ -126,11 +126,11 @@ public:
     static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
 protected:
-    virtual uint16_t GenerateLocalPort();
+    virtual std::uint16_t GenerateLocalPort();
     virtual void SetMaxPriority();
 
     static void GenerateTCPO2States(unsigned char* buffer, TCPO2State* recvState, TCPO2State* sendState);
-    static void EncryptForTCPO2(unsigned char* buffer, size_t len, TCPO2State* state);
+    static void EncryptForTCPO2(unsigned char* buffer, std::size_t len, TCPO2State* state);
     double ipv6Timeout;
     unsigned char nat64Prefix[12];
     std::atomic<bool> failed;
@@ -159,10 +159,10 @@ public:
     virtual NetworkSocket* GetWrapped();
     virtual void InitConnection();
     virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(size_t maxLen) override;
+    virtual NetworkPacket Receive(std::size_t maxLen) override;
     virtual void Open();
     virtual void Close();
-    virtual void Connect(const NetworkAddress address, uint16_t port);
+    virtual void Connect(const NetworkAddress address, std::uint16_t port);
     virtual bool OnReadyToSend();
 
     virtual bool IsFailed();
@@ -184,15 +184,15 @@ public:
     NetworkSocketSOCKS5Proxy(NetworkSocket* tcp, NetworkSocket* udp, std::string username, std::string password);
     virtual ~NetworkSocketSOCKS5Proxy();
     virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(size_t maxLen) override;
+    virtual NetworkPacket Receive(std::size_t maxLen) override;
     virtual void Open() override;
     virtual void Close();
-    virtual void Connect(const NetworkAddress address, uint16_t port);
+    virtual void Connect(const NetworkAddress address, std::uint16_t port);
     virtual NetworkSocket* GetWrapped();
     virtual void InitConnection();
     virtual bool IsFailed();
     virtual NetworkAddress GetConnectedAddress();
-    virtual uint16_t GetConnectedPort();
+    virtual std::uint16_t GetConnectedPort();
     virtual bool OnReadyToSend();
     virtual bool OnReadyToReceive();
 
@@ -213,7 +213,7 @@ private:
     std::string username;
     std::string password;
     NetworkAddress connectedAddress = NetworkAddress::Empty();
-    uint16_t connectedPort;
+    std::uint16_t connectedPort;
     ConnectionState state = ConnectionState::Initial;
 };
 

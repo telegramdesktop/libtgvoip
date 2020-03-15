@@ -9,7 +9,7 @@
 struct TgVoipProxy
 {
     std::string host;
-    uint16_t port;
+    std::uint16_t port;
     std::string login;
     std::string password;
 };
@@ -30,9 +30,9 @@ struct TgVoipEdpointHost
 
 struct TgVoipEndpoint
 {
-    int64_t endpointId;
+    std::int64_t endpointId;
     TgVoipEdpointHost host;
-    uint16_t port;
+    std::uint16_t port;
     TgVoipEndpointType type;
     unsigned char peerTag[16];
 };
@@ -62,20 +62,20 @@ enum class TgVoipDataSaving
 
 struct TgVoipPersistentState
 {
-    std::vector<uint8_t> value;
+    std::vector<std::uint8_t> value;
 };
 
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
 struct TgVoipCrypto
 {
-    void (*rand_bytes)(uint8_t* buffer, size_t length);
-    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
-    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+    void (*rand_bytes)(std::uint8_t* buffer, std::size_t length);
+    void (*sha1)(std::uint8_t* msg, std::size_t length, std::uint8_t* output);
+    void (*sha256)(std::uint8_t* msg, std::size_t length, std::uint8_t* output);
+    void (*aes_ige_encrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_ige_decrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_ctr_encrypt)(std::uint8_t* inout, std::size_t length, std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num);
+    void (*aes_cbc_encrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_cbc_decrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
 };
 #endif
 
@@ -99,7 +99,7 @@ struct TgVoipConfig
 
 struct TgVoipEncryptionKey
 {
-    std::vector<uint8_t> value;
+    std::vector<std::uint8_t> value;
     bool isOutgoing;
 };
 
@@ -114,10 +114,10 @@ enum class TgVoipState
 
 struct TgVoipTrafficStats
 {
-    uint64_t bytesSentWifi;
-    uint64_t bytesReceivedWifi;
-    uint64_t bytesSentMobile;
-    uint64_t bytesReceivedMobile;
+    std::uint64_t bytesSentWifi;
+    std::uint64_t bytesReceivedWifi;
+    std::uint64_t bytesSentMobile;
+    std::uint64_t bytesReceivedMobile;
 };
 
 struct TgVoipFinalState
@@ -130,9 +130,9 @@ struct TgVoipFinalState
 
 struct TgVoipAudioDataCallbacks
 {
-    std::function<void(int16_t*, size_t)> input;
-    std::function<void(int16_t*, size_t)> output;
-    std::function<void(int16_t*, size_t)> preprocessed;
+    std::function<void(std::int16_t*, std::size_t)> input;
+    std::function<void(std::int16_t*, std::size_t)> output;
+    std::function<void(std::int16_t*, std::size_t)> preprocessed;
 };
 
 class TgVoip
@@ -171,7 +171,7 @@ public:
 
     virtual std::string getLastError() = 0;
     virtual std::string getDebugInfo() = 0;
-    virtual int64_t getPreferredRelayId() = 0;
+    virtual std::int64_t getPreferredRelayId() = 0;
     virtual TgVoipTrafficStats getTrafficStats() = 0;
     virtual TgVoipPersistentState getPersistentState() = 0;
 

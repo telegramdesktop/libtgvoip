@@ -12,8 +12,8 @@
 #include "threading.h"
 #include <memory>
 #include <mutex>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 #include <vector>
 
 namespace tgvoip
@@ -26,15 +26,15 @@ class MediaStreamItf
 public:
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    void SetCallback(size_t (*f)(unsigned char*, size_t, void*), void* param);
+    void SetCallback(std::size_t (*f)(unsigned char*, std::size_t, void*), void* param);
 
     //protected:
-    size_t InvokeCallback(unsigned char* data, size_t length);
+    std::size_t InvokeCallback(unsigned char* data, std::size_t length);
 
     virtual ~MediaStreamItf() = default;
 
 private:
-    size_t (*callback)(unsigned char*, size_t, void*) = NULL;
+    std::size_t (*callback)(unsigned char*, std::size_t, void*) = NULL;
     std::mutex m_callback;
     void* callbackParam;
 };
@@ -60,8 +60,8 @@ private:
         float multiplier;
     };
     Mutex inputsMutex;
-    void DoCallback(unsigned char* data, size_t length);
-    static size_t OutputCallback(unsigned char* data, size_t length, void* arg);
+    void DoCallback(unsigned char* data, std::size_t length);
+    static std::size_t OutputCallback(unsigned char* data, std::size_t length, void* arg);
     std::vector<MixerInput> inputs;
     Thread* thread;
     BufferPool<960 * 2, 16> bufferPool;
@@ -85,13 +85,13 @@ class AudioLevelMeter
 public:
     AudioLevelMeter();
     float GetLevel();
-    void Update(int16_t* samples, size_t count);
+    void Update(std::int16_t* samples, std::size_t count);
 
 private:
-    int16_t absMax;
-    int16_t count;
-    int8_t currentLevel;
-    int16_t currentLevelFullRange;
+    std::int16_t absMax;
+    std::int16_t count;
+    std::int8_t currentLevel;
+    std::int16_t currentLevelFullRange;
 };
 };
 

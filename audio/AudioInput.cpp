@@ -40,7 +40,7 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-int32_t AudioInput::estimatedDelay = 60;
+std::int32_t AudioInput::estimatedDelay = 60;
 
 AudioInput::AudioInput()
     : currentDevice("default")
@@ -99,7 +99,7 @@ void AudioInput::SetCurrentDevice(std::string deviceID)
 {
 }
 
-int32_t AudioInput::GetEstimatedDelay()
+std::int32_t AudioInput::GetEstimatedDelay()
 {
     return estimatedDelay;
 }

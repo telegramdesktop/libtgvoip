@@ -8,12 +8,12 @@
 
 #include <array>
 #include <pthread.h>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 
-#include <assert.h>
-#include <errno.h>
+#include <cassert>
+#include <cerrno>
 #include <net/if.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
@@ -28,12 +28,12 @@ namespace test
     class MockReflector
     {
     public:
-        MockReflector(std::string bindAddress, uint16_t bindPort);
+        MockReflector(std::string bindAddress, std::uint16_t bindPort);
         ~MockReflector();
         void Start();
         void Stop();
         void SetDropAllPackets(bool drop);
-        static std::array<std::array<uint8_t, 16>, 2> GeneratePeerTags();
+        static std::array<std::array<std::uint8_t, 16>, 2> GeneratePeerTags();
 
     private:
         void RunThread();
@@ -42,7 +42,7 @@ namespace test
             sockaddr_in addr0 = {0};
             sockaddr_in addr1 = {0};
         };
-        std::unordered_map<uint64_t, ClientPair> clients; // clients are identified by the first half of their peer_tag
+        std::unordered_map<std::uint64_t, ClientPair> clients; // clients are identified by the first half of their peer_tag
         int sfd;
         pthread_t thread;
         bool running = false;

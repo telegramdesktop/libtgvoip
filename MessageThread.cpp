@@ -2,11 +2,11 @@
 // Created by Grishka on 17.06.2018.
 //
 
-#include <assert.h>
-#include <float.h>
-#include <math.h>
-#include <stdint.h>
-#include <time.h>
+#include <cassert>
+#include <cfloat>
+#include <cmath>
+#include <cstdint>
+#include <ctime>
 
 #ifndef _WIN32
 #include <sys/time.h>
@@ -31,7 +31,7 @@ MessageThread::MessageThread()
     event = CreateEventEx(NULL, NULL, 0, EVENT_ALL_ACCESS);
 #endif
 #else
-    pthread_cond_init(&cond, NULL);
+    pthread_cond_init(&cond, nullptr);
 #endif
 }
 
@@ -143,7 +143,7 @@ void MessageThread::Run()
     queueMutex.Unlock();
 }
 
-uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
+std::uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
 {
     assert(delay >= 0);
     //LOGI("MessageThread post [function] delay %f", delay);
@@ -190,7 +190,7 @@ void MessageThread::InsertMessageInternal(MessageThread::Message& m)
     }
 }
 
-void MessageThread::Cancel(uint32_t id)
+void MessageThread::Cancel(std::uint32_t id)
 {
     MutexGuard _m(queueAccessMutex);
 

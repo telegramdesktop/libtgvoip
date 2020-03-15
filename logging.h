@@ -13,7 +13,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 void tgvoip_log_file_printf(char level, const char* msg, ...);
 void tgvoip_log_file_write_header(FILE* file);
@@ -83,7 +83,7 @@ void tgvoip_log_file_write_header(FILE* file);
 
 #elif defined(_WIN32) && defined(_DEBUG)
 
-#include <stdio.h>
+#include <cstdio>
 #include <windows.h>
 
 #define _TGVOIP_W32_LOG_PRINT(verb, msg, ...)                                   \
@@ -102,7 +102,7 @@ void tgvoip_log_file_write_header(FILE* file);
 
 #else
 
-#include <stdio.h>
+#include <cstdio>
 
 #ifndef TGVOIP_NO_STDOUT_LOGS
 #ifndef TGVOIP_NO_STDOUT_COLOR

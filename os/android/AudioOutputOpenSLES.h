@@ -21,7 +21,7 @@ namespace audio
     public:
         AudioOutputOpenSLES();
         virtual ~AudioOutputOpenSLES();
-        virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+        virtual void Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels);
         virtual bool IsPhone();
         virtual void EnableLoudspeaker(bool enabled);
         virtual void Start();
@@ -40,11 +40,11 @@ namespace audio
         SLObjectItf slOutputMixObj;
         SLPlayItf slPlayer;
         SLAndroidSimpleBufferQueueItf slBufferQueue;
-        int16_t* buffer;
-        int16_t* nativeBuffer;
+        std::int16_t* buffer;
+        std::int16_t* nativeBuffer;
         bool stopped;
         unsigned char remainingData[10240];
-        size_t remainingDataSize;
+        std::size_t remainingDataSize;
     };
 }
 }

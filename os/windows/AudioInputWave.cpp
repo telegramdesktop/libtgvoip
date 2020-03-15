@@ -7,9 +7,9 @@
 #include "AudioInputWave.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace tgvoip::audio;
 

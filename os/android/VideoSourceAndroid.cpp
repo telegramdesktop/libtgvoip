@@ -12,7 +12,7 @@ using namespace tgvoip::video;
 
 extern JavaVM* sharedJVM;
 
-std::vector<uint32_t> VideoSourceAndroid::availableEncoders;
+std::vector<std::uint32_t> VideoSourceAndroid::availableEncoders;
 
 VideoSourceAndroid::VideoSourceAndroid(jobject jobj)
     : javaObject(jobj)
@@ -48,7 +48,7 @@ void VideoSourceAndroid::Stop()
     });
 }
 
-void VideoSourceAndroid::SendFrame(Buffer frame, uint32_t flags)
+void VideoSourceAndroid::SendFrame(Buffer frame, std::uint32_t flags)
 {
     m_callback(frame, flags, m_rotation);
 }
@@ -61,7 +61,7 @@ void VideoSourceAndroid::SetStreamParameters(std::vector<Buffer> csd, unsigned i
     this->m_csd = std::move(csd);
 }
 
-void VideoSourceAndroid::Reset(uint32_t codec, int maxResolution)
+void VideoSourceAndroid::Reset(std::uint32_t codec, int maxResolution)
 {
     jni::DoWithJNI([&](JNIEnv* env) {
         std::string codecStr = "";
@@ -91,7 +91,7 @@ void VideoSourceAndroid::RequestKeyFrame()
     });
 }
 
-void VideoSourceAndroid::SetBitrate(uint32_t bitrate)
+void VideoSourceAndroid::SetBitrate(std::uint32_t bitrate)
 {
     jni::DoWithJNI([&](JNIEnv* env) {
         env->CallVoidMethod(javaObject, setBitrateMethod, (jint)bitrate);

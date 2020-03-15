@@ -4,9 +4,9 @@
 // you should have received with this source code distribution.
 //
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
 #include "../../logging.h"
 #include "AudioInputOpenSLES.h"
@@ -43,8 +43,8 @@ AudioInputOpenSLES::AudioInputOpenSLES()
         nativeBufferSize *= 2;
     LOGI("Adjusted native buffer size is %u", nativeBufferSize);
 
-    buffer = (int16_t*)calloc(BUFFER_SIZE, sizeof(int16_t));
-    nativeBuffer = (int16_t*)calloc((size_t)nativeBufferSize, sizeof(int16_t));
+    buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
+    nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
     slRecorderObj = NULL;
 }
 
@@ -69,7 +69,7 @@ void AudioInputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void* 
     ((AudioInputOpenSLES*)context)->HandleSLCallback();
 }
 
-void AudioInputOpenSLES::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
+void AudioInputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)
 {
     assert(slRecorderObj == NULL);
     SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE,
@@ -104,7 +104,7 @@ void AudioInputOpenSLES::Configure(uint32_t sampleRate, uint32_t bitsPerSample, 
     result = (*slBufferQueue)->RegisterCallback(slBufferQueue, AudioInputOpenSLES::BufferCallback, this);
     CHECK_SL_ERROR(result, "Error setting buffer queue callback");
 
-    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(int16_t));
+    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(std::int16_t));
 }
 
 void AudioInputOpenSLES::Start()
@@ -124,23 +124,23 @@ void AudioInputOpenSLES::HandleSLCallback()
     //SLmillisecond pMsec = 0;
     //(*slRecorder)->GetPosition(slRecorder, &pMsec);
     //LOGI("Callback! pos=%lu", pMsec);
-    //InvokeCallback((unsigned char*)buffer, BUFFER_SIZE*sizeof(int16_t));
+    //InvokeCallback((unsigned char*)buffer, BUFFER_SIZE*sizeof(std::int16_t));
     //fwrite(nativeBuffer, 1, nativeBufferSize*2, test);
 
     if (nativeBufferSize == BUFFER_SIZE)
     {
         //LOGV("nativeBufferSize==BUFFER_SIZE");
-        InvokeCallback((unsigned char*)nativeBuffer, BUFFER_SIZE * sizeof(int16_t));
+        InvokeCallback((unsigned char*)nativeBuffer, BUFFER_SIZE * sizeof(std::int16_t));
     }
     else if (nativeBufferSize < BUFFER_SIZE)
     {
         //LOGV("nativeBufferSize<BUFFER_SIZE");
         if (positionInBuffer >= BUFFER_SIZE)
         {
-            InvokeCallback((unsigned char*)buffer, BUFFER_SIZE * sizeof(int16_t));
+            InvokeCallback((unsigned char*)buffer, BUFFER_SIZE * sizeof(std::int16_t));
             positionInBuffer = 0;
         }
-        std::memcpy(((unsigned char*)buffer) + positionInBuffer * 2, nativeBuffer, (size_t)nativeBufferSize * 2);
+        std::memcpy(((unsigned char*)buffer) + positionInBuffer * 2, nativeBuffer, (std::size_t)nativeBufferSize * 2);
         positionInBuffer += nativeBufferSize;
     }
     else if (nativeBufferSize > BUFFER_SIZE)
@@ -148,9 +148,9 @@ void AudioInputOpenSLES::HandleSLCallback()
         //LOGV("nativeBufferSize>BUFFER_SIZE");
         for (unsigned int offset = 0; offset < nativeBufferSize; offset += BUFFER_SIZE)
         {
-            InvokeCallback(((unsigned char*)nativeBuffer) + offset * 2, BUFFER_SIZE * sizeof(int16_t));
+            InvokeCallback(((unsigned char*)nativeBuffer) + offset * 2, BUFFER_SIZE * sizeof(std::int16_t));
         }
     }
 
-    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(int16_t));
+    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(std::int16_t));
 }

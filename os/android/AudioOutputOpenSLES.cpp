@@ -9,7 +9,7 @@
 #include "../../logging.h"
 #include "AudioInputAndroid.h"
 #include "OpenSLEngineWrapper.h"
-#include <assert.h>
+#include <cassert>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -50,8 +50,8 @@ AudioOutputOpenSLES::AudioOutputOpenSLES()
 	}
 	LOGI("Adjusted native buffer size is %u", nativeBufferSize);*/
 
-    buffer = (int16_t*)calloc(BUFFER_SIZE, sizeof(int16_t));
-    nativeBuffer = (int16_t*)calloc((size_t)nativeBufferSize, sizeof(int16_t));
+    buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
+    nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
     slPlayerObj = NULL;
     remainingDataSize = 0;
 }
@@ -80,7 +80,7 @@ void AudioOutputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void*
     ((AudioOutputOpenSLES*)context)->HandleSLCallback();
 }
 
-void AudioOutputOpenSLES::Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels)
+void AudioOutputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)
 {
     assert(slPlayerObj == NULL);
     SLDataLocator_AndroidSimpleBufferQueue locatorBufferQueue = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 1};
@@ -113,7 +113,7 @@ void AudioOutputOpenSLES::Configure(uint32_t sampleRate, uint32_t bitsPerSample,
     result = (*slBufferQueue)->RegisterCallback(slBufferQueue, AudioOutputOpenSLES::BufferCallback, this);
     CHECK_SL_ERROR(result, "Error setting buffer queue callback");
 
-    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(int16_t));
+    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(std::int16_t));
 }
 
 bool AudioOutputOpenSLES::IsPhone()
@@ -159,14 +159,14 @@ void AudioOutputOpenSLES::HandleSLCallback()
         remainingDataSize -= nativeBufferSize * 2;
         if (remainingDataSize > 0)
             memmove(remainingData, remainingData + nativeBufferSize * 2, remainingDataSize);
-        //InvokeCallback((unsigned char *) nativeBuffer, nativeBufferSize*sizeof(int16_t));
+        //InvokeCallback((unsigned char *) nativeBuffer, nativeBufferSize*sizeof(std::int16_t));
     }
     else
     {
-        memset(nativeBuffer, 0, nativeBufferSize * 2);
+        std::memset(nativeBuffer, 0, nativeBufferSize * 2);
     }
 
-    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(int16_t));
+    (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(std::int16_t));
     //LOGV("left HandleSLCallback");
 }
 
@@ -174,7 +174,7 @@ bool AudioOutputOpenSLES::IsPlaying()
 {
     if (slPlayer)
     {
-        uint32_t state;
+        std::uint32_t state;
         (*slPlayer)->GetPlayState(slPlayer, &state);
         return state == SL_PLAYSTATE_PLAYING;
     }

@@ -20,17 +20,17 @@ namespace video
     public:
         VideoRendererAndroid(jobject jobj);
         virtual ~VideoRendererAndroid();
-        virtual void Reset(uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
-        virtual void DecodeAndDisplay(Buffer frame, uint32_t pts) override;
+        virtual void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
+        virtual void DecodeAndDisplay(Buffer frame, std::uint32_t pts) override;
         virtual void SetStreamEnabled(bool enabled) override;
-        virtual void SetRotation(uint16_t rotation) override;
+        virtual void SetRotation(std::uint16_t rotation) override;
         virtual void SetStreamPaused(bool paused) override;
 
         static jmethodID resetMethod;
         static jmethodID decodeAndDisplayMethod;
         static jmethodID setStreamEnabledMethod;
         static jmethodID setRotationMethod;
-        static std::vector<uint32_t> availableDecoders;
+        static std::vector<std::uint32_t> availableDecoders;
         static int maxResolution;
 
     private:
@@ -56,8 +56,8 @@ namespace video
         int height;
         bool streamEnabled = true;
         bool streamPaused = false;
-        uint32_t codec;
-        uint16_t rotation = 0;
+        std::uint32_t codec;
+        std::uint16_t rotation = 0;
         jobject jobj;
     };
 }

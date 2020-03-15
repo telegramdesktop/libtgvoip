@@ -7,7 +7,7 @@
 #include "AudioOutputWave.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
+#include <cassert>
 
 #define BUFFER_SIZE 960
 #define CHECK_ERROR(res, msg)                           \

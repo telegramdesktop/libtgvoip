@@ -23,7 +23,7 @@ CongestionControl::CongestionControl()
     , m_stateTransitionTime(0)
     , m_lastSentSeq(0)
     , m_inflightDataSize(0)
-    , m_cwnd(static_cast<size_t>(ServerConfig::GetSharedInstance()->GetInt("audio_congestion_window", 1024)))
+    , m_cwnd(static_cast<std::size_t>(ServerConfig::GetSharedInstance()->GetInt("audio_congestion_window", 1024)))
 {
     std::memset(m_inflightPackets, 0, sizeof(m_inflightPackets));
 }
@@ -32,7 +32,7 @@ CongestionControl::~CongestionControl()
 {
 }
 
-size_t CongestionControl::GetAcknowledgedDataSize() const
+std::size_t CongestionControl::GetAcknowledgedDataSize() const
 {
     return 0;
 }
@@ -42,12 +42,12 @@ double CongestionControl::GetAverageRTT() const
     return m_rttHistory.NonZeroAverage();
 }
 
-size_t CongestionControl::GetInflightDataSize() const
+std::size_t CongestionControl::GetInflightDataSize() const
 {
     return m_inflightHistory.Average();
 }
 
-size_t CongestionControl::GetCongestionWindow() const
+std::size_t CongestionControl::GetCongestionWindow() const
 {
     return m_cwnd;
 }
@@ -57,7 +57,7 @@ double CongestionControl::GetMinimumRTT() const
     return m_rttHistory.Min();
 }
 
-void CongestionControl::PacketAcknowledged(uint32_t seq)
+void CongestionControl::PacketAcknowledged(std::uint32_t seq)
 {
     for (int i = 0; i < 100; ++i)
     {
@@ -72,7 +72,7 @@ void CongestionControl::PacketAcknowledged(uint32_t seq)
     }
 }
 
-void CongestionControl::PacketSent(uint32_t seq, size_t size)
+void CongestionControl::PacketSent(std::uint32_t seq, std::size_t size)
 {
     if (!seqgt(seq, m_lastSentSeq) || seq == m_lastSentSeq)
     {
@@ -109,7 +109,7 @@ void CongestionControl::PacketSent(uint32_t seq, size_t size)
     m_inflightDataSize += size;
 }
 
-void CongestionControl::PacketLost(uint32_t seq)
+void CongestionControl::PacketLost(std::uint32_t seq)
 {
     for (int i = 0; i < 100; ++i)
     {
@@ -150,9 +150,9 @@ ConctlAct CongestionControl::GetBandwidthControlAction() const
 {
     if (VoIPController::GetCurrentTime() - m_lastActionTime < 1)
         return ConctlAct::NONE;
-    size_t inflightAvg = GetInflightDataSize();
-    size_t max = m_cwnd + m_cwnd / 10;
-    size_t min = m_cwnd - m_cwnd / 10;
+    std::size_t inflightAvg = GetInflightDataSize();
+    std::size_t max = m_cwnd + m_cwnd / 10;
+    std::size_t min = m_cwnd - m_cwnd / 10;
     if (inflightAvg < min)
     {
         m_lastActionTime = VoIPController::GetCurrentTime();
@@ -166,7 +166,7 @@ ConctlAct CongestionControl::GetBandwidthControlAction() const
     return ConctlAct::NONE;
 }
 
-uint32_t CongestionControl::GetSendLossCount() const
+std::uint32_t CongestionControl::GetSendLossCount() const
 {
     return m_lossCount;
 }

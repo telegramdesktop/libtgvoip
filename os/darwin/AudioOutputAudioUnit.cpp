@@ -7,7 +7,7 @@
 #include "AudioOutputAudioUnit.h"
 #include "../../logging.h"
 #include "AudioUnitIO.h"
-#include <assert.h>
+#include <cassert>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -55,7 +55,7 @@ void AudioOutputAudioUnit::HandleBufferCallback(AudioBufferList* ioData)
         AudioBuffer buf = ioData->mBuffers[i];
         if (!isPlaying)
         {
-            memset(buf.mData, 0, buf.mDataByteSize);
+            std::memset(buf.mData, 0, buf.mDataByteSize);
             return;
         }
 #if TARGET_OS_OSX
@@ -67,7 +67,7 @@ void AudioOutputAudioUnit::HandleBufferCallback(AudioBufferList* ioData)
             remainingDataSize += BUFFER_SIZE * 2;
         }
         float* dst = reinterpret_cast<float*>(buf.mData);
-        int16_t* src = reinterpret_cast<int16_t*>(remainingData);
+        std::int16_t* src = reinterpret_cast<std::int16_t*>(remainingData);
         for (k = 0; k < buf.mDataByteSize / 4; k++)
         {
             dst[k] = src[k] / (float)INT16_MAX;

@@ -22,7 +22,7 @@ namespace audio
     public:
         AudioInputOpenSLES();
         virtual ~AudioInputOpenSLES();
-        virtual void Configure(uint32_t sampleRate, uint32_t bitsPerSample, uint32_t channels);
+        virtual void Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels);
         virtual void Start();
         virtual void Stop();
 
@@ -35,9 +35,9 @@ namespace audio
         SLObjectItf slRecorderObj;
         SLRecordItf slRecorder;
         SLAndroidSimpleBufferQueueItf slBufferQueue;
-        int16_t* buffer;
-        int16_t* nativeBuffer;
-        size_t positionInBuffer;
+        std::int16_t* buffer;
+        std::int16_t* nativeBuffer;
+        std::size_t positionInBuffer;
     };
 }
 }

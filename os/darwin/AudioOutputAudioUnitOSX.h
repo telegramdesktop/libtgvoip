@@ -34,7 +34,7 @@ namespace audio
         static OSStatus DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* inClientData);
         void SetPanRight(bool panRight);
         unsigned char remainingData[10240];
-        size_t remainingDataSize;
+        std::size_t remainingDataSize;
         bool isPlaying;
         AudioUnit unit;
         int hardwareSampleRate;

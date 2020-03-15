@@ -19,8 +19,8 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(MessageThread);
     MessageThread();
     virtual ~MessageThread();
-    uint32_t Post(std::function<void()> func, double delay = 0, double interval = 0);
-    void Cancel(uint32_t id);
+    std::uint32_t Post(std::function<void()> func, double delay = 0, double interval = 0);
+    void Cancel(std::uint32_t id);
     void CancelSelf();
     void Stop();
 
@@ -32,7 +32,7 @@ public:
 private:
     struct Message
     {
-        uint32_t id;
+        std::uint32_t id;
         double deliverAt;
         double interval;
         std::function<void()> func;
@@ -45,7 +45,7 @@ private:
     std::vector<Message> queue;
     Mutex queueMutex;
     Mutex queueAccessMutex;
-    uint32_t lastMessageID = 1;
+    std::uint32_t lastMessageID = 1;
     bool cancelCurrent = false;
 
 #ifdef _WIN32

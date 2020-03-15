@@ -7,8 +7,8 @@
 #include "AudioOutputAudioUnitOSX.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/sysctl.h>
 
 #define BUFFER_SIZE 960
@@ -46,8 +46,8 @@ AudioOutputAudioUnitLegacy::AudioOutputAudioUnitLegacy(std::string deviceID)
     CHECK_AU_ERROR(status, "Error enabling AudioUnit input");
 
     char model[128];
-    memset(model, 0, sizeof(model));
-    size_t msize = sizeof(model);
+    std::memset(model, 0, sizeof(model));
+    std::size_t msize = sizeof(model);
     int mres = sysctlbyname("hw.model", model, &msize, NULL, 0);
     if (mres == 0)
     {
@@ -138,7 +138,7 @@ void AudioOutputAudioUnitLegacy::HandleBufferCallback(AudioBufferList* ioData)
         AudioBuffer buf = ioData->mBuffers[i];
         if (!isPlaying)
         {
-            memset(buf.mData, 0, buf.mDataByteSize);
+            std::memset(buf.mData, 0, buf.mDataByteSize);
             return;
         }
         while (remainingDataSize < buf.mDataByteSize)
@@ -368,7 +368,7 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
 void AudioOutputAudioUnitLegacy::SetPanRight(bool panRight)
 {
     LOGI("%sabling pan right on macbook pro", panRight ? "En" : "Dis");
-    int32_t channelMap[] = {panRight ? -1 : 0, 0};
+    std::int32_t channelMap[] = {panRight ? -1 : 0, 0};
     OSStatus status = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Global, kOutputBus, channelMap, sizeof(channelMap));
     CHECK_AU_ERROR(status, "Error setting channel map");
 }

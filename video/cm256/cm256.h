@@ -34,7 +34,7 @@
 
 #include "export.h"
 #include "gf256.h"
-#include <assert.h>
+#include <cassert>
 
 class CM256CC_API CM256
 {

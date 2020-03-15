@@ -7,9 +7,9 @@
 #include "AudioInputAudioUnit.h"
 #include "../../logging.h"
 #include "AudioUnitIO.h"
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
 #define BUFFER_SIZE 960
 
@@ -51,10 +51,10 @@ void AudioInputAudioUnit::HandleBufferCallback(AudioBufferList* ioData)
 #if TARGET_OS_OSX
         assert(remainingDataSize + buf.mDataByteSize / 2 < 10240);
         float* src = reinterpret_cast<float*>(buf.mData);
-        int16_t* dst = reinterpret_cast<int16_t*>(remainingData + remainingDataSize);
+        std::int16_t* dst = reinterpret_cast<std::int16_t*>(remainingData + remainingDataSize);
         for (int j = 0; j < buf.mDataByteSize / 4; j++)
         {
-            dst[j] = (int16_t)(src[j] * INT16_MAX);
+            dst[j] = (std::int16_t)(src[j] * INT16_MAX);
         }
         remainingDataSize += buf.mDataByteSize / 2;
 #else

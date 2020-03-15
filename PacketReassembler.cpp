@@ -7,7 +7,7 @@
 #include "logging.h"
 #include "video/VideoFEC.h"
 
-#include <assert.h>
+#include <cassert>
 #include <sstream>
 
 #define NUM_OLD_PACKETS 3
@@ -28,7 +28,7 @@ void PacketReassembler::Reset()
 {
 }
 
-void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsigned int fragmentCount, uint32_t pts, uint8_t _fseq, bool keyframe, uint16_t rotation)
+void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsigned int fragmentCount, std::uint32_t pts, std::uint8_t _fseq, bool keyframe, std::uint16_t rotation)
 {
     for (std::unique_ptr<Packet>& packet : packets)
     {
@@ -48,8 +48,8 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
             return;
         }
     }
-    uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (uint32_t)_fseq;
-    if ((uint8_t)lastFrameSeq > _fseq)
+    std::uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (std::uint32_t)_fseq;
+    if ((std::uint8_t)lastFrameSeq > _fseq)
         fseq += 256;
     //LOGV("fseq: %u", (unsigned int)fseq);
 
@@ -130,9 +130,9 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
     lastFrameSeq = fseq;
 }
 
-void PacketReassembler::AddFEC(Buffer data, uint8_t _fseq, unsigned int frameCount, unsigned int fecScheme)
+void PacketReassembler::AddFEC(Buffer data, std::uint8_t _fseq, unsigned int frameCount, unsigned int fecScheme)
 {
-    uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (uint32_t)_fseq;
+    std::uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (std::uint32_t)_fseq;
     std::ostringstream _s;
     for (unsigned int i = 0; i < frameCount; i++)
     {
@@ -161,7 +161,7 @@ void PacketReassembler::AddFEC(Buffer data, uint8_t _fseq, unsigned int frameCou
         fecPackets.erase(fecPackets.begin());
 }
 
-void PacketReassembler::SetCallback(std::function<void(Buffer packet, uint32_t pts, bool keyframe, uint16_t rotation)> callback)
+void PacketReassembler::SetCallback(std::function<void(Buffer packet, std::uint32_t pts, bool keyframe, std::uint16_t rotation)> callback)
 {
     this->callback = callback;
 }
@@ -176,7 +176,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
         if (p->seq <= fec.seq && p->seq > fec.seq - fec.prevFrameCount)
         {
             LOGD("Adding frame %u from old", p->seq);
-            for (uint32_t i = 0; i < p->partCount; i++)
+            for (std::uint32_t i = 0; i < p->partCount; i++)
             {
                 packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
             }
@@ -188,7 +188,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
         if (p->seq <= fec.seq && p->seq > fec.seq - fec.prevFrameCount)
         {
             LOGD("Adding frame %u from pending", p->seq);
-            for (uint32_t i = 0; i < p->partCount; i++)
+            for (std::uint32_t i = 0; i < p->partCount; i++)
             {
                 //LOGV("[%u] size %u", i, p.parts[i].Length());
                 packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
@@ -228,7 +228,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
 
 #pragma mark - Packet
 
-void PacketReassembler::Packet::AddFragment(Buffer pkt, uint32_t fragmentIndex)
+void PacketReassembler::Packet::AddFragment(Buffer pkt, std::uint32_t fragmentIndex)
 {
     //LOGV("Add fragment %u/%u to packet %u", fragmentIndex, partCount, timestamp);
     if (parts.size() == fragmentIndex)

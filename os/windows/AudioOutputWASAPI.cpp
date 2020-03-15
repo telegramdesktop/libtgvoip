@@ -7,7 +7,7 @@
 #include "AudioOutputWASAPI.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
+#include <cassert>
 
 #define BUFFER_SIZE 960
 #define CHECK_RES(res, msg)                              \
@@ -348,7 +348,7 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     res = audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY, 60 * 10000, 0, &format, &guid);
     CHECK_RES(res, "audioClient->Initialize");
 
-    uint32_t bufSize;
+    std::uint32_t bufSize;
     res = audioClient->GetBufferSize(&bufSize);
     CHECK_RES(res, "audioClient->GetBufferSize");
 
@@ -359,7 +359,7 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     {
         if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, NULL)))
         {
-            estimatedDelay = (int32_t)(latency / 10000 + devicePeriod / 10000);
+            estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
         }
     }
 
@@ -403,10 +403,10 @@ void AudioOutputWASAPI::RunThread()
     HRESULT res = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     CHECK_RES(res, "CoInitializeEx in render thread");
 
-    uint32_t bufferSize;
+    std::uint32_t bufferSize;
     res = audioClient->GetBufferSize(&bufferSize);
     CHECK_RES(res, "audioClient->GetBufferSize");
-    uint64_t framesWritten = 0;
+    std::uint64_t framesWritten = 0;
 
     bool running = true;
     //double prevCallback=VoIPController::GetCurrentTime();
@@ -432,8 +432,8 @@ void AudioOutputWASAPI::RunThread()
                 continue;
 
             BYTE* data;
-            uint32_t padding;
-            uint32_t framesAvailable;
+            std::uint32_t padding;
+            std::uint32_t framesAvailable;
             res = audioClient->GetCurrentPadding(&padding);
             CHECK_RES(res, "audioClient->GetCurrentPadding");
             framesAvailable = bufferSize - padding;
@@ -444,7 +444,7 @@ void AudioOutputWASAPI::RunThread()
             //LOGV("framesAvail: %u, time: %f, isPlaying: %d", framesAvailable, t-prevCallback, isPlaying);
             //prevCallback=t;
 
-            size_t bytesAvailable = framesAvailable * 2;
+            std::size_t bytesAvailable = framesAvailable * 2;
             while (bytesAvailable > remainingDataLen)
             {
                 if (isPlaying)
@@ -453,7 +453,7 @@ void AudioOutputWASAPI::RunThread()
                 }
                 else
                 {
-                    memset(remainingData + remainingDataLen, 0, 960 * 2);
+                    std::memset(remainingData + remainingDataLen, 0, 960 * 2);
                 }
                 remainingDataLen += 960 * 2;
             }

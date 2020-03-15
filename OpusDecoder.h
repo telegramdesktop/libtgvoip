@@ -16,7 +16,7 @@
 #include "utils.h"
 #include <atomic>
 #include <memory>
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
 struct OpusDecoder;
@@ -35,9 +35,9 @@ public:
     OpusDecoder(const std::unique_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC);
     OpusDecoder(MediaStreamItf* dst, bool isAsync, bool needEC);
     virtual ~OpusDecoder();
-    size_t HandleCallback(unsigned char* data, size_t len);
+    std::size_t HandleCallback(unsigned char* data, std::size_t len);
     void SetEchoCanceller(EchoCanceller* canceller);
-    void SetFrameDuration(uint32_t duration);
+    void SetFrameDuration(std::uint32_t duration);
     void SetJitterBuffer(std::shared_ptr<JitterBuffer> jitterBuffer);
     void SetDTX(bool enable);
     void SetLevelMeter(AudioLevelMeter* levelMeter);
@@ -46,7 +46,7 @@ public:
 
 private:
     void Initialize(bool isAsync, bool needEC);
-    static size_t Callback(unsigned char* data, size_t len, void* param);
+    static std::size_t Callback(unsigned char* data, std::size_t len, void* param);
     void RunThread();
     int DecodeNextFrame();
     ::OpusDecoder* dec;
@@ -56,26 +56,26 @@ private:
     unsigned char* buffer;
     unsigned char* lastDecoded;
     unsigned char* processedBuffer;
-    size_t outputBufferSize;
+    std::size_t outputBufferSize;
     std::atomic<bool> running;
     Thread* thread;
     Semaphore* semaphore;
-    uint32_t frameDuration;
+    std::uint32_t frameDuration;
     EchoCanceller* echoCanceller;
     std::shared_ptr<JitterBuffer> jitterBuffer;
     AudioLevelMeter* levelMeter;
     int consecutiveLostPackets;
     bool enableDTX;
-    size_t silentPacketCount;
+    std::size_t silentPacketCount;
     std::vector<effects::AudioEffect*> postProcEffects;
     std::atomic<bool> async;
     alignas(2) unsigned char nextBuffer[8192];
     alignas(2) unsigned char decodeBuffer[8192];
-    size_t nextLen;
+    std::size_t nextLen;
     unsigned int packetsPerFrame;
     ptrdiff_t remainingDataLen;
     bool prevWasEC;
-    int16_t prevLastSample;
+    std::int16_t prevLastSample;
 };
 }
 

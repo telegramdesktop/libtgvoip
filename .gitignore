@@ -32,3 +32,5 @@ autom4te.cache/
 *.cxxflags
 *.files
 *.includes
+*.creator.user
+

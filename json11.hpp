@@ -148,7 +148,7 @@ public:
     const object &object_items() const;
 
     // Return a reference to arr[i] if this is an array, Json() otherwise.
-    const Json & operator[](size_t i) const;
+    const Json & operator[](std::size_t i) const;
     // Return a reference to obj[key] if this is an object, Json() otherwise.
     const Json & operator[](const std::string &key) const;
 
@@ -223,7 +223,7 @@ protected:
     virtual bool bool_value() const;
     virtual const std::string &string_value() const;
     virtual const Json::array &array_items() const;
-    virtual const Json &operator[](size_t i) const;
+    virtual const Json &operator[](std::size_t i) const;
     virtual const Json::object &object_items() const;
     virtual const Json &operator[](const std::string &key) const;
     virtual ~JsonValue() {}

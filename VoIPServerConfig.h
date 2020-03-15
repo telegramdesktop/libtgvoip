@@ -10,7 +10,7 @@
 #include "json11.hpp"
 #include "threading.h"
 #include <map>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 namespace tgvoip
@@ -22,7 +22,7 @@ public:
     ServerConfig();
     ~ServerConfig();
     static ServerConfig* GetSharedInstance();
-    int32_t GetInt(std::string name, int32_t fallback);
+    std::int32_t GetInt(std::string name, std::int32_t fallback);
     double GetDouble(std::string name, double fallback);
     std::string GetString(std::string name, std::string fallback);
     bool GetBoolean(std::string name, bool fallback);

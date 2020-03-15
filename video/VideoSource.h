@@ -23,8 +23,8 @@ class VideoSource
 public:
     virtual ~VideoSource() = default;
     static std::shared_ptr<VideoSource> Create();
-    static std::vector<uint32_t> GetAvailableEncoders();
-    void SetCallback(std::function<void(const Buffer& buffer, uint32_t flags, uint32_t m_rotation)> callback)
+    static std::vector<std::uint32_t> GetAvailableEncoders();
+    void SetCallback(std::function<void(const Buffer& buffer, std::uint32_t flags, std::uint32_t m_rotation)> callback)
     {
         this->m_callback = callback;
     }
@@ -34,9 +34,9 @@ public:
     }
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    virtual void Reset(uint32_t codec, int maxResolution) = 0;
+    virtual void Reset(std::uint32_t codec, int maxResolution) = 0;
     virtual void RequestKeyFrame() = 0;
-    virtual void SetBitrate(uint32_t bitrate) = 0;
+    virtual void SetBitrate(std::uint32_t bitrate) = 0;
     bool Failed();
     std::string GetErrorDescription();
     std::vector<Buffer>& GetCodecSpecificData()
@@ -57,7 +57,7 @@ public:
     }
 
 protected:
-    std::function<void(const Buffer&, uint32_t, uint32_t)> m_callback;
+    std::function<void(const Buffer&, std::uint32_t, std::uint32_t)> m_callback;
     std::function<void(bool)> m_streamStateCallback;
     std::string m_error;
     std::vector<Buffer> m_csd;

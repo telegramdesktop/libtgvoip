@@ -8,7 +8,7 @@
 #include "../../Buffers.h"
 #include <functional>
 #include <jni.h>
-#include <stdarg.h>
+#include <cstdarg>
 #include <string>
 
 extern JavaVM* sharedJVM;

@@ -8,7 +8,7 @@
 #include "VoIPServerConfig.h"
 #include "logging.h"
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
@@ -54,7 +54,7 @@ tgvoip::OpusEncoder::OpusEncoder(MediaStreamItf* source, bool needSecondary)
     complexity = 10;
     frameDuration = 20;
     levelMeter = NULL;
-    vadNoVoiceBitrate = static_cast<uint32_t>(ServerConfig::GetSharedInstance()->GetInt("audio_vad_no_voice_bitrate", 6000));
+    vadNoVoiceBitrate = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("audio_vad_no_voice_bitrate", 6000));
     vadModeVoiceBandwidth = serverConfigValueToBandwidth(ServerConfig::GetSharedInstance()->GetInt("audio_vad_bandwidth", 3));
     vadModeNoVoiceBandwidth = serverConfigValueToBandwidth(ServerConfig::GetSharedInstance()->GetInt("audio_vad_no_voice_bandwidth", 0));
     secondaryEnabledBandwidth = serverConfigValueToBandwidth(ServerConfig::GetSharedInstance()->GetInt("audio_extra_ec_bandwidth", 2));
@@ -101,12 +101,12 @@ void tgvoip::OpusEncoder::Stop()
     delete thread;
 }
 
-void tgvoip::OpusEncoder::SetBitrate(uint32_t bitrate)
+void tgvoip::OpusEncoder::SetBitrate(std::uint32_t bitrate)
 {
     requestedBitrate = bitrate;
 }
 
-void tgvoip::OpusEncoder::Encode(int16_t* data, size_t len)
+void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
 {
     if (requestedBitrate != currentBitrate)
     {
@@ -120,7 +120,7 @@ void tgvoip::OpusEncoder::Encode(int16_t* data, size_t len)
     {
         wasSecondaryEncoderEnabled = secondaryEncoderEnabled;
     }
-    int32_t r = opus_encode(enc, data, static_cast<int>(len), buffer, 4096);
+    std::int32_t r = opus_encode(enc, data, static_cast<int>(len), buffer, 4096);
     //	int bw;
     //	opus_encoder_ctl(enc, OPUS_GET_BANDWIDTH(&bw));
     //	LOGV("Opus bandwidth: %d", bw);
@@ -135,18 +135,18 @@ void tgvoip::OpusEncoder::Encode(int16_t* data, size_t len)
     else if (running)
     {
         //LOGV("Packet size = %d", r);
-        int32_t secondaryLen = 0;
+        std::int32_t secondaryLen = 0;
         unsigned char secondaryBuffer[128];
         if (secondaryEncoderEnabled && secondaryEncoder)
         {
             secondaryLen = opus_encode(secondaryEncoder, data, static_cast<int>(len), secondaryBuffer, sizeof(secondaryBuffer));
             //LOGV("secondaryLen %d", secondaryLen);
         }
-        InvokeCallback(buffer, (size_t)r, secondaryBuffer, (size_t)secondaryLen);
+        InvokeCallback(buffer, (std::size_t)r, secondaryBuffer, (std::size_t)secondaryLen);
     }
 }
 
-size_t tgvoip::OpusEncoder::Callback(unsigned char* data, size_t len, void* param)
+std::size_t tgvoip::OpusEncoder::Callback(unsigned char* data, std::size_t len, void* param)
 {
     assert(len == 960 * 2);
     OpusEncoder* e = (OpusEncoder*)param;
@@ -168,7 +168,7 @@ size_t tgvoip::OpusEncoder::Callback(unsigned char* data, size_t len, void* para
     return 0;
 }
 
-uint32_t tgvoip::OpusEncoder::GetBitrate()
+std::uint32_t tgvoip::OpusEncoder::GetBitrate()
 {
     return requestedBitrate;
 }
@@ -180,12 +180,12 @@ void tgvoip::OpusEncoder::SetEchoCanceller(EchoCanceller* aec)
 
 void tgvoip::OpusEncoder::RunThread()
 {
-    uint32_t bufferedCount = 0;
-    uint32_t packetsPerFrame = frameDuration / 20;
+    std::uint32_t bufferedCount = 0;
+    std::uint32_t packetsPerFrame = frameDuration / 20;
     LOGV("starting encoder, packets per frame=%d", packetsPerFrame);
-    int16_t* frame;
+    std::int16_t* frame;
     if (packetsPerFrame > 1)
-        frame = (int16_t*)std::malloc(960 * 2 * packetsPerFrame);
+        frame = (std::int16_t*)std::malloc(960 * 2 * packetsPerFrame);
     else
         frame = NULL;
     bool frameHasVoice = false;
@@ -195,7 +195,7 @@ void tgvoip::OpusEncoder::RunThread()
         Buffer _packet = queue.GetBlocking();
         if (!_packet.IsEmpty())
         {
-            int16_t* packet = (int16_t*)*_packet;
+            std::int16_t* packet = (std::int16_t*)*_packet;
             bool hasVoice = true;
             if (echoCanceller)
                 echoCanceller->ProcessInput(packet, 960, hasVoice);
@@ -261,7 +261,7 @@ void tgvoip::OpusEncoder::RunThread()
         std::free(frame);
 }
 
-void tgvoip::OpusEncoder::SetOutputFrameDuration(uint32_t duration)
+void tgvoip::OpusEncoder::SetOutputFrameDuration(std::uint32_t duration)
 {
     frameDuration = duration;
 }
@@ -288,12 +288,12 @@ void tgvoip::OpusEncoder::SetLevelMeter(tgvoip::AudioLevelMeter* levelMeter)
     this->levelMeter = levelMeter;
 }
 
-void tgvoip::OpusEncoder::SetCallback(std::function<void(unsigned char*, size_t, unsigned char*, size_t)> f)
+void tgvoip::OpusEncoder::SetCallback(std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> f)
 {
     callback = f;
 }
 
-void tgvoip::OpusEncoder::InvokeCallback(unsigned char* data, size_t length, unsigned char* secondaryData, size_t secondaryLength)
+void tgvoip::OpusEncoder::InvokeCallback(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength)
 {
     callback(data, length, secondaryData, secondaryLength);
 }

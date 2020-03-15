@@ -89,7 +89,7 @@ static void dump(bool value, string& out)
 static void dump(const string& value, string& out)
 {
     out += '"';
-    for (size_t i = 0; i < value.length(); i++)
+    for (std::size_t i = 0; i < value.length(); i++)
     {
         const char ch = value[i];
         if (ch == '\\')
@@ -120,20 +120,20 @@ static void dump(const string& value, string& out)
         {
             out += "\\t";
         }
-        else if (static_cast<uint8_t>(ch) <= 0x1f)
+        else if (static_cast<std::uint8_t>(ch) <= 0x1f)
         {
             char buf[8];
             snprintf(buf, sizeof buf, "\\u%04x", ch);
             out += buf;
         }
-        else if (static_cast<uint8_t>(ch) == 0xe2 && static_cast<uint8_t>(value[i + 1]) == 0x80
-            && static_cast<uint8_t>(value[i + 2]) == 0xa8)
+        else if (static_cast<std::uint8_t>(ch) == 0xe2 && static_cast<std::uint8_t>(value[i + 1]) == 0x80
+            && static_cast<std::uint8_t>(value[i + 2]) == 0xa8)
         {
             out += "\\u2028";
             i += 2;
         }
-        else if (static_cast<uint8_t>(ch) == 0xe2 && static_cast<uint8_t>(value[i + 1]) == 0x80
-            && static_cast<uint8_t>(value[i + 2]) == 0xa9)
+        else if (static_cast<std::uint8_t>(ch) == 0xe2 && static_cast<std::uint8_t>(value[i + 1]) == 0x80
+            && static_cast<std::uint8_t>(value[i + 2]) == 0xa9)
         {
             out += "\\u2029";
             i += 2;
@@ -276,7 +276,7 @@ public:
 class JsonArray final : public Value<Json::ARRAY, Json::array>
 {
     const Json::array& array_items() const override { return m_value; }
-    const Json& operator[](size_t i) const override;
+    const Json& operator[](std::size_t i) const override;
 
 public:
     explicit JsonArray(const Json::array& value)
@@ -405,7 +405,7 @@ bool Json::bool_value() const { return m_ptr->bool_value(); }
 const string& Json::string_value() const { return m_ptr->string_value(); }
 const vector<Json>& Json::array_items() const { return m_ptr->array_items(); }
 const map<string, Json>& Json::object_items() const { return m_ptr->object_items(); }
-const Json& Json::operator[](size_t i) const { return (*m_ptr)[i]; }
+const Json& Json::operator[](std::size_t i) const { return (*m_ptr)[i]; }
 const Json& Json::operator[](const string& key) const { return (*m_ptr)[key]; }
 
 double JsonValue::number_value() const { return 0; }
@@ -414,7 +414,7 @@ bool JsonValue::bool_value() const { return false; }
 const string& JsonValue::string_value() const { return statics().empty_string; }
 const vector<Json>& JsonValue::array_items() const { return statics().empty_vector; }
 const map<string, Json>& JsonValue::object_items() const { return statics().empty_map; }
-const Json& JsonValue::operator[](size_t) const { return static_null(); }
+const Json& JsonValue::operator[](std::size_t) const { return static_null(); }
 const Json& JsonValue::operator[](const string&) const { return static_null(); }
 
 const Json& JsonObject::operator[](const string& key) const
@@ -422,7 +422,7 @@ const Json& JsonObject::operator[](const string& key) const
     auto iter = m_value.find(key);
     return (iter == m_value.end()) ? static_null() : iter->second;
 }
-const Json& JsonArray::operator[](size_t i) const
+const Json& JsonArray::operator[](std::size_t i) const
 {
     if (i >= m_value.size())
         return static_null();
@@ -465,7 +465,7 @@ bool Json::operator<(const Json& other) const
 static inline string esc(char c)
 {
     char buf[12];
-    if (static_cast<uint8_t>(c) >= 0x20 && static_cast<uint8_t>(c) <= 0x7f)
+    if (static_cast<std::uint8_t>(c) >= 0x20 && static_cast<std::uint8_t>(c) <= 0x7f)
     {
         snprintf(buf, sizeof buf, "'%c' (%d)", c, c);
     }
@@ -493,7 +493,7 @@ namespace
         /* State
      */
         const string& str;
-        size_t i;
+        std::size_t i;
         string& err;
         bool failed;
         const JsonParse strategy;
@@ -689,7 +689,7 @@ namespace
                     {
                         return fail("bad \\u escape: " + esc, "");
                     }
-                    for (size_t j = 0; j < 4; j++)
+                    for (std::size_t j = 0; j < 4; j++)
                     {
                         if (!in_range(esc[j], 'a', 'f') && !in_range(esc[j], 'A', 'F')
                             && !in_range(esc[j], '0', '9'))
@@ -763,7 +763,7 @@ namespace
      */
         Json parse_number()
         {
-            size_t start_pos = i;
+            std::size_t start_pos = i;
 
             if (str[i] == '-')
                 i++;
@@ -787,7 +787,7 @@ namespace
             }
 
             if (str[i] != '.' && str[i] != 'e' && str[i] != 'E'
-                && (i - start_pos) <= static_cast<size_t>(std::numeric_limits<int>::digits10))
+                && (i - start_pos) <= static_cast<std::size_t>(std::numeric_limits<int>::digits10))
             {
                 return std::atoi(str.c_str() + start_pos);
             }

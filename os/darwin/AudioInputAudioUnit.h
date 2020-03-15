@@ -33,7 +33,7 @@ namespace audio
 
     private:
         unsigned char remainingData[10240];
-        size_t remainingDataSize;
+        std::size_t remainingDataSize;
         bool isRecording;
         AudioUnitIO* io;
     };

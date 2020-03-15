@@ -10,14 +10,14 @@
 #include "../os/darwin/SampleBufferDisplayLayerRenderer.h"
 #endif
 
-std::vector<uint32_t> tgvoip::video::VideoRenderer::GetAvailableDecoders()
+std::vector<std::uint32_t> tgvoip::video::VideoRenderer::GetAvailableDecoders()
 {
 #ifdef __ANDROID__
     return VideoRendererAndroid::availableDecoders;
 #elif defined(__APPLE__) && !defined(TARGET_OSX)
     return SampleBufferDisplayLayerRenderer::GetAvailableDecoders();
 #endif
-    return std::vector<uint32_t>();
+    return std::vector<std::uint32_t>();
 }
 
 int tgvoip::video::VideoRenderer::GetMaximumResolution()

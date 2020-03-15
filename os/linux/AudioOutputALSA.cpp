@@ -7,7 +7,7 @@
 #include "AudioOutputALSA.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
+#include <cassert>
 #include <dlfcn.h>
 
 #define BUFFER_SIZE 960

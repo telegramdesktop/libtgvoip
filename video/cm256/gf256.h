@@ -30,8 +30,8 @@
 #define GF256_H
 
 #include "export.h"
-#include <stdint.h> // uint32_t etc
-#include <string.h> // memcpy, memset
+#include <cstdint> // uint32_t etc
+#include <cstring> // memcpy, memset
 
 // TBD: Fix the polynomial at one value and use precomputed tables here to
 // simplify the API for GF256.h version 2.  Avoids user data alignment issues.

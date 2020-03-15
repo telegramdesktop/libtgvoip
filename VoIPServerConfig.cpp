@@ -8,7 +8,7 @@
 #include "logging.h"
 #include <locale>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace tgvoip;
 
@@ -45,7 +45,7 @@ double ServerConfig::GetDouble(std::string name, double fallback)
     return fallback;
 }
 
-int32_t ServerConfig::GetInt(std::string name, int32_t fallback)
+std::int32_t ServerConfig::GetInt(std::string name, std::int32_t fallback)
 {
     MutexGuard sync(mutex);
     if (ContainsKey(name) && config[name].is_number())

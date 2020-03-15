@@ -17,12 +17,12 @@ namespace video
 class VideoRenderer
 {
 public:
-    static std::vector<uint32_t> GetAvailableDecoders();
+    static std::vector<std::uint32_t> GetAvailableDecoders();
     virtual ~VideoRenderer() = default;
-    virtual void Reset(uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) = 0;
-    virtual void DecodeAndDisplay(Buffer frame, uint32_t pts) = 0;
+    virtual void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) = 0;
+    virtual void DecodeAndDisplay(Buffer frame, std::uint32_t pts) = 0;
     virtual void SetStreamEnabled(bool enabled) = 0;
-    virtual void SetRotation(uint16_t rotation) = 0;
+    virtual void SetRotation(std::uint16_t rotation) = 0;
     virtual void SetStreamPaused(bool paused) = 0;
     static int GetMaximumResolution();
 };

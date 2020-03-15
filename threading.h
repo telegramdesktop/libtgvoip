@@ -225,7 +225,7 @@ private:
 #elif defined(_WIN32)
 
 #include <Windows.h>
-#include <assert.h>
+#include <cassert>
 
 namespace tgvoip
 {

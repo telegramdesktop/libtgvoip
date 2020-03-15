@@ -9,7 +9,7 @@
 #include "../../logging.h"
 #include "AudioInputAudioUnit.h"
 #include "AudioOutputAudioUnit.h"
-#include <stdio.h>
+#include <cstdio>
 
 #define CHECK_AU_ERROR(res, msg)             \
     if (res != noErr)                        \
@@ -171,7 +171,7 @@ void AudioUnitIO::BufferCallback(AudioUnitRenderActionFlags* ioActionFlags, cons
         }
         else
         {
-            memset(ioData->mBuffers[0].mData, 0, ioData->mBuffers[0].mDataByteSize);
+            std::memset(ioData->mBuffers[0].mData, 0, ioData->mBuffers[0].mDataByteSize);
         }
     }
     else if (bus == kInputBus)

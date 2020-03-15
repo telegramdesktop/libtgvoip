@@ -7,7 +7,7 @@
 
 #include "VoIPController.h"
 #include <functional>
-#include <stdint.h>
+#include <cstdint>
 
 namespace tgvoip
 {
@@ -17,8 +17,8 @@ public:
     PacketSender(VoIPController* controller)
         : controller(controller) {};
     virtual ~PacketSender() {};
-    virtual void PacketAcknowledged(uint32_t seq, double sendTime, double ackTime, uint8_t type, uint32_t size) = 0;
-    virtual void PacketLost(uint32_t seq, uint8_t type, uint32_t size) = 0;
+    virtual void PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, std::uint8_t type, std::uint32_t size) = 0;
+    virtual void PacketLost(std::uint32_t seq, std::uint8_t type, std::uint32_t size) = 0;
 
 protected:
     void SendExtra(Buffer& data, unsigned char type)
@@ -31,9 +31,9 @@ protected:
         controller->unsentStreamPackets++;
     }
 
-    uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt)
+    std::uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt)
     {
-        uint32_t seq = controller->GenerateOutSeq();
+        std::uint32_t seq = controller->GenerateOutSeq();
         pkt.seq = seq;
         controller->SendOrEnqueuePacket(std::move(pkt), true, this);
         return seq;

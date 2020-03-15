@@ -9,7 +9,7 @@
 #include "../../logging.h"
 #include "AudioPulse.h"
 #include "PulseFunctions.h"
-#include <assert.h>
+#include <cassert>
 #include <dlfcn.h>
 #include <unistd.h>
 #if !defined(__GLIBC__)
@@ -117,11 +117,11 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
     }
 
     pa_buffer_attr bufferAttr = {
-        .maxlength = (uint32_t)-1,
+        .maxlength = (std::uint32_t)-1,
         .tlength = 960 * 2,
-        .prebuf = (uint32_t)-1,
-        .minreq = (uint32_t)-1,
-        .fragsize = (uint32_t)-1};
+        .prebuf = (std::uint32_t)-1,
+        .minreq = (std::uint32_t)-1,
+        .fragsize = (std::uint32_t)-1};
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
     int err = pa_stream_connect_playback(stream, devID == "default" ? NULL : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags, NULL, NULL);
@@ -178,12 +178,12 @@ void AudioOutputPulse::StreamStateCallback(pa_stream* s, void* arg)
     pa_threaded_mainloop_signal(self->mainloop, 0);
 }
 
-void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, size_t requestedBytes, void* userdata)
+void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t requestedBytes, void* userdata)
 {
     ((AudioOutputPulse*)userdata)->StreamWriteCallback(stream, requestedBytes);
 }
 
-void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, size_t requestedBytes)
+void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t requestedBytes)
 {
     //assert(requestedBytes<=sizeof(remainingData));
     if (requestedBytes > sizeof(remainingData))
@@ -193,7 +193,7 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, size_t requestedBy
     pa_usec_t latency;
     if (pa_stream_get_latency(stream, &latency, NULL) == 0)
     {
-        estimatedDelay = (int32_t)(latency / 100);
+        estimatedDelay = (std::int32_t)(latency / 100);
     }
     while (requestedBytes > remainingDataSize)
     {
@@ -204,7 +204,7 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, size_t requestedBy
         }
         else
         {
-            memset(remainingData + remainingDataSize, 0, requestedBytes - remainingDataSize);
+            std::memset(remainingData + remainingDataSize, 0, requestedBytes - remainingDataSize);
             remainingDataSize = requestedBytes;
         }
     }

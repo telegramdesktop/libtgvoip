@@ -18,24 +18,24 @@ constexpr float QDELAY_TARGET_LO = 0.1f; // seconds
 constexpr float QDELAY_TARGET_HI = 0.4f; // seconds
 constexpr float QDELAY_WEIGHT = 0.1f;
 constexpr float QDELAY_TREND_TH = 0.2f;
-constexpr uint32_t MIN_CWND = 3000; // bytes
+constexpr std::uint32_t MIN_CWND = 3000; // bytes
 constexpr float MAX_BYTES_IN_FLIGHT_HEAD_ROOM = 1.1f;
 constexpr float GAIN = 1.0f;
 constexpr float BETA_LOSS = 0.9f;
 constexpr float BETA_ECN = 0.9f;
 constexpr float BETA_R = 0.9f;
-constexpr uint32_t MSS = 1024;
+constexpr std::uint32_t MSS = 1024;
 constexpr float RATE_ADJUST_INTERVAL = 0.2f;
-constexpr uint32_t TARGET_BITRATE_MIN = 50 * 1024; // bps
-constexpr uint32_t TARGET_BITRATE_MAX = 500 * 1024; // bps
-constexpr uint32_t RAMP_UP_SPEED = 1024 * 1024; //200000; // bps/s
+constexpr std::uint32_t TARGET_BITRATE_MIN = 50 * 1024; // bps
+constexpr std::uint32_t TARGET_BITRATE_MAX = 500 * 1024; // bps
+constexpr std::uint32_t RAMP_UP_SPEED = 1024 * 1024; //200000; // bps/s
 constexpr float PRE_CONGESTION_GUARD = 0.1f;
 constexpr float TX_QUEUE_SIZE_FACTOR = 1.0f;
 constexpr float RTP_QDELAY_TH = 0.02f; // seconds
 constexpr float TARGET_RATE_SCALE_RTP_QDELAY = 0.95f;
 constexpr float QDELAY_TREND_LO = 0.2f;
 constexpr float T_RESUME_FAST_INCREASE = 5.0f; // seconds
-constexpr uint32_t RATE_PACE_MIN = 50000; // bps
+constexpr std::uint32_t RATE_PACE_MIN = 50000; // bps
 
 } // namespace
 
@@ -53,12 +53,12 @@ void ScreamCongestionController::UpdateVariables(float qdelay)
     float avg = m_qdelayFractionHist.Average();
 
     float r1 = 0.0, r0 = 0.0;
-    for (size_t i = m_qdelayFractionHist.Size(); i > 0; --i)
+    for (std::size_t i = m_qdelayFractionHist.Size(); i > 0; --i)
     {
         float v = m_qdelayFractionHist[i - 1] - avg;
         r0 += v * v;
     }
-    for (size_t i = m_qdelayFractionHist.Size(); i > 1; --i)
+    for (std::size_t i = m_qdelayFractionHist.Size(); i > 1; --i)
     {
         float v1 = m_qdelayFractionHist[i - 1] - avg;
         float v2 = m_qdelayFractionHist[i - 2] - avg;
@@ -101,8 +101,8 @@ void ScreamCongestionController::UpdateCWnd(float qdelay)
     {
         cwndDelta = 0.0;
     }
-    m_cwnd += static_cast<uint32_t>(cwndDelta);
-    m_cwnd = std::min(m_cwnd, static_cast<uint32_t>(m_maxBytesInFlight * MAX_BYTES_IN_FLIGHT_HEAD_ROOM));
+    m_cwnd += static_cast<std::uint32_t>(cwndDelta);
+    m_cwnd = std::min(m_cwnd, static_cast<std::uint32_t>(m_maxBytesInFlight * MAX_BYTES_IN_FLIGHT_HEAD_ROOM));
     m_cwnd = std::max(m_cwnd, MIN_CWND);
 }
 
@@ -113,7 +113,7 @@ void ScreamCongestionController::AdjustQDelayTarget(float qdelay)
 
     float qdelayNormAvg = m_qdelayNormHist.Average();
     float qdelayNormVar = 0.0;
-    for (uint32_t i = 0; i < m_qdelayNormHist.Size(); i++)
+    for (std::uint32_t i = 0; i < m_qdelayNormHist.Size(); i++)
     {
         float tmp = m_qdelayNormHist[i] - qdelayNormAvg;
         qdelayNormVar += tmp * tmp;
@@ -155,7 +155,7 @@ void ScreamCongestionController::AdjustBitrate()
     if (m_lossPending)
     {
         m_lossPending = false;
-        m_targetBitrate = std::max(static_cast<uint32_t>(BETA_R * m_targetBitrate), TARGET_BITRATE_MIN);
+        m_targetBitrate = std::max(static_cast<std::uint32_t>(BETA_R * m_targetBitrate), TARGET_BITRATE_MIN);
         return;
     }
 
@@ -166,7 +166,7 @@ void ScreamCongestionController::AdjustBitrate()
 
     if (m_inFastIncrease)
     {
-        m_targetBitrate += static_cast<uint32_t>((rampUpSpeed * RATE_ADJUST_INTERVAL) * scale);
+        m_targetBitrate += static_cast<std::uint32_t>((rampUpSpeed * RATE_ADJUST_INTERVAL) * scale);
     }
     else
     {
@@ -176,17 +176,17 @@ void ScreamCongestionController::AdjustBitrate()
             deltaRate *= scale;
             deltaRate = std::min(deltaRate, rampUpSpeed * RATE_ADJUST_INTERVAL);
         }
-        m_targetBitrate += static_cast<uint32_t>(deltaRate);
+        m_targetBitrate += static_cast<std::uint32_t>(deltaRate);
         float rtpQueueDelay = m_rtpQueueSize / currentRate;
         if (rtpQueueDelay > RTP_QDELAY_TH)
         {
-            m_targetBitrate = static_cast<uint32_t>(m_targetBitrate * TARGET_RATE_SCALE_RTP_QDELAY);
+            m_targetBitrate = static_cast<std::uint32_t>(m_targetBitrate * TARGET_RATE_SCALE_RTP_QDELAY);
         }
     }
 
     float rateMediaLimit = std::max(currentRate, std::max(m_rateMedia, m_rateMediaMedian));
     rateMediaLimit *= (2.0f - m_qdelayTrendMem);
-    m_targetBitrate = std::min(m_targetBitrate, static_cast<uint32_t>(rateMediaLimit));
+    m_targetBitrate = std::min(m_targetBitrate, static_cast<std::uint32_t>(rateMediaLimit));
     m_targetBitrate = std::min(TARGET_BITRATE_MAX, std::max(TARGET_BITRATE_MIN, m_targetBitrate));
 }
 
@@ -198,7 +198,7 @@ void ScreamCongestionController::CalculateSendWindow(float qdelay)
         m_sendWnd = m_cwnd - m_bytesInFlight;
 }
 
-void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNewlyAcked, uint32_t lossCount, double rtt)
+void ScreamCongestionController::ProcessAcks(float oneWayDelay, std::uint32_t bytesNewlyAcked, std::uint32_t lossCount, double rtt)
 {
     if (m_prevOneWayDelay != 0.0f)
     {
@@ -227,7 +227,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
             m_ignoreLossesUntil = currentTime + rtt;
             LOGD("ignoring losses for %f", rtt);
             m_inFastIncrease = false;
-            m_cwnd = std::max(MIN_CWND, static_cast<uint32_t>(m_cwnd * BETA_LOSS));
+            m_cwnd = std::max(MIN_CWND, static_cast<std::uint32_t>(m_cwnd * BETA_LOSS));
             AdjustQDelayTarget(qdelay);
             CalculateSendWindow(qdelay);
             m_lossPending = true;
@@ -258,7 +258,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
     m_prevOneWayDelay = oneWayDelay;
 }
 
-void ScreamCongestionController::ProcessPacketSent(uint32_t size)
+void ScreamCongestionController::ProcessPacketSent(std::uint32_t size)
 {
     m_bytesInFlight += size;
     m_rtpQueueSize += (size * 8);
@@ -276,7 +276,7 @@ void ScreamCongestionController::ProcessPacketSent(uint32_t size)
     UpdateBytesInFlightHistory();
 }
 
-void ScreamCongestionController::ProcessPacketLost(uint32_t size)
+void ScreamCongestionController::ProcessPacketLost(std::uint32_t size)
 {
     m_bytesInFlight -= size;
     m_rtpQueueSize -= (size * 8);
@@ -296,7 +296,7 @@ void ScreamCongestionController::UpdateBytesInFlightHistory()
     double currentTime = VoIPController::GetCurrentTime();
     ValueSample now = {m_bytesInFlight, currentTime};
     m_bytesInFlightHistory.push_back(now);
-    uint32_t max = 0;
+    std::uint32_t max = 0;
     for (std::vector<ValueSample>::iterator i = m_bytesInFlightHistory.begin(); i != m_bytesInFlightHistory.end();)
     {
         if (currentTime - i->time >= 5.0)
@@ -312,7 +312,7 @@ void ScreamCongestionController::UpdateBytesInFlightHistory()
     m_maxBytesInFlight = max;
 }
 
-void ScreamCongestionController::UpdateMediaRate(uint32_t frameSize)
+void ScreamCongestionController::UpdateMediaRate(std::uint32_t frameSize)
 {
     m_bytesMedia += frameSize;
     double currentTime = VoIPController::GetCurrentTime();
@@ -327,7 +327,7 @@ void ScreamCongestionController::UpdateMediaRate(uint32_t frameSize)
     }
 }
 
-uint32_t ScreamCongestionController::GetBitrate()
+std::uint32_t ScreamCongestionController::GetBitrate()
 {
     return m_targetBitrate;
 }

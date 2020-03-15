@@ -6,7 +6,7 @@
 
 #include "AudioOutput.h"
 #include "../logging.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -44,7 +44,7 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-int32_t AudioOutput::estimatedDelay = 60;
+std::int32_t AudioOutput::estimatedDelay = 60;
 
 AudioOutput::AudioOutput()
     : currentDevice("default")
@@ -62,7 +62,7 @@ AudioOutput::~AudioOutput()
 {
 }
 
-int32_t AudioOutput::GetEstimatedDelay()
+std::int32_t AudioOutput::GetEstimatedDelay()
 {
 #if defined(__ANDROID__)
     char sdkNum[PROP_VALUE_MAX];

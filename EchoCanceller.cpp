@@ -116,7 +116,7 @@ void EchoCanceller::Stop()
 {
 }
 
-void EchoCanceller::SpeakerOutCallback(unsigned char* data, size_t len)
+void EchoCanceller::SpeakerOutCallback(unsigned char* data, std::size_t len)
 {
     if (len != 960 * 2 || !m_enableAEC || !m_isOn)
         return;
@@ -149,7 +149,7 @@ void EchoCanceller::RunBufferFarendThread()
             LOGI("Echo canceller buffer farend thread exiting");
             return;
         }
-        int16_t* samplesIn = reinterpret_cast<int16_t*>(*buf);
+        std::int16_t* samplesIn = reinterpret_cast<std::int16_t*>(*buf);
         std::memcpy(frame.mutable_data(), samplesIn, 480 * 2);
         m_apm->ProcessReverseStream(&frame);
         std::memcpy(frame.mutable_data(), samplesIn + 480, 480 * 2);
@@ -164,7 +164,7 @@ void EchoCanceller::Enable(bool enabled)
     m_isOn = enabled;
 }
 
-void EchoCanceller::ProcessInput(int16_t* inOut, size_t numSamples, bool& hasVoice)
+void EchoCanceller::ProcessInput(std::int16_t* inOut, std::size_t numSamples, bool& hasVoice)
 {
 #ifndef TGVOIP_NO_DSP
     if (!m_isOn || (!m_enableAEC && !m_enableAGC && !m_enableNS))
@@ -200,7 +200,7 @@ void EchoCanceller::SetAECStrength(int strength)
 #ifndef TGVOIP_USE_DESKTOP_DSP
 		AecmConfig cfg;
 		cfg.cngMode=AecmFalse;
-		cfg.echoMode=(int16_t) strength;
+        cfg.echoMode=(std::int16_t) strength;
 		WebRtcAecm_set_config(aec, cfg);
 #endif
 	}*/
@@ -234,13 +234,13 @@ Volume::~Volume()
 {
 }
 
-void Volume::Process(int16_t* inOut, size_t numSamples) const
+void Volume::Process(std::int16_t* inOut, std::size_t numSamples) const
 {
     if (m_level == 1.0f || m_passThrough)
     {
         return;
     }
-    for (size_t i = 0; i < numSamples; i++)
+    for (std::size_t i = 0; i < numSamples; i++)
     {
         float sample = inOut[i] * m_multiplier;
         if (sample > 32767.0f)
@@ -248,7 +248,7 @@ void Volume::Process(int16_t* inOut, size_t numSamples) const
         else if (sample < -32768.0f)
             inOut[i] = std::numeric_limits<std::int16_t>::min();
         else
-            inOut[i] = static_cast<int16_t>(sample);
+            inOut[i] = static_cast<std::int16_t>(sample);
     }
 }
 

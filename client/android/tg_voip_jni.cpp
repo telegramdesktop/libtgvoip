@@ -18,7 +18,7 @@
 #include "../../os/android/VideoSourceAndroid.h"
 #include <jni.h>
 #include <map>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -75,7 +75,7 @@ void updateSignalBarCount(VoIPController* cntrlr, int count)
     jni::AttachAndCallVoidMethod(setSignalBarsMethod, impl->javaObject, count);
 }
 
-void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams, size_t len)
+void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams, std::size_t len)
 {
     ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
     if (!impl->javaObject)
@@ -121,7 +121,7 @@ void callUpgradeRequestReceived(VoIPController* cntrlr)
     jni::AttachAndCallVoidMethod(callUpgradeRequestReceivedMethod, impl->javaObject);
 }
 
-void updateParticipantAudioState(VoIPGroupController* cntrlr, int32_t userID, bool enabled)
+void updateParticipantAudioState(VoIPGroupController* cntrlr, std::int32_t userID, bool enabled)
 {
     ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
     jni::AttachAndCallVoidMethod(setParticipantAudioEnabledMethod, impl->javaObject, userID, enabled);
@@ -129,7 +129,7 @@ void updateParticipantAudioState(VoIPGroupController* cntrlr, int32_t userID, bo
 
 #pragma mark - VoIPController
 
-uint32_t AndroidCodecToFOURCC(std::string mime)
+std::uint32_t AndroidCodecToFOURCC(std::string mime)
 {
     if (mime == "video/avc")
         return CODEC_AVC;
@@ -165,13 +165,13 @@ jlong VoIPController_nativeInit(JNIEnv* env, jobject thiz, jstring persistentSta
         if (f)
         {
             fseek(f, 0, SEEK_END);
-            size_t len = static_cast<size_t>(ftell(f));
+            std::size_t len = static_cast<std::size_t>(ftell(f));
             fseek(f, 0, SEEK_SET);
             if (len < 1024 * 512 && len > 0)
             {
                 char* fbuf = static_cast<char*>(std::malloc(len));
                 fread(fbuf, 1, len, f);
-                std::vector<uint8_t> state(fbuf, fbuf + len);
+                std::vector<std::uint8_t> state(fbuf, fbuf + len);
                 std::free(fbuf);
                 cntrlr->SetPersistentState(state);
             }
@@ -190,14 +190,14 @@ jlong VoIPController_nativeInit(JNIEnv* env, jobject thiz, jstring persistentSta
         for (jsize i = 0; i < env->GetArrayLength(encoders); i++)
         {
             std::string codec = jni::JavaStringToStdString(env, static_cast<jstring>(env->GetObjectArrayElement(encoders, i)));
-            uint32_t id = AndroidCodecToFOURCC(codec);
+            std::uint32_t id = AndroidCodecToFOURCC(codec);
             if (id)
                 video::VideoSourceAndroid::availableEncoders.push_back(id);
         }
         for (jsize i = 0; i < env->GetArrayLength(decoders); i++)
         {
             std::string codec = jni::JavaStringToStdString(env, static_cast<jstring>(env->GetObjectArrayElement(decoders, i)));
-            uint32_t id = AndroidCodecToFOURCC(codec);
+            std::uint32_t id = AndroidCodecToFOURCC(codec);
             if (id)
                 video::VideoRendererAndroid::availableDecoders.push_back(id);
         }
@@ -220,7 +220,7 @@ void VoIPController_nativeConnect(JNIEnv* env, jobject thiz, jlong inst)
 
 void VoIPController_nativeSetProxy(JNIEnv* env, jobject thiz, jlong inst, jstring _address, jint port, jstring _username, jstring _password)
 {
-    ((VoIPController*)(intptr_t)inst)->SetProxy(PROXY_SOCKS5, jni::JavaStringToStdString(env, _address), (uint16_t)port, jni::JavaStringToStdString(env, _username), jni::JavaStringToStdString(env, _password));
+    ((VoIPController*)(intptr_t)inst)->SetProxy(PROXY_SOCKS5, jni::JavaStringToStdString(env, _address), (std::uint16_t)port, jni::JavaStringToStdString(env, _username), jni::JavaStringToStdString(env, _password));
 }
 
 void VoIPController_nativeSetEncryptionKey(JNIEnv* env, jobject thiz, jlong inst, jbyteArray key, jboolean isOutgoing)
@@ -232,7 +232,7 @@ void VoIPController_nativeSetEncryptionKey(JNIEnv* env, jobject thiz, jlong inst
 
 void VoIPController_nativeSetRemoteEndpoints(JNIEnv* env, jobject thiz, jlong inst, jobjectArray endpoints, jboolean allowP2p, jboolean tcp, jint connectionMaxLayer)
 {
-    size_t len = (size_t)env->GetArrayLength(endpoints);
+    std::size_t len = (std::size_t)env->GetArrayLength(endpoints);
     std::vector<Endpoint> eps;
     /*public String ip;
 			public String ipv6;
@@ -265,7 +265,7 @@ void VoIPController_nativeSetRemoteEndpoints(JNIEnv* env, jobject thiz, jlong in
             std::memcpy(pTag, peerTagBytes, 16);
             env->ReleaseByteArrayElements(peerTag, peerTagBytes, JNI_ABORT);
         }
-        eps.push_back(Endpoint((int64_t)id, (uint16_t)port, v4addr, v6addr, tcp ? Endpoint::Type::TCP_RELAY : Endpoint::Type::UDP_RELAY, pTag));
+        eps.push_back(Endpoint((std::int64_t)id, (std::uint16_t)port, v4addr, v6addr, tcp ? Endpoint::Type::TCP_RELAY : Endpoint::Type::UDP_RELAY, pTag));
     }
     ((VoIPController*)(intptr_t)inst)->SetRemoteEndpoints(eps, allowP2p, connectionMaxLayer);
 }
@@ -283,7 +283,7 @@ void VoIPController_nativeRelease(JNIEnv* env, jobject thiz, jlong inst)
     VoIPController* ctlr = ((VoIPController*)(intptr_t)inst);
     ImplDataAndroid* impl = (ImplDataAndroid*)ctlr->implData;
     ctlr->Stop();
-    std::vector<uint8_t> state = ctlr->GetPersistentState();
+    std::vector<std::uint8_t> state = ctlr->GetPersistentState();
     delete ctlr;
     env->DeleteGlobalRef(impl->javaObject);
     if (!impl->persistentStateFile.empty())
@@ -455,12 +455,12 @@ void VoIPServerConfig_nativeSetConfig(JNIEnv* env, jclass clasz, jstring jsonStr
 
 jint Resampler_convert44to48(JNIEnv* env, jclass cls, jobject from, jobject to)
 {
-    return (jint)tgvoip::audio::Resampler::Convert44To48((int16_t*)env->GetDirectBufferAddress(from), (int16_t*)env->GetDirectBufferAddress(to), (size_t)(env->GetDirectBufferCapacity(from) / 2), (size_t)(env->GetDirectBufferCapacity(to) / 2));
+    return (jint)tgvoip::audio::Resampler::Convert44To48((std::int16_t*)env->GetDirectBufferAddress(from), (std::int16_t*)env->GetDirectBufferAddress(to), (std::size_t)(env->GetDirectBufferCapacity(from) / 2), (std::size_t)(env->GetDirectBufferCapacity(to) / 2));
 }
 
 jint Resampler_convert48to44(JNIEnv* env, jclass cls, jobject from, jobject to)
 {
-    return (jint)tgvoip::audio::Resampler::Convert48To44((int16_t*)env->GetDirectBufferAddress(from), (int16_t*)env->GetDirectBufferAddress(to), (size_t)(env->GetDirectBufferCapacity(from) / 2), (size_t)(env->GetDirectBufferCapacity(to) / 2));
+    return (jint)tgvoip::audio::Resampler::Convert48To44((std::int16_t*)env->GetDirectBufferAddress(from), (std::int16_t*)env->GetDirectBufferAddress(to), (std::size_t)(env->GetDirectBufferCapacity(from) / 2), (std::size_t)(env->GetDirectBufferCapacity(to) / 2));
 }
 
 #pragma mark - VoIPGroupController
@@ -503,7 +503,7 @@ void VoIPGroupController_nativeSetGroupCallInfo(JNIEnv* env, jclass cls, jlong i
         v6addr = NetworkAddress::IPv6(ipv6Chars);
         env->ReleaseStringUTFChars(reflectorAddressV6, ipv6Chars);
     }
-    ctlr->SetGroupCallInfo((unsigned char*)encryptionKey, (unsigned char*)reflectorGroupTag, (unsigned char*)reflectorSelfTag, (unsigned char*)reflectorSelfSecret, (unsigned char*)reflectorSelfTagHash, selfUserID, v4addr, v6addr, (uint16_t)reflectorPort);
+    ctlr->SetGroupCallInfo((unsigned char*)encryptionKey, (unsigned char*)reflectorGroupTag, (unsigned char*)reflectorSelfTag, (unsigned char*)reflectorSelfSecret, (unsigned char*)reflectorSelfTagHash, selfUserID, v4addr, v6addr, (std::uint16_t)reflectorPort);
 
     env->ReleaseByteArrayElements(_encryptionKey, encryptionKey, JNI_ABORT);
     env->ReleaseByteArrayElements(_reflectorGroupTag, reflectorGroupTag, JNI_ABORT);
@@ -518,7 +518,7 @@ void VoIPGroupController_nativeAddGroupCallParticipant(JNIEnv* env, jclass cls, 
     jbyte* memberTagHash = env->GetByteArrayElements(_memberTagHash, NULL);
     jbyte* streams = _streams ? env->GetByteArrayElements(_streams, NULL) : NULL;
 
-    ctlr->AddGroupCallParticipant(userID, (unsigned char*)memberTagHash, (unsigned char*)streams, (size_t)env->GetArrayLength(_streams));
+    ctlr->AddGroupCallParticipant(userID, (unsigned char*)memberTagHash, (unsigned char*)streams, (std::size_t)env->GetArrayLength(_streams));
 
     env->ReleaseByteArrayElements(_memberTagHash, memberTagHash, JNI_ABORT);
     if (_streams)
@@ -544,7 +544,7 @@ void VoIPGroupController_nativeSetParticipantVolume(JNIEnv* env, jclass cls, jlo
 jbyteArray VoIPGroupController_getInitialStreams(JNIEnv* env, jclass cls)
 {
     unsigned char buf[1024];
-    size_t len = VoIPGroupController::GetInitialStreams(buf, sizeof(buf));
+    std::size_t len = VoIPGroupController::GetInitialStreams(buf, sizeof(buf));
     jbyteArray arr = env->NewByteArray(len);
     jbyte* arrElems = env->GetByteArrayElements(arr, NULL);
     std::memcpy(arrElems, buf, len);
@@ -556,7 +556,7 @@ void VoIPGroupController_nativeSetParticipantStreams(JNIEnv* env, jclass cls, jl
 {
     jbyte* streams = env->GetByteArrayElements(_streams, NULL);
 
-    ((VoIPGroupController*)(intptr_t)inst)->SetParticipantStreams(userID, (unsigned char*)streams, (size_t)env->GetArrayLength(_streams));
+    ((VoIPGroupController*)(intptr_t)inst)->SetParticipantStreams(userID, (unsigned char*)streams, (std::size_t)env->GetArrayLength(_streams));
 
     env->ReleaseByteArrayElements(_streams, streams, JNI_ABORT);
 }
@@ -582,7 +582,7 @@ void VideoSource_nativeSetVideoStreamParameters(JNIEnv* env, jobject thiz, jlong
         for (int i = 0; i < env->GetArrayLength(_csd); i++)
         {
             jobject _buf = env->GetObjectArrayElement(_csd, i);
-            size_t len = static_cast<size_t>(env->GetDirectBufferCapacity(_buf));
+            std::size_t len = static_cast<std::size_t>(env->GetDirectBufferCapacity(_buf));
             Buffer buf(len);
             buf.CopyFrom(env->GetDirectBufferAddress(_buf), 0, len);
             csd.push_back(std::move(buf));
@@ -593,10 +593,10 @@ void VideoSource_nativeSetVideoStreamParameters(JNIEnv* env, jobject thiz, jlong
 
 void VideoSource_nativeSendFrame(JNIEnv* env, jobject thiz, jlong inst, jobject buffer, jint offset, jint length, jint flags)
 {
-    //size_t bufsize=(size_t)env->GetDirectBufferCapacity(buffer);
-    Buffer buf(static_cast<size_t>(length));
-    buf.CopyFrom(((char*)env->GetDirectBufferAddress(buffer)) + offset, 0, static_cast<size_t>(length));
-    ((video::VideoSourceAndroid*)(intptr_t)inst)->SendFrame(std::move(buf), static_cast<uint32_t>(flags));
+    //std::size_t bufsize=(std::size_t)env->GetDirectBufferCapacity(buffer);
+    Buffer buf(static_cast<std::size_t>(length));
+    buf.CopyFrom(((char*)env->GetDirectBufferAddress(buffer)) + offset, 0, static_cast<std::size_t>(length));
+    ((video::VideoSourceAndroid*)(intptr_t)inst)->SendFrame(std::move(buf), static_cast<std::uint32_t>(flags));
 }
 
 void VideoSource_nativeSetRotation(JNIEnv* env, jobject thiz, jlong inst, jint rotation)

@@ -8,20 +8,20 @@
 #include "EchoCanceller.h"
 #include "logging.h"
 #include <algorithm>
-#include <assert.h>
-#include <math.h>
-#include <stdint.h>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
 
 using namespace tgvoip;
 
-void MediaStreamItf::SetCallback(size_t (*f)(unsigned char*, size_t, void*), void* param)
+void MediaStreamItf::SetCallback(std::size_t (*f)(unsigned char*, std::size_t, void*), void* param)
 {
     std::lock_guard<std::mutex> lock(m_callback);
     callback = f;
     callbackParam = param;
 }
 
-size_t MediaStreamItf::InvokeCallback(unsigned char* data, size_t length)
+std::size_t MediaStreamItf::InvokeCallback(unsigned char* data, std::size_t length)
 {
     std::lock_guard<std::mutex> lock(m_callback);
     if (callback)
@@ -68,9 +68,9 @@ void AudioMixer::Stop()
     thread = NULL;
 }
 
-void AudioMixer::DoCallback(unsigned char* data, size_t length)
+void AudioMixer::DoCallback(unsigned char* data, std::size_t length)
 {
-    //memset(data, 0, 960*2);
+    //std::memset(data, 0, 960*2);
     //LOGD("audio mixer callback, %d inputs", inputs.size());
     if (processedQueue.Size() == 0)
         semaphore.Release(2);
@@ -80,7 +80,7 @@ void AudioMixer::DoCallback(unsigned char* data, size_t length)
     std::memcpy(data, *buf, 960 * 2);
 }
 
-size_t AudioMixer::OutputCallback(unsigned char* data, size_t length, void* arg)
+std::size_t AudioMixer::OutputCallback(unsigned char* data, std::size_t length, void* arg)
 {
     ((AudioMixer*)arg)->DoCallback(data, length);
     return 960 * 2;
@@ -138,14 +138,14 @@ void AudioMixer::RunThread()
             Buffer data = bufferPool.Get();
             //LOGV("Audio mixer processing a frame");
             MutexGuard m(inputsMutex);
-            int16_t* buf = reinterpret_cast<int16_t*>(*data);
-            int16_t input[960];
+            std::int16_t* buf = reinterpret_cast<std::int16_t*>(*data);
+            std::int16_t input[960];
             float out[960];
-            memset(out, 0, 960 * 4);
+            std::memset(out, 0, 960 * 4);
             int usedInputs = 0;
             for (std::vector<MixerInput>::iterator in = inputs.begin(); in != inputs.end(); ++in)
             {
-                size_t res = in->source->InvokeCallback(reinterpret_cast<unsigned char*>(input), 960 * 2);
+                std::size_t res = in->source->InvokeCallback(reinterpret_cast<unsigned char*>(input), 960 * 2);
                 if (!res || in->multiplier == 0)
                 {
                     //LOGV("AudioMixer: skipping silent packet");
@@ -155,14 +155,14 @@ void AudioMixer::RunThread()
                 float k = in->multiplier;
                 if (k != 1)
                 {
-                    for (size_t i = 0; i < 960; i++)
+                    for (std::size_t i = 0; i < 960; i++)
                     {
                         out[i] += (float)input[i] * k;
                     }
                 }
                 else
                 {
-                    for (size_t i = 0; i < 960; i++)
+                    for (std::size_t i = 0; i < 960; i++)
                     {
                         out[i] += (float)input[i];
                     }
@@ -170,19 +170,19 @@ void AudioMixer::RunThread()
             }
             if (usedInputs > 0)
             {
-                for (size_t i = 0; i < 960; i++)
+                for (std::size_t i = 0; i < 960; i++)
                 {
                     if (out[i] > 32767.0f)
                         buf[i] = INT16_MAX;
                     else if (out[i] < -32768.0f)
                         buf[i] = INT16_MIN;
                     else
-                        buf[i] = (int16_t)out[i];
+                        buf[i] = (std::int16_t)out[i];
                 }
             }
             else
             {
-                memset(*data, 0, 960 * 2);
+                std::memset(*data, 0, 960 * 2);
             }
             if (echoCanceller)
                 echoCanceller->SpeakerOutCallback(*data, 960 * 2);
@@ -215,16 +215,16 @@ float AudioLevelMeter::GetLevel()
     return currentLevel / 9.0f;
 }
 
-void AudioLevelMeter::Update(int16_t* samples, size_t count)
+void AudioLevelMeter::Update(std::int16_t* samples, std::size_t count)
 {
     // Number of bars on the indicator.
     // Note that the number of elements is specified because we are indexing it
     // in the range of 0-32
-    const int8_t permutation[33] = {0, 1, 2, 3, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
-    int16_t absValue = 0;
+    const std::int8_t permutation[33] = {0, 1, 2, 3, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
+    std::int16_t absValue = 0;
     for (unsigned int k = 0; k < count; k++)
     {
-        int16_t absolute = (int16_t)abs(samples[k]);
+        std::int16_t absolute = (std::int16_t)abs(samples[k]);
         if (absolute > absValue)
             absValue = absolute;
     }
@@ -236,10 +236,10 @@ void AudioLevelMeter::Update(int16_t* samples, size_t count)
     {
         currentLevelFullRange = absMax;
         this->count = 0;
-        // Highest value for a int16_t is 0x7fff = 32767
+        // Highest value for a std::int16_t is 0x7fff = 32767
         // Divide with 1000 to get in the range of 0-32 which is the range of
         // the permutation vector
-        int32_t position = absMax / 1000;
+        std::int32_t position = absMax / 1000;
         // Make it less likely that the bar stays at position 0. I.e. only if
         // its in the range 0-250 (instead of 0-1000)
         /*if ((position==0) && (absMax>250)){

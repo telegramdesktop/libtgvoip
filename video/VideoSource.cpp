@@ -32,12 +32,12 @@ std::string VideoSource::GetErrorDescription()
     return m_error;
 }
 
-std::vector<uint32_t> VideoSource::GetAvailableEncoders()
+std::vector<std::uint32_t> VideoSource::GetAvailableEncoders()
 {
 #ifdef __ANDROID__
     return VideoSourceAndroid::availableEncoders;
 #elif defined(__APPLE__) && !defined(TARGET_OSX)
     return VideoToolboxEncoderSource::GetAvailableEncoders();
 #endif
-    return std::vector<uint32_t>();
+    return std::vector<std::uint32_t>();
 }

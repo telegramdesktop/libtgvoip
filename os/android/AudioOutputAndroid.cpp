@@ -6,7 +6,7 @@
 
 #include "AudioOutputAndroid.h"
 #include "../../logging.h"
-#include <stdio.h>
+#include <cstdio>
 
 extern JavaVM* sharedJVM;
 
@@ -109,7 +109,7 @@ void AudioOutputAndroid::HandleCallback(JNIEnv* env, jbyteArray buffer)
     if (!running)
         return;
     unsigned char* buf = (unsigned char*)env->GetByteArrayElements(buffer, NULL);
-    size_t len = (size_t)env->GetArrayLength(buffer);
+    std::size_t len = (std::size_t)env->GetArrayLength(buffer);
     InvokeCallback(buf, len);
     env->ReleaseByteArrayElements(buffer, (jbyte*)buf, 0);
 }

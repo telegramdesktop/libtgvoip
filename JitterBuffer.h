@@ -12,30 +12,28 @@
 #include "MediaStreamItf.h"
 #include "threading.h"
 #include <atomic>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 
 #define JITTER_SLOT_COUNT 64
 #define JITTER_SLOT_SIZE 1024
-#define JR_OK 1
-#define JR_MISSING 2
-#define JR_BUFFERING 3
 
 namespace tgvoip
 {
+
 class JitterBuffer
 {
 public:
-    JitterBuffer(MediaStreamItf* out, uint32_t step);
+    JitterBuffer(MediaStreamItf* out, std::uint32_t m_step);
     ~JitterBuffer();
-    void SetMinPacketCount(uint32_t count);
+    void SetMinPacketCount(std::uint32_t count);
     int GetMinPacketCount();
     unsigned int GetCurrentDelay();
     double GetAverageDelay();
     void Reset();
-    void HandleInput(unsigned char* data, size_t len, uint32_t timestamp, bool isEC);
-    size_t HandleOutput(unsigned char* buffer, size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC);
+    void HandleInput(unsigned char* data, std::size_t len, std::uint32_t timestamp, bool isEC);
+    std::size_t HandleOutput(unsigned char* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC);
     void Tick();
     void GetAverageLateCount(double* out);
     int GetAndResetLostPacketCount();
@@ -46,55 +44,64 @@ private:
     struct jitter_packet_t
     {
         Buffer buffer = Buffer();
-        size_t size;
-        uint32_t timestamp;
-        bool isEC;
         double recvTimeDiff;
+        std::size_t size;
+        std::uint32_t timestamp;
+        bool isEC;
     };
-    static size_t CallbackIn(unsigned char* data, size_t len, void* param);
-    static size_t CallbackOut(unsigned char* data, size_t len, void* param);
+
+    enum class Status
+    {
+        OK = 1,
+        MISSING,
+        BUFFERING
+    };
+
+    static std::size_t CallbackIn(unsigned char* data, std::size_t len, void* param);
+    static std::size_t CallbackOut(unsigned char* data, std::size_t len, void* param);
     void PutInternal(jitter_packet_t* pkt, bool overwriteExisting);
-    int GetInternal(jitter_packet_t* pkt, int offset, bool advance);
+    Status GetInternal(jitter_packet_t* pkt, int offset, bool advance);
     void Advance();
 
-    BufferPool<JITTER_SLOT_SIZE, JITTER_SLOT_COUNT> bufferPool;
-    Mutex mutex;
-    jitter_packet_t slots[JITTER_SLOT_COUNT];
-    int64_t nextTimestamp = 0;
-    uint32_t step;
-    std::atomic<double> minDelay {6};
-    uint32_t minMinDelay;
-    uint32_t maxMinDelay;
-    uint32_t maxUsedSlots;
-    uint32_t lastPutTimestamp;
-    uint32_t lossesToReset;
-    double resyncThreshold;
-    unsigned int lostCount = 0;
-    unsigned int lostSinceReset = 0;
-    unsigned int gotSinceReset = 0;
-    bool wasReset = true;
-    bool needBuffering = true;
-    HistoricBuffer<int, 64, double> delayHistory;
-    HistoricBuffer<int, 64, double> lateHistory;
-    bool adjustingDelay = false;
-    unsigned int tickCount = 0;
-    unsigned int latePacketCount = 0;
-    unsigned int dontIncMinDelay = 0;
-    unsigned int dontDecMinDelay = 0;
-    int lostPackets = 0;
-    double prevRecvTime = 0;
-    double expectNextAtTime = 0;
-    HistoricBuffer<double, 64> deviationHistory;
-    double lastMeasuredJitter = 0;
-    double lastMeasuredDelay = 0;
-    int outstandingDelayChange = 0;
-    unsigned int dontChangeDelay = 0;
-    double avgDelay = 0;
-    bool first = true;
+    BufferPool<JITTER_SLOT_SIZE, JITTER_SLOT_COUNT> m_bufferPool;
+    mutable Mutex m_mutex;
+    jitter_packet_t m_slots[JITTER_SLOT_COUNT];
+    std::int64_t m_nextTimestamp = 0;
+    std::uint32_t m_step;
+    std::atomic<double> m_minDelay{6};
+    std::uint32_t m_minMinDelay;
+    std::uint32_t m_maxMinDelay;
+    std::uint32_t m_maxUsedSlots;
+    std::uint32_t m_lastPutTimestamp;
+    std::uint32_t m_lossesToReset;
+    double m_resyncThreshold;
+    unsigned int m_lostCount = 0;
+    unsigned int m_lostSinceReset = 0;
+    unsigned int m_gotSinceReset = 0;
+    bool m_wasReset = true;
+    bool m_needBuffering = true;
+    HistoricBuffer<int, 64, double> m_delayHistory;
+    HistoricBuffer<int, 64, double> m_lateHistory;
+    bool m_adjustingDelay = false;
+    unsigned int m_tickCount = 0;
+    unsigned int m_latePacketCount = 0;
+    unsigned int m_dontIncMinDelay = 0;
+    unsigned int m_dontDecMinDelay = 0;
+    int m_lostPackets = 0;
+    double m_prevRecvTime = 0;
+    double m_expectNextAtTime = 0;
+    HistoricBuffer<double, 64> m_deviationHistory;
+    double m_lastMeasuredJitter = 0;
+    double m_lastMeasuredDelay = 0;
+    int m_outstandingDelayChange = 0;
+    unsigned int m_dontChangeDelay = 0;
+    double m_avgDelay = 0;
+    bool m_first = true;
 #ifdef TGVOIP_DUMP_JITTER_STATS
     FILE* dump;
 #endif
 };
-}
+
+} // namespace tgvoip
 
 #endif //LIBTGVOIP_JITTERBUFFER_H

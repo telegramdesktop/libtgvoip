@@ -8,8 +8,8 @@
 #include "audio/Resampler.h"
 #include "logging.h"
 #include <algorithm>
-#include <assert.h>
-#include <math.h>
+#include <cassert>
+#include <cmath>
 #if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
@@ -92,18 +92,18 @@ void tgvoip::OpusDecoder::SetEchoCanceller(EchoCanceller* canceller)
     echoCanceller = canceller;
 }
 
-size_t tgvoip::OpusDecoder::Callback(unsigned char* data, size_t len, void* param)
+std::size_t tgvoip::OpusDecoder::Callback(unsigned char* data, std::size_t len, void* param)
 {
     return (reinterpret_cast<OpusDecoder*>(param)->HandleCallback(data, len));
 }
 
-size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
+std::size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, std::size_t len)
 {
     if (async)
     {
         if (!running)
         {
-            memset(data, 0, len);
+            std::memset(data, 0, len);
             return 0;
         }
         if (outputBufferSize == 0)
@@ -129,7 +129,7 @@ size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
             {
                 silentPacketCount--;
                 if (levelMeter)
-                    levelMeter->Update(reinterpret_cast<int16_t*>(data), 0);
+                    levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
                 return 0;
             }
             if (echoCanceller)
@@ -148,15 +148,15 @@ size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
         if (remainingDataLen == 0 && silentPacketCount == 0)
         {
             int duration = DecodeNextFrame();
-            remainingDataLen = static_cast<size_t>(duration) / 20 * 960 * 2;
+            remainingDataLen = static_cast<std::size_t>(duration) / 20 * 960 * 2;
         }
         if (silentPacketCount > 0 || remainingDataLen == 0 || !processedBuffer)
         {
             if (silentPacketCount > 0)
                 silentPacketCount--;
-            memset(data, 0, 960 * 2);
+            std::memset(data, 0, 960 * 2);
             if (levelMeter)
-                levelMeter->Update(reinterpret_cast<int16_t*>(data), 0);
+                levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
             return 0;
         }
         std::memcpy(data, processedBuffer, 960 * 2);
@@ -167,7 +167,7 @@ size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
         }
     }
     if (levelMeter)
-        levelMeter->Update(reinterpret_cast<int16_t*>(data), len / 2);
+        levelMeter->Update(reinterpret_cast<std::int16_t*>(data), len / 2);
     return len;
 }
 
@@ -213,14 +213,14 @@ void tgvoip::OpusDecoder::RunThread()
                 {
                     for (effects::AudioEffect*& effect : postProcEffects)
                     {
-                        effect->Process(reinterpret_cast<int16_t*>(processedBuffer + (PACKET_SIZE * i)), 960);
+                        effect->Process(reinterpret_cast<std::int16_t*>(processedBuffer + (PACKET_SIZE * i)), 960);
                     }
                     buf.CopyFrom(processedBuffer + (PACKET_SIZE * i), 0, PACKET_SIZE);
                 }
                 else
                 {
                     //LOGE("Error decoding, result=%d", size);
-                    memset(*buf, 0, PACKET_SIZE);
+                    std::memset(*buf, 0, PACKET_SIZE);
                 }
                 decodedQueue->Put(std::move(buf));
             }
@@ -236,7 +236,7 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
 {
     int playbackDuration = 0;
     bool isEC = false;
-    size_t len = jitterBuffer->HandleOutput(buffer, 8192, 0, true, playbackDuration, isEC);
+    std::size_t len = jitterBuffer->HandleOutput(buffer, 8192, 0, true, playbackDuration, isEC);
     bool fec = false;
     if (!len)
     {
@@ -258,13 +258,13 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
             size = opus_decode(prevWasEC ? ecDec : dec, NULL, 0, reinterpret_cast<opus_int16*>(nextBuffer), packetsPerFrame * 960, 0);
             if (size)
             {
-                int16_t* plcSamples = reinterpret_cast<int16_t*>(nextBuffer);
-                int16_t* samples = reinterpret_cast<int16_t*>(decodeBuffer);
+                std::int16_t* plcSamples = reinterpret_cast<std::int16_t*>(nextBuffer);
+                std::int16_t* samples = reinterpret_cast<std::int16_t*>(decodeBuffer);
                 constexpr float coeffs[] = {0.999802f, 0.995062f, 0.984031f, 0.966778f, 0.943413f, 0.914084f, 0.878975f, 0.838309f, 0.792344f, 0.741368f,
                     0.685706f, 0.625708f, 0.561754f, 0.494249f, 0.423619f, 0.350311f, 0.274788f, 0.197527f, 0.119018f, 0.039757f};
                 for (int i = 0; i < 20; i++)
                 {
-                    samples[i] = static_cast<int16_t>(round(plcSamples[i] * coeffs[i] + samples[i] * (1.f - coeffs[i])));
+                    samples[i] = static_cast<std::int16_t>(round(plcSamples[i] * coeffs[i] + samples[i] * (1.f - coeffs[i])));
                 }
             }
         }
@@ -291,14 +291,14 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
     if (playbackDuration == 80)
     {
         processedBuffer = buffer;
-        audio::Resampler::Rescale60To80(reinterpret_cast<int16_t*>(decodeBuffer),
-            reinterpret_cast<int16_t*>(processedBuffer));
+        audio::Resampler::Rescale60To80(reinterpret_cast<std::int16_t*>(decodeBuffer),
+            reinterpret_cast<std::int16_t*>(processedBuffer));
     }
     else if (playbackDuration == 40)
     {
         processedBuffer = buffer;
-        audio::Resampler::Rescale60To40(reinterpret_cast<int16_t*>(decodeBuffer),
-            reinterpret_cast<int16_t*>(processedBuffer));
+        audio::Resampler::Rescale60To40(reinterpret_cast<std::int16_t*>(decodeBuffer),
+            reinterpret_cast<std::int16_t*>(processedBuffer));
     }
     else
     {
@@ -307,7 +307,7 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
     return playbackDuration;
 }
 
-void tgvoip::OpusDecoder::SetFrameDuration(uint32_t duration)
+void tgvoip::OpusDecoder::SetFrameDuration(std::uint32_t duration)
 {
     frameDuration = duration;
     packetsPerFrame = frameDuration / 20;

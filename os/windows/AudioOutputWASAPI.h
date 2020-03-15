@@ -77,7 +77,7 @@ namespace audio
         IMMDevice* device;
 #endif
         unsigned char remainingData[10240];
-        size_t remainingDataLen;
+        std::size_t remainingDataLen;
         bool isDefaultDevice;
         ULONG refCount;
         std::string streamChangeToDevice;

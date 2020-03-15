@@ -25,7 +25,7 @@ public:
         THREAD_PRIO_BACKGROUND,
         THREAD_PRIO_DEFAULT
     };
-    static void GetSystemName(char* buf, size_t len);
+    static void GetSystemName(char* buf, std::size_t len);
     static void SetCurrentThreadPriority(int priority);
     static CellularCarrierInfo GetCarrierInfo();
     static void ConfigureAudioSession();

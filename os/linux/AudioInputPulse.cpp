@@ -9,7 +9,7 @@
 #include "../../logging.h"
 #include "AudioPulse.h"
 #include "PulseFunctions.h"
-#include <assert.h>
+#include <cassert>
 #include <dlfcn.h>
 #include <unistd.h>
 #if !defined(__GLIBC__)
@@ -121,10 +121,10 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
     }
 
     pa_buffer_attr bufferAttr = {
-        .maxlength = (uint32_t)-1,
-        .tlength = (uint32_t)-1,
-        .prebuf = (uint32_t)-1,
-        .minreq = (uint32_t)-1,
+        .maxlength = (std::uint32_t)-1,
+        .tlength = (std::uint32_t)-1,
+        .prebuf = (std::uint32_t)-1,
+        .minreq = (std::uint32_t)-1,
         .fragsize = 960 * 2};
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
@@ -186,23 +186,23 @@ void AudioInputPulse::StreamStateCallback(pa_stream* s, void* arg)
     pa_threaded_mainloop_signal(self->mainloop, 0);
 }
 
-void AudioInputPulse::StreamReadCallback(pa_stream* stream, size_t requestedBytes, void* userdata)
+void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requestedBytes, void* userdata)
 {
     ((AudioInputPulse*)userdata)->StreamReadCallback(stream, requestedBytes);
 }
 
-void AudioInputPulse::StreamReadCallback(pa_stream* stream, size_t requestedBytes)
+void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requestedBytes)
 {
-    size_t bytesRemaining = requestedBytes;
-    uint8_t* buffer = NULL;
+    std::size_t bytesRemaining = requestedBytes;
+    std::uint8_t* buffer = NULL;
     pa_usec_t latency;
     if (pa_stream_get_latency(stream, &latency, NULL) == 0)
     {
-        estimatedDelay = (int32_t)(latency / 100);
+        estimatedDelay = (std::int32_t)(latency / 100);
     }
     while (bytesRemaining > 0)
     {
-        size_t bytesToFill = 102400;
+        std::size_t bytesToFill = 102400;
 
         if (bytesToFill > bytesRemaining)
             bytesToFill = bytesRemaining;

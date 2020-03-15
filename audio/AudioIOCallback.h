@@ -24,14 +24,14 @@ namespace audio
         virtual ~AudioInputCallback();
         virtual void Start() override;
         virtual void Stop() override;
-        void SetDataCallback(std::function<void(int16_t*, size_t)> c);
+        void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
 
     private:
         void RunThread();
         std::atomic<bool> running {false};
         bool recording = false;
         Thread* thread;
-        std::function<void(int16_t*, size_t)> dataCallback;
+        std::function<void(std::int16_t*, std::size_t)> dataCallback;
     };
 
     class AudioOutputCallback : public AudioOutput
@@ -42,14 +42,14 @@ namespace audio
         virtual void Start() override;
         virtual void Stop() override;
         virtual bool IsPlaying() override;
-        void SetDataCallback(std::function<void(int16_t*, size_t)> c);
+        void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
 
     private:
         void RunThread();
         std::atomic<bool> running {false};
         bool playing = false;
         Thread* thread;
-        std::function<void(int16_t*, size_t)> dataCallback;
+        std::function<void(std::int16_t*, std::size_t)> dataCallback;
     };
 
     class AudioIOCallback : public AudioIO

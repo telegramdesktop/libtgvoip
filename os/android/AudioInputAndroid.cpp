@@ -7,7 +7,7 @@
 #include "AudioInputAndroid.h"
 #include "../../logging.h"
 #include "JNIUtilities.h"
-#include <stdio.h>
+#include <cstdio>
 
 extern JavaVM* sharedJVM;
 
@@ -69,7 +69,7 @@ void AudioInputAndroid::HandleCallback(JNIEnv* env, jobject buffer)
     if (!running)
         return;
     unsigned char* buf = (unsigned char*)env->GetDirectBufferAddress(buffer);
-    size_t len = (size_t)env->GetDirectBufferCapacity(buffer);
+    std::size_t len = (std::size_t)env->GetDirectBufferCapacity(buffer);
     InvokeCallback(buf, len);
 }
 

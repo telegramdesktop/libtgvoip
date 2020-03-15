@@ -16,7 +16,7 @@
 #include "../../VoIPController.h"
 #include "../../logging.h"
 #include "WindowsSpecific.h"
-#include <assert.h>
+#include <cassert>
 
 using namespace tgvoip;
 
@@ -89,7 +89,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                             if (addrPtr->ai_family == AF_INET6)
                             {
                                 sockaddr_in6* translatedAddr = (sockaddr_in6*)addrPtr->ai_addr;
-                                uint32_t v4part = *((uint32_t*)&translatedAddr->sin6_addr.s6_addr[12]);
+                                std::uint32_t v4part = *((std::uint32_t*)&translatedAddr->sin6_addr.s6_addr[12]);
                                 if (v4part == 0xAA0000C0 && !addr170)
                                 {
                                     addr170 = translatedAddr->sin6_addr.s6_addr;
@@ -117,9 +117,9 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                     }
                     needUpdateNat64Prefix = false;
                 }
-                memset(&addr, 0, sizeof(sockaddr_in6));
+                std::memset(&addr, 0, sizeof(sockaddr_in6));
                 addr.sin6_family = AF_INET6;
-                *((uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
+                *((std::uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
                 if (nat64Present)
                     std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
                 else
@@ -202,7 +202,7 @@ bool NetworkSocketWinsock::OnReadyToSend()
     return true;
 }
 
-NetworkPacket NetworkSocketWinsock::Receive(size_t maxLen)
+NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
         maxLen = UINT32_MAX;
@@ -236,7 +236,7 @@ NetworkPacket NetworkSocketWinsock::Receive(size_t maxLen)
                 addr = NetworkAddress::IPv6(srcAddr.sin6_addr.s6_addr);
             }
             return NetworkPacket {
-                Buffer::CopyOf(recvBuf, 0, (size_t)res),
+                Buffer::CopyOf(recvBuf, 0, (std::size_t)res),
                 addr,
                 ntohs(srcAddr.sin6_port),
                 NetworkProtocol::UDP};
@@ -252,7 +252,7 @@ NetworkPacket NetworkSocketWinsock::Receive(size_t maxLen)
                 return NetworkPacket::Empty();
             }
             return NetworkPacket {
-                Buffer::CopyOf(recvBuf, 0, (size_t)res),
+                Buffer::CopyOf(recvBuf, 0, (std::size_t)res),
                 NetworkAddress::IPv4(srcAddr.sin_addr.s_addr),
                 ntohs(srcAddr.sin_port),
                 NetworkProtocol::UDP};
@@ -271,7 +271,7 @@ NetworkPacket NetworkSocketWinsock::Receive(size_t maxLen)
         else
         {
             return NetworkPacket {
-                Buffer::CopyOf(recvBuf, 0, (size_t)res),
+                Buffer::CopyOf(recvBuf, 0, (std::size_t)res),
                 tcpConnectedAddress,
                 tcpConnectedPort,
                 NetworkProtocol::TCP};
@@ -318,7 +318,7 @@ void NetworkSocketWinsock::Open()
         if (isAtLeastVista)
         {
             //addr.sin6_addr.s_addr=0;
-            memset(&addr6, 0, sizeof(sockaddr_in6));
+            std::memset(&addr6, 0, sizeof(sockaddr_in6));
             //addr.sin6_len=sizeof(sa_family_t);
             addr6.sin6_family = AF_INET6;
             addr = (sockaddr*)&addr6;
@@ -334,7 +334,7 @@ void NetworkSocketWinsock::Open()
         }
         for (tries = 0; tries < 10; tries++)
         {
-            uint16_t port = htons(GenerateLocalPort());
+            std::uint16_t port = htons(GenerateLocalPort());
             if (isAtLeastVista)
                 ((sockaddr_in6*)addr)->sin6_port = port;
             else
@@ -365,7 +365,7 @@ void NetworkSocketWinsock::Open()
             }
         }
         getsockname(fd, addr, (socklen_t*)&addrLen);
-        uint16_t localUdpPort;
+        std::uint16_t localUdpPort;
         if (isAtLeastVista)
             localUdpPort = ntohs(((sockaddr_in6*)addr)->sin6_port);
         else
@@ -470,7 +470,7 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
                 {
                     sockaddr_in* ipv4 = (sockaddr_in*)addr;
                     LOGV("-> V4: %s", V4AddressToString(ipv4->sin_addr.s_addr).c_str());
-                    uint32_t ip = ntohl(ipv4->sin_addr.s_addr);
+                    std::uint32_t ip = ntohl(ipv4->sin_addr.s_addr);
                     if ((ip & 0xFFFF0000) != 0xA9FE0000)
                     {
                         if (isAtLeastVista)
@@ -509,22 +509,22 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
 #endif
 }
 
-uint16_t NetworkSocketWinsock::GetLocalPort()
+std::uint16_t NetworkSocketWinsock::GetLocalPort()
 {
     if (!isAtLeastVista)
     {
         sockaddr_in addr;
-        size_t addrLen = sizeof(sockaddr_in);
+        std::size_t addrLen = sizeof(sockaddr_in);
         getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
         return ntohs(addr.sin_port);
     }
     sockaddr_in6 addr;
-    size_t addrLen = sizeof(sockaddr_in6);
+    std::size_t addrLen = sizeof(sockaddr_in6);
     getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
     return ntohs(addr.sin6_port);
 }
 
-std::string NetworkSocketWinsock::V4AddressToString(uint32_t address)
+std::string NetworkSocketWinsock::V4AddressToString(std::uint32_t address)
 {
     char buf[INET_ADDRSTRLEN];
     sockaddr_in addr;
@@ -562,7 +562,7 @@ std::string NetworkSocketWinsock::V6AddressToString(const unsigned char* address
     return std::string(buf);
 }
 
-uint32_t NetworkSocketWinsock::StringToV4Address(std::string address)
+std::uint32_t NetworkSocketWinsock::StringToV4Address(std::string address)
 {
     sockaddr_in addr;
     ZeroMemory(&addr, sizeof(addr));
@@ -594,12 +594,12 @@ void NetworkSocketWinsock::StringToV6Address(std::string address, unsigned char*
     std::memcpy(out, addr.sin6_addr.s6_addr, 16);
 }
 
-void NetworkSocketWinsock::Connect(const NetworkAddress address, uint16_t port)
+void NetworkSocketWinsock::Connect(const NetworkAddress address, std::uint16_t port)
 {
     sockaddr_in v4;
     sockaddr_in6 v6;
     sockaddr* addr = NULL;
-    size_t addrLen = 0;
+    std::size_t addrLen = 0;
     if (!address.isIPv6)
     {
         v4.sin_family = AF_INET;
@@ -681,7 +681,7 @@ NetworkAddress NetworkSocketWinsock::GetConnectedAddress()
     return tcpConnectedAddress;
 }
 
-uint16_t NetworkSocketWinsock::GetConnectedPort()
+std::uint16_t NetworkSocketWinsock::GetConnectedPort()
 {
     return tcpConnectedPort;
 }

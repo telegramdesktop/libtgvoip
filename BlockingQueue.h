@@ -21,7 +21,7 @@ class BlockingQueue
 {
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BlockingQueue);
-    BlockingQueue(size_t capacity)
+    BlockingQueue(std::size_t capacity)
         : m_capacity(capacity)
         , m_semaphore(capacity, 0)
         , m_overflowCallback(nullptr)
@@ -70,7 +70,7 @@ public:
         return GetInternal();
     }
 
-    size_t Size() const
+    std::size_t Size() const
     {
         return m_queue.size();
     }
@@ -95,7 +95,7 @@ private:
     }
 
     std::list<T> m_queue;
-    size_t m_capacity;
+    std::size_t m_capacity;
     //tgvoip_lock_t lock;
     mutable Semaphore m_semaphore;
     mutable Mutex m_mutex;

@@ -8,7 +8,7 @@
 #define LIBTGVOIP_AUDIOINPUT_H
 
 #include "../MediaStreamItf.h"
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -32,12 +32,12 @@ namespace audio
         virtual void SetCurrentDevice(std::string deviceID);
         //static AudioInput* Create(std::string deviceID, void* platformSpecific);
         static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
-        static int32_t GetEstimatedDelay();
+        static std::int32_t GetEstimatedDelay();
 
     protected:
         std::string currentDevice;
         bool failed;
-        static int32_t estimatedDelay;
+        static std::int32_t estimatedDelay;
     };
 }
 }

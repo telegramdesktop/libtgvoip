@@ -7,7 +7,7 @@
 #include <cstring>
 
 using namespace tgvoip::audio;
-static constexpr int16_t hann[960] = {
+static constexpr std::int16_t hann[960] = {
     0x0000, 0x0000, 0x0000, 0x0001, 0x0001, 0x0002, 0x0003, 0x0004, 0x0006, 0x0007, 0x0009, 0x000B, 0x000D, 0x000F, 0x0011, 0x0014, 0x0016, 0x0019, 0x001C, 0x0020,
     0x0023, 0x0027, 0x002A, 0x002E, 0x0033, 0x0037, 0x003B, 0x0040, 0x0045, 0x004A, 0x004F, 0x0054, 0x005A, 0x0060, 0x0065, 0x006B, 0x0072, 0x0078, 0x007F, 0x0085,
     0x008C, 0x0093, 0x009B, 0x00A2, 0x00AA, 0x00B2, 0x00B9, 0x00C2, 0x00CA, 0x00D2, 0x00DB, 0x00E4, 0x00ED, 0x00F6, 0x00FF, 0x0109, 0x0113, 0x011C, 0x0127, 0x0131,
@@ -59,23 +59,23 @@ static constexpr int16_t hann[960] = {
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-size_t Resampler::Convert48To44(int16_t* from, int16_t* to, size_t fromLen, size_t toLen)
+std::size_t Resampler::Convert48To44(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
 {
-    size_t outLen = fromLen * 147 / 160;
+    std::size_t outLen = fromLen * 147 / 160;
     if (toLen < outLen)
         outLen = toLen;
     for (unsigned int offset = 0; offset < outLen; offset++)
     {
         float offsetf = offset * 160.0f / 147.0f;
         float factor = offsetf - floorf(offsetf);
-        to[offset] = static_cast<int16_t>(from[static_cast<size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<size_t>(ceilf(offsetf))] * factor);
+        to[offset] = static_cast<std::int16_t>(from[static_cast<std::size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<std::size_t>(ceilf(offsetf))] * factor);
     }
     return outLen;
 }
 
-size_t Resampler::Convert44To48(int16_t* from, int16_t* to, size_t fromLen, size_t toLen)
+std::size_t Resampler::Convert44To48(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
 {
-    size_t outLen = fromLen * 160 / 147;
+    std::size_t outLen = fromLen * 160 / 147;
     if (toLen < outLen)
         outLen = toLen;
     unsigned int offset;
@@ -83,14 +83,14 @@ size_t Resampler::Convert44To48(int16_t* from, int16_t* to, size_t fromLen, size
     {
         float offsetf = offset * 147.0f / 160.0f;
         float factor = offsetf - floorf(offsetf);
-        to[offset] = static_cast<int16_t>(from[static_cast<size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<size_t>(ceilf(offsetf))] * factor);
+        to[offset] = static_cast<std::int16_t>(from[static_cast<std::size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<std::size_t>(ceilf(offsetf))] * factor);
     }
     return outLen;
 }
 
-size_t Resampler::Convert(int16_t* from, int16_t* to, size_t fromLen, size_t toLen, size_t num, size_t denom)
+std::size_t Resampler::Convert(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen, std::size_t num, std::size_t denom)
 {
-    size_t outLen = fromLen * num / denom;
+    std::size_t outLen = fromLen * num / denom;
     if (toLen < outLen)
         outLen = toLen;
     unsigned int offset;
@@ -98,27 +98,27 @@ size_t Resampler::Convert(int16_t* from, int16_t* to, size_t fromLen, size_t toL
     {
         float offsetf = offset * static_cast<float>(denom) / static_cast<float>(num);
         float factor = offsetf - floorf(offsetf);
-        to[offset] = static_cast<int16_t>(from[static_cast<size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<size_t>(ceilf(offsetf))] * factor);
+        to[offset] = static_cast<std::int16_t>(from[static_cast<std::size_t>(floorf(offsetf))] * (1 - factor) + from[static_cast<std::size_t>(ceilf(offsetf))] * factor);
     }
     return outLen;
 }
 
-void Resampler::Rescale60To80(int16_t* in, int16_t* out)
+void Resampler::Rescale60To80(std::int16_t* in, std::int16_t* out)
 {
     std::memcpy(out, in, 960 * 2);
     std::memcpy(out + 960 * 3, in + 960 * 2, 960 * 2);
     for (int i = 0; i < 960; i++)
     {
-        out[960 + i] = static_cast<int16_t>(((static_cast<int32_t>(in[960 + i]) * hann[959 - i]) >> 15) + ((static_cast<int32_t>(in[480 + i]) * hann[i]) >> 15));
-        out[1920 + i] = static_cast<int16_t>(((static_cast<int32_t>(in[960 + 480 + i]) * hann[959 - i]) >> 15) + ((static_cast<int32_t>(in[480 + 480 + i]) * hann[i]) >> 15));
+        out[960 + i] = static_cast<std::int16_t>(((static_cast<std::int32_t>(in[960 + i]) * hann[959 - i]) >> 15) + ((static_cast<std::int32_t>(in[480 + i]) * hann[i]) >> 15));
+        out[1920 + i] = static_cast<std::int16_t>(((static_cast<std::int32_t>(in[960 + 480 + i]) * hann[959 - i]) >> 15) + ((static_cast<std::int32_t>(in[480 + 480 + i]) * hann[i]) >> 15));
     }
 }
 
-void Resampler::Rescale60To40(int16_t* in, int16_t* out)
+void Resampler::Rescale60To40(std::int16_t* in, std::int16_t* out)
 {
     for (int i = 0; i < 960; i++)
     {
-        out[i] = static_cast<int16_t>(((static_cast<int32_t>(in[i]) * hann[959 - i]) >> 15) + ((static_cast<int32_t>(in[480 + i]) * hann[i]) >> 15));
-        out[960 + i] = static_cast<int16_t>(((static_cast<int32_t>(in[1920 + i]) * hann[i]) >> 15) + ((static_cast<int32_t>(in[1440 + i]) * hann[959 - i]) >> 15));
+        out[i] = static_cast<std::int16_t>(((static_cast<std::int32_t>(in[i]) * hann[959 - i]) >> 15) + ((static_cast<std::int32_t>(in[480 + i]) * hann[i]) >> 15));
+        out[960 + i] = static_cast<std::int16_t>(((static_cast<std::int32_t>(in[1920 + i]) * hann[i]) >> 15) + ((static_cast<std::int32_t>(in[1440 + i]) * hann[959 - i]) >> 15));
     }
 }

@@ -8,8 +8,8 @@
 #include "../../Buffers.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
-#include <errno.h>
+#include <cassert>
+#include <cerrno>
 #include <fcntl.h>
 #include <net/if.h>
 #include <netdb.h>
@@ -116,7 +116,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                         if (addrPtr->ai_family == AF_INET6)
                         {
                             sockaddr_in6* translatedAddr = (sockaddr_in6*)addrPtr->ai_addr;
-                            uint32_t v4part = *((uint32_t*)&translatedAddr->sin6_addr.s6_addr[12]);
+                            std::uint32_t v4part = *((std::uint32_t*)&translatedAddr->sin6_addr.s6_addr[12]);
                             if (v4part == 0xAA0000C0 && !addr170)
                             {
                                 addr170 = translatedAddr->sin6_addr.s6_addr;
@@ -144,9 +144,9 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                 }
                 needUpdateNat64Prefix = false;
             }
-            memset(&addr, 0, sizeof(sockaddr_in6));
+            std::memset(&addr, 0, sizeof(sockaddr_in6));
             addr.sin6_family = AF_INET6;
-            *((uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
+            *((std::uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
             if (nat64Present)
                 std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
             else
@@ -193,7 +193,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             }
         }
     }
-    else if ((size_t)res != packet.data.Length() && packet.protocol == NetworkProtocol::TCP)
+    else if ((std::size_t)res != packet.data.Length() && packet.protocol == NetworkProtocol::TCP)
     {
         if (!pendingOutgoingPacket.IsEmpty())
         {
@@ -221,7 +221,7 @@ bool NetworkSocketPosix::OnReadyToSend()
     return true;
 }
 
-NetworkPacket NetworkSocketPosix::Receive(size_t maxLen)
+NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
         maxLen = INT32_MAX;
@@ -252,7 +252,7 @@ NetworkPacket NetworkSocketPosix::Receive(size_t maxLen)
                 addr = NetworkAddress::IPv6(srcAddr.sin6_addr.s6_addr);
             }
             return NetworkPacket {
-                Buffer::CopyOf(recvBuffer, 0, (size_t)len),
+                Buffer::CopyOf(recvBuffer, 0, (std::size_t)len),
                 addr,
                 ntohs(srcAddr.sin6_port),
                 NetworkProtocol::UDP};
@@ -276,7 +276,7 @@ NetworkPacket NetworkSocketPosix::Receive(size_t maxLen)
         else
         {
             return NetworkPacket {
-                Buffer::CopyOf(recvBuffer, 0, (size_t)res),
+                Buffer::CopyOf(recvBuffer, 0, (std::size_t)res),
                 tcpConnectedAddress,
                 tcpConnectedPort,
                 NetworkProtocol::TCP};
@@ -321,7 +321,7 @@ void NetworkSocketPosix::Open()
     int tries = 0;
     sockaddr_in6 addr;
     //addr.sin6_addr.s_addr=0;
-    memset(&addr, 0, sizeof(sockaddr_in6));
+    std::memset(&addr, 0, sizeof(sockaddr_in6));
     //addr.sin6_len=sizeof(sa_family_t);
     addr.sin6_family = AF_INET6;
     for (tries = 0; tries < 10; tries++)
@@ -350,7 +350,7 @@ void NetworkSocketPosix::Open()
             return;
         }
     }
-    size_t addrLen = sizeof(sockaddr_in6);
+    std::size_t addrLen = sizeof(sockaddr_in6);
     getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
     LOGD("Bound to local UDP port %u", ntohs(addr.sin6_port));
 
@@ -376,12 +376,12 @@ void NetworkSocketPosix::Close()
     }
 }
 
-void NetworkSocketPosix::Connect(const NetworkAddress address, uint16_t port)
+void NetworkSocketPosix::Connect(const NetworkAddress address, std::uint16_t port)
 {
     struct sockaddr_in v4 = {0};
     struct sockaddr_in6 v6 = {0};
     struct sockaddr* addr = NULL;
-    size_t addrLen = 0;
+    std::size_t addrLen = 0;
     if (!address.isIPv6)
     {
         v4.sin_family = AF_INET;
@@ -523,15 +523,15 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
     return name;
 }
 
-uint16_t NetworkSocketPosix::GetLocalPort()
+std::uint16_t NetworkSocketPosix::GetLocalPort()
 {
     sockaddr_in6 addr;
-    size_t addrLen = sizeof(sockaddr_in6);
+    std::size_t addrLen = sizeof(sockaddr_in6);
     getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
     return ntohs(addr.sin6_port);
 }
 
-std::string NetworkSocketPosix::V4AddressToString(uint32_t address)
+std::string NetworkSocketPosix::V4AddressToString(std::uint32_t address)
 {
     char buf[INET_ADDRSTRLEN];
     in_addr addr;
@@ -549,7 +549,7 @@ std::string NetworkSocketPosix::V6AddressToString(const unsigned char* address)
     return std::string(buf);
 }
 
-uint32_t NetworkSocketPosix::StringToV4Address(std::string address)
+std::uint32_t NetworkSocketPosix::StringToV4Address(std::string address)
 {
     in_addr addr;
     inet_pton(AF_INET, address.c_str(), &addr);
@@ -594,7 +594,7 @@ NetworkAddress NetworkSocketPosix::GetConnectedAddress()
     return tcpConnectedAddress;
 }
 
-uint16_t NetworkSocketPosix::GetConnectedPort()
+std::uint16_t NetworkSocketPosix::GetConnectedPort()
 {
     return tcpConnectedPort;
 }

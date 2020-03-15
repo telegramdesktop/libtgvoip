@@ -8,8 +8,8 @@
 #include "../../VoIPController.h"
 #include "../../audio/Resampler.h"
 #include "../../logging.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #define BUFFER_SIZE 960
 #define CHECK_AU_ERROR(res, msg)                       \
@@ -114,10 +114,10 @@ void AudioInputAudioUnitLegacy::HandleBufferCallback(AudioBufferList* ioData)
     for (i = 0; i < ioData->mNumberBuffers; i++)
     {
         AudioBuffer buf = ioData->mBuffers[i];
-        size_t len = buf.mDataByteSize;
+        std::size_t len = buf.mDataByteSize;
         if (hardwareSampleRate != 48000)
         {
-            len = tgvoip::audio::Resampler::Convert((int16_t*)buf.mData, (int16_t*)(remainingData + remainingDataSize), buf.mDataByteSize / 2, (10240 - (buf.mDataByteSize + remainingDataSize)) / 2, 48000, hardwareSampleRate) * 2;
+            len = tgvoip::audio::Resampler::Convert((std::int16_t*)buf.mData, (std::int16_t*)(remainingData + remainingDataSize), buf.mDataByteSize / 2, (10240 - (buf.mDataByteSize + remainingDataSize)) / 2, 48000, hardwareSampleRate) * 2;
         }
         else
         {

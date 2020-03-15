@@ -14,7 +14,7 @@ jmethodID VideoRendererAndroid::resetMethod = NULL;
 jmethodID VideoRendererAndroid::decodeAndDisplayMethod = NULL;
 jmethodID VideoRendererAndroid::setStreamEnabledMethod = NULL;
 jmethodID VideoRendererAndroid::setRotationMethod = NULL;
-std::vector<uint32_t> VideoRendererAndroid::availableDecoders;
+std::vector<std::uint32_t> VideoRendererAndroid::availableDecoders;
 int VideoRendererAndroid::maxResolution;
 
 extern JavaVM* sharedJVM;
@@ -39,7 +39,7 @@ VideoRendererAndroid::~VideoRendererAndroid()
 	});*/
 }
 
-void VideoRendererAndroid::Reset(uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& _csd)
+void VideoRendererAndroid::Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& _csd)
 {
     csd.clear();
     for (Buffer& b : _csd)
@@ -65,7 +65,7 @@ void VideoRendererAndroid::Reset(uint32_t codec, unsigned int width, unsigned in
     }
 }
 
-void VideoRendererAndroid::DecodeAndDisplay(Buffer frame, uint32_t pts)
+void VideoRendererAndroid::DecodeAndDisplay(Buffer frame, std::uint32_t pts)
 {
     /*decoderThread.Post(std::bind([this](Buffer frame){
 	}, std::move(frame)));*/
@@ -81,10 +81,10 @@ void VideoRendererAndroid::RunThread()
     JNIEnv* env;
     sharedJVM->AttachCurrentThread(&env, NULL);
 
-    constexpr size_t bufferSize = 200 * 1024;
+    constexpr std::size_t bufferSize = 200 * 1024;
     unsigned char* buf = reinterpret_cast<unsigned char*>(std::malloc(bufferSize));
     jobject jbuf = env->NewDirectByteBuffer(buf, bufferSize);
-    uint16_t lastSetRotation = 0;
+    std::uint16_t lastSetRotation = 0;
 
     while (running)
     {
@@ -164,7 +164,7 @@ void VideoRendererAndroid::SetStreamEnabled(bool enabled)
     queue.Put(std::move(req));
 }
 
-void VideoRendererAndroid::SetRotation(uint16_t rotation)
+void VideoRendererAndroid::SetRotation(std::uint16_t rotation)
 {
     this->rotation = rotation;
 }

@@ -31,8 +31,8 @@ namespace audio
 
     private:
         static void StreamStateCallback(pa_stream* s, void* arg);
-        static void StreamReadCallback(pa_stream* stream, size_t requested_bytes, void* userdata);
-        void StreamReadCallback(pa_stream* stream, size_t requestedBytes);
+        static void StreamReadCallback(pa_stream* stream, std::size_t requested_bytes, void* userdata);
+        void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes);
         pa_stream* CreateAndInitStream();
 
         pa_threaded_mainloop* mainloop;
@@ -44,7 +44,7 @@ namespace audio
         bool didStart;
         bool isLocked;
         unsigned char remainingData[960 * 8 * 2];
-        size_t remainingDataSize;
+        std::size_t remainingDataSize;
     };
 
 }

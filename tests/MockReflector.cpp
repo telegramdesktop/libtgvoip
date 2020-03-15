@@ -6,27 +6,27 @@
 
 #include "MockReflector.h"
 #include <arpa/inet.h>
-#include <assert.h>
-#include <stdio.h>
+#include <cassert>
+#include <cstdio>
 
 using namespace tgvoip;
 using namespace tgvoip::test;
 
 struct UdpReflectorSelfInfo
 {
-    uint8_t peerTag[16];
-    uint64_t _id1 = 0xFFFFFFFFFFFFFFFFLL;
-    uint32_t _id2 = 0xFFFFFFFF;
-    uint32_t magic = 0xc01572c7;
-    int32_t date;
-    uint64_t query_id;
-    uint64_t my_ip_padding1;
-    uint32_t my_ip_padding2;
-    uint32_t my_ip;
-    uint32_t my_port;
+    std::uint8_t peerTag[16];
+    std::uint64_t _id1 = 0xFFFFFFFFFFFFFFFFLL;
+    std::uint32_t _id2 = 0xFFFFFFFF;
+    std::uint32_t magic = 0xc01572c7;
+    std::int32_t date;
+    std::uint64_t query_id;
+    std::uint64_t my_ip_padding1;
+    std::uint32_t my_ip_padding2;
+    std::uint32_t my_ip;
+    std::uint32_t my_port;
 } __attribute__((packed));
 
-MockReflector::MockReflector(std::string bindAddress, uint16_t bindPort)
+MockReflector::MockReflector(std::string bindAddress, std::uint16_t bindPort)
 {
     sfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     assert(sfd != -1);
@@ -42,15 +42,15 @@ MockReflector::~MockReflector()
 {
 }
 
-std::array<std::array<uint8_t, 16>, 2> MockReflector::GeneratePeerTags()
+std::array<std::array<std::uint8_t, 16>, 2> MockReflector::GeneratePeerTags()
 {
-    std::array<uint8_t, 16> tag1;
+    std::array<std::uint8_t, 16> tag1;
     for (int i = 0; i < 16; i++)
     {
-        tag1[i] = (uint8_t)rand();
+        tag1[i] = (std::uint8_t)rand();
     }
     tag1[15] &= 0xFE;
-    std::array<std::array<uint8_t, 16>, 2> res;
+    std::array<std::array<std::uint8_t, 16>, 2> res;
     res[0] = tag1;
     std::copy(tag1.begin(), tag1.end(), res[1].begin());
     res[1][15] |= 1;
@@ -87,7 +87,7 @@ void MockReflector::RunThread()
 {
     while (running)
     {
-        std::array<uint8_t, 1500> buf;
+        std::array<std::uint8_t, 1500> buf;
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
         ssize_t len = recvfrom(sfd, buf.data(), sizeof(buf), 0, (struct sockaddr*)&addr, &addrlen);
@@ -95,11 +95,11 @@ void MockReflector::RunThread()
             return;
         if (len >= 32)
         {
-            std::array<uint8_t, 16> peerTag;
-            int32_t specialID[4];
+            std::array<std::uint8_t, 16> peerTag;
+            std::int32_t specialID[4];
             std::copy(buf.begin(), buf.begin() + 16, peerTag.begin());
             std::memcpy(specialID, buf.data() + 16, 16);
-            uint64_t tagID = *reinterpret_cast<uint64_t*>(peerTag.data());
+            std::uint64_t tagID = *reinterpret_cast<std::uint64_t*>(peerTag.data());
             ClientPair c = clients[tagID];
             sockaddr_in* dest;
             if (peerTag[15] & 1)
@@ -124,11 +124,11 @@ void MockReflector::RunThread()
                 {
                     UdpReflectorSelfInfo response;
                     std::memcpy(response.peerTag, peerTag.data(), 16);
-                    response.date = (int32_t)time(NULL);
-                    response.query_id = *reinterpret_cast<uint64_t*>(buf.data() + 32);
+                    response.date = (std::int32_t)time(NULL);
+                    response.query_id = *reinterpret_cast<std::uint64_t*>(buf.data() + 32);
                     response.my_ip_padding1 = 0;
                     response.my_ip_padding2 = 0xFFFF0000;
-                    response.my_ip = (uint32_t)addr.sin_addr.s_addr;
+                    response.my_ip = (std::uint32_t)addr.sin_addr.s_addr;
                     response.my_port = ntohs(addr.sin_port);
                     sendto(sfd, &response, sizeof(response), 0, (struct sockaddr*)&addr, sizeof(addr));
                     continue;

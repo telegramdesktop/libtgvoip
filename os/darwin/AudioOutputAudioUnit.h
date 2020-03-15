@@ -35,7 +35,7 @@ namespace audio
     private:
         std::atomic<bool> isPlaying;
         unsigned char remainingData[10240];
-        size_t remainingDataSize;
+        std::size_t remainingDataSize;
         AudioUnitIO* io;
     };
 }

@@ -1,8 +1,8 @@
-﻿#include <stdlib.h>
+﻿#include <cstdlib>
 #include "CXWrapper.h"
 #include <collection.h>
 #include <robuffer.h>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -62,7 +62,7 @@ void VoIPControllerWrapper::Connect()
     controller->Connect();
 }
 
-void VoIPControllerWrapper::SetPublicEndpoints(const Platform::Array<libtgvoip::Endpoint ^> ^ endpoints, bool allowP2P, int32_t connectionMaxLayer)
+void VoIPControllerWrapper::SetPublicEndpoints(const Platform::Array<libtgvoip::Endpoint ^> ^ endpoints, bool allowP2P, std::int32_t connectionMaxLayer)
 {
     std::vector<tgvoip::Endpoint> eps;
     for (unsigned int i = 0; i < endpoints->Length; i++)
@@ -106,7 +106,7 @@ int64 VoIPControllerWrapper::GetPreferredRelayID()
     return controller->GetPreferredRelayID();
 }
 
-int32_t VoIPControllerWrapper::GetConnectionMaxLayer()
+std::int32_t VoIPControllerWrapper::GetConnectionMaxLayer()
 {
     return tgvoip::VoIPController::GetConnectionMaxLayer();
 }
@@ -145,7 +145,7 @@ TrafficStats ^ VoIPControllerWrapper::GetStats()
 Platform::String ^ VoIPControllerWrapper::GetDebugString()
 {
     std::string log = controller->GetDebugString();
-    size_t len = sizeof(wchar_t) * (log.length() + 1);
+    std::size_t len = sizeof(wchar_t) * (log.length() + 1);
     wchar_t* wlog = (wchar_t*)std::malloc(len);
     MultiByteToWideChar(CP_UTF8, 0, log.c_str(), -1, wlog, len / sizeof(wchar_t));
     Platform::String ^ res = ref new Platform::String(wlog);
@@ -156,7 +156,7 @@ Platform::String ^ VoIPControllerWrapper::GetDebugString()
 Platform::String ^ VoIPControllerWrapper::GetDebugLog()
 {
     std::string log = controller->GetDebugLog();
-    size_t len = sizeof(wchar_t) * (log.length() + 1);
+    std::size_t len = sizeof(wchar_t) * (log.length() + 1);
     wchar_t* wlog = (wchar_t*)std::malloc(len);
     MultiByteToWideChar(CP_UTF8, 0, log.c_str(), -1, wlog, len / sizeof(wchar_t));
     Platform::String ^ res = ref new Platform::String(wlog);
@@ -230,7 +230,7 @@ void VoIPControllerWrapper::SetConfig(VoIPConfig ^ wrapper)
     controller->SetConfig(config);
 }
 
-void VoIPControllerWrapper::SetProxy(ProxyProtocol protocol, Platform::String ^ address, uint16_t port, Platform::String ^ username, Platform::String ^ password)
+void VoIPControllerWrapper::SetProxy(ProxyProtocol protocol, Platform::String ^ address, std::uint16_t port, Platform::String ^ username, Platform::String ^ password)
 {
     char _address[2000];
     char _username[256];
@@ -284,18 +284,18 @@ void VoIPControllerWrapper::SwitchSpeaker(bool external)
     }
 }
 
-void MicrosoftCryptoImpl::AesIgeEncrypt(uint8_t* in, uint8_t* out, size_t len, uint8_t* key, uint8_t* iv)
+void MicrosoftCryptoImpl::AesIgeEncrypt(std::uint8_t* in, std::uint8_t* out, std::size_t len, std::uint8_t* key, std::uint8_t* iv)
 {
     IBuffer ^ keybuf = IBufferFromPtr(key, 32);
     CryptographicKey ^ _key = aesKeyProvider->CreateSymmetricKey(keybuf);
-    uint8_t tmpOut[16];
-    uint8_t* xPrev = iv + 16;
-    uint8_t* yPrev = iv;
-    uint8_t x[16];
-    uint8_t y[16];
-    for (size_t offset = 0; offset < len; offset += 16)
+    std::uint8_t tmpOut[16];
+    std::uint8_t* xPrev = iv + 16;
+    std::uint8_t* yPrev = iv;
+    std::uint8_t x[16];
+    std::uint8_t y[16];
+    for (std::size_t offset = 0; offset < len; offset += 16)
     {
-        for (size_t i = 0; i < 16; i++)
+        for (std::size_t i = 0; i < 16; i++)
         {
             if (offset + i < len)
             {
@@ -317,18 +317,18 @@ void MicrosoftCryptoImpl::AesIgeEncrypt(uint8_t* in, uint8_t* out, size_t len, u
     }
 }
 
-void MicrosoftCryptoImpl::AesIgeDecrypt(uint8_t* in, uint8_t* out, size_t len, uint8_t* key, uint8_t* iv)
+void MicrosoftCryptoImpl::AesIgeDecrypt(std::uint8_t* in, std::uint8_t* out, std::size_t len, std::uint8_t* key, std::uint8_t* iv)
 {
     IBuffer ^ keybuf = IBufferFromPtr(key, 32);
     CryptographicKey ^ _key = aesKeyProvider->CreateSymmetricKey(keybuf);
-    uint8_t tmpOut[16];
-    uint8_t* xPrev = iv;
-    uint8_t* yPrev = iv + 16;
-    uint8_t x[16];
-    uint8_t y[16];
-    for (size_t offset = 0; offset < len; offset += 16)
+    std::uint8_t tmpOut[16];
+    std::uint8_t* xPrev = iv;
+    std::uint8_t* yPrev = iv + 16;
+    std::uint8_t x[16];
+    std::uint8_t y[16];
+    for (std::size_t offset = 0; offset < len; offset += 16)
     {
-        for (size_t i = 0; i < 16; i++)
+        for (std::size_t i = 0; i < 16; i++)
         {
             if (offset + i < len)
             {
@@ -350,7 +350,7 @@ void MicrosoftCryptoImpl::AesIgeDecrypt(uint8_t* in, uint8_t* out, size_t len, u
     }
 }
 
-#define GETU32(pt) (((uint32_t)(pt)[0] << 24) ^ ((uint32_t)(pt)[1] << 16) ^ ((uint32_t)(pt)[2] << 8) ^ ((uint32_t)(pt)[3]))
+#define GETU32(pt) (((std::uint32_t)(pt)[0] << 24) ^ ((std::uint32_t)(pt)[1] << 16) ^ ((std::uint32_t)(pt)[2] << 8) ^ ((std::uint32_t)(pt)[3]))
 #define PUTU32(ct, st)              \
     {                               \
         (ct)[0] = (u8)((st) >> 24); \
@@ -359,7 +359,7 @@ void MicrosoftCryptoImpl::AesIgeDecrypt(uint8_t* in, uint8_t* out, size_t len, u
         (ct)[3] = (u8)(st);         \
     }
 
-typedef uint8_t u8;
+typedef std::uint8_t u8;
 
 #define L_ENDIAN
 
@@ -395,7 +395,7 @@ static void AES_ctr128_inc(unsigned char* counter)
 #endif
 }
 
-void MicrosoftCryptoImpl::AesCtrEncrypt(uint8_t* inout, size_t len, uint8_t* key, uint8_t* counter, uint8_t* ecount_buf, uint32_t* num)
+void MicrosoftCryptoImpl::AesCtrEncrypt(std::uint8_t* inout, std::size_t len, std::uint8_t* key, std::uint8_t* counter, std::uint8_t* ecount_buf, std::uint32_t* num)
 {
     unsigned int n;
     unsigned long l = len;
@@ -425,7 +425,7 @@ void MicrosoftCryptoImpl::AesCtrEncrypt(uint8_t* inout, size_t len, uint8_t* key
     *num = n;
 }
 
-void MicrosoftCryptoImpl::SHA1(uint8_t* msg, size_t len, uint8_t* out)
+void MicrosoftCryptoImpl::SHA1(std::uint8_t* msg, std::size_t len, std::uint8_t* out)
 {
     //EnterCriticalSection(&hashMutex);
 
@@ -438,7 +438,7 @@ void MicrosoftCryptoImpl::SHA1(uint8_t* msg, size_t len, uint8_t* out)
     //LeaveCriticalSection(&hashMutex);
 }
 
-void MicrosoftCryptoImpl::SHA256(uint8_t* msg, size_t len, uint8_t* out)
+void MicrosoftCryptoImpl::SHA256(std::uint8_t* msg, std::size_t len, std::uint8_t* out)
 {
     //EnterCriticalSection(&hashMutex);
 
@@ -450,7 +450,7 @@ void MicrosoftCryptoImpl::SHA256(uint8_t* msg, size_t len, uint8_t* out)
     //LeaveCriticalSection(&hashMutex);
 }
 
-void MicrosoftCryptoImpl::RandBytes(uint8_t* buffer, size_t len)
+void MicrosoftCryptoImpl::RandBytes(std::uint8_t* buffer, std::size_t len)
 {
     IBuffer ^ res = CryptographicBuffer::GenerateRandom(len);
     IBufferToPtr(res, len, buffer);
@@ -465,16 +465,16 @@ void MicrosoftCryptoImpl::Init()
     aesKeyProvider = SymmetricKeyAlgorithmProvider::OpenAlgorithm(SymmetricAlgorithmNames::AesEcb);
 }
 
-void MicrosoftCryptoImpl::XorInt128(uint8_t* a, uint8_t* b, uint8_t* out)
+void MicrosoftCryptoImpl::XorInt128(std::uint8_t* a, std::uint8_t* b, std::uint8_t* out)
 {
-    uint64_t* _a = reinterpret_cast<uint64_t*>(a);
-    uint64_t* _b = reinterpret_cast<uint64_t*>(b);
-    uint64_t* _out = reinterpret_cast<uint64_t*>(out);
+    std::uint64_t* _a = reinterpret_cast<std::uint64_t*>(a);
+    std::uint64_t* _b = reinterpret_cast<std::uint64_t*>(b);
+    std::uint64_t* _out = reinterpret_cast<std::uint64_t*>(out);
     _out[0] = _a[0] ^ _b[0];
     _out[1] = _a[1] ^ _b[1];
 }
 
-void MicrosoftCryptoImpl::IBufferToPtr(IBuffer ^ buffer, size_t len, uint8_t* out)
+void MicrosoftCryptoImpl::IBufferToPtr(IBuffer ^ buffer, std::size_t len, std::uint8_t* out)
 {
     ComPtr<IBufferByteAccess> bufferByteAccess;
     reinterpret_cast<IInspectable*>(buffer)->QueryInterface(IID_PPV_ARGS(&bufferByteAccess));
@@ -484,7 +484,7 @@ void MicrosoftCryptoImpl::IBufferToPtr(IBuffer ^ buffer, size_t len, uint8_t* ou
     CopyMemory(out, hashBuffer, len);
 }
 
-IBuffer ^ MicrosoftCryptoImpl::IBufferFromPtr(uint8_t* msg, size_t len)
+IBuffer ^ MicrosoftCryptoImpl::IBufferFromPtr(std::uint8_t* msg, std::size_t len)
 {
     ComPtr<NativeBuffer> nativeBuffer = Make<NativeBuffer>((byte*)msg, len);
     return reinterpret_cast<IBuffer ^>(nativeBuffer.Get());

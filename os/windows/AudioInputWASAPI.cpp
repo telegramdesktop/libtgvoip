@@ -7,7 +7,7 @@
 #include "AudioInputWASAPI.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
+#include <cassert>
 
 #define BUFFER_SIZE 960
 #define CHECK_RES(res, msg)                              \
@@ -355,7 +355,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     res = audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY, 1000 * 10000, 0, &format, &guid);
     CHECK_RES(res, "audioClient->Initialize");
 
-    uint32_t bufSize;
+    std::uint32_t bufSize;
     res = audioClient->GetBufferSize(&bufSize);
     CHECK_RES(res, "audioClient->GetBufferSize");
 
@@ -366,7 +366,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     {
         if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, NULL)))
         {
-            estimatedDelay = (int32_t)(latency / 10000 + devicePeriod / 10000);
+            estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
         }
     }
 
@@ -407,8 +407,8 @@ void AudioInputWASAPI::RunThread()
     HRESULT res = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     CHECK_RES(res, "CoInitializeEx in capture thread");
 
-    uint32_t bufferSize = 0;
-    uint64_t framesWritten = 0;
+    std::uint32_t bufferSize = 0;
+    std::uint64_t framesWritten = 0;
 
     bool running = true;
     //double prevCallback=VoIPController::GetCurrentTime();
@@ -436,12 +436,12 @@ void AudioInputWASAPI::RunThread()
             res = captureClient->GetNextPacketSize(&bufferSize);
             CHECK_RES(res, "captureClient->GetNextPacketSize");
             BYTE* data;
-            uint32_t framesAvailable = 0;
+            std::uint32_t framesAvailable = 0;
             DWORD flags;
 
             res = captureClient->GetBuffer(&data, &framesAvailable, &flags, NULL, NULL);
             CHECK_RES(res, "captureClient->GetBuffer");
-            size_t dataLen = framesAvailable * 2;
+            std::size_t dataLen = framesAvailable * 2;
             assert(remainingDataLen + dataLen < sizeof(remainingData));
 
             if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
@@ -467,7 +467,7 @@ void AudioInputWASAPI::RunThread()
 
             res = captureClient->ReleaseBuffer(framesAvailable);
             CHECK_RES(res, "captureClient->ReleaseBuffer");
-            //estimatedDelay=(int32_t)((devicePosition-framesWritten)/48);
+            //estimatedDelay=(std::int32_t)((devicePosition-framesWritten)/48);
 
             framesWritten += framesAvailable;
         }

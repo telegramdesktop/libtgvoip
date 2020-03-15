@@ -15,7 +15,7 @@
 #include "utils.h"
 
 #include <atomic>
-#include <stdint.h>
+#include <cstdint>
 
 struct OpusEncoder;
 
@@ -29,15 +29,15 @@ public:
     virtual ~OpusEncoder();
     virtual void Start();
     virtual void Stop();
-    void SetBitrate(uint32_t bitrate);
+    void SetBitrate(std::uint32_t bitrate);
     void SetEchoCanceller(EchoCanceller* aec);
-    void SetOutputFrameDuration(uint32_t duration);
+    void SetOutputFrameDuration(std::uint32_t duration);
     void SetPacketLoss(int percent);
     int GetPacketLoss();
-    uint32_t GetBitrate();
+    std::uint32_t GetBitrate();
     void SetDTX(bool enable);
     void SetLevelMeter(AudioLevelMeter* levelMeter);
-    void SetCallback(std::function<void(unsigned char*, size_t, unsigned char*, size_t)> callback);
+    void SetCallback(std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> callback);
     void SetSecondaryEncoderEnabled(bool enabled);
     void SetVadMode(bool vad);
     void AddAudioEffect(effects::AudioEffect* effect);
@@ -48,28 +48,28 @@ public:
     }
 
 private:
-    static size_t Callback(unsigned char* data, size_t len, void* param);
+    static std::size_t Callback(unsigned char* data, std::size_t len, void* param);
     void RunThread();
-    void Encode(int16_t* data, size_t len);
-    void InvokeCallback(unsigned char* data, size_t length, unsigned char* secondaryData, size_t secondaryLength);
+    void Encode(std::int16_t* data, std::size_t len);
+    void InvokeCallback(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength);
     MediaStreamItf* source;
     ::OpusEncoder* enc;
     ::OpusEncoder* secondaryEncoder;
     unsigned char buffer[4096];
-    std::atomic<uint32_t> requestedBitrate;
-    uint32_t currentBitrate;
+    std::atomic<std::uint32_t> requestedBitrate;
+    std::uint32_t currentBitrate;
     Thread* thread;
     BlockingQueue<Buffer> queue;
     BufferPool<960 * 2, 10> bufferPool;
     EchoCanceller* echoCanceller;
     std::atomic<int> complexity;
     std::atomic<bool> running;
-    uint32_t frameDuration;
+    std::uint32_t frameDuration;
     int packetLossPercent;
     AudioLevelMeter* levelMeter;
     std::atomic<bool> secondaryEncoderEnabled;
     bool vadMode = false;
-    uint32_t vadNoVoiceBitrate;
+    std::uint32_t vadNoVoiceBitrate;
     std::vector<effects::AudioEffect*> postProcEffects;
     int secondaryEnabledBandwidth;
     int vadModeVoiceBandwidth;
@@ -77,7 +77,7 @@ private:
 
     bool wasSecondaryEncoderEnabled = false;
 
-    std::function<void(unsigned char*, size_t, unsigned char*, size_t)> callback;
+    std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> callback;
 };
 }
 

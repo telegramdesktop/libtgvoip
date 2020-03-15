@@ -7,10 +7,10 @@
 #include "AudioInputALSA.h"
 #include "../../VoIPController.h"
 #include "../../logging.h"
-#include <assert.h>
+#include <cassert>
 #include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace tgvoip::audio;
 

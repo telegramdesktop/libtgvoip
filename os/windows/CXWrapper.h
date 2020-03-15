@@ -13,7 +13,7 @@ using namespace Platform;
 #define STACK_ARRAY(TYPE, LEN) \
     static_cast<TYPE*>(::alloca((LEN) * sizeof(TYPE)))
 
-inline std::wstring ToUtf16(const char* utf8, size_t len)
+inline std::wstring ToUtf16(const char* utf8, std::size_t len)
 {
     int len16 = ::MultiByteToWideChar(CP_UTF8, 0, utf8, static_cast<int>(len),
         nullptr, 0);
@@ -27,7 +27,7 @@ inline std::wstring ToUtf16(const std::string& str)
     return ToUtf16(str.data(), str.length());
 }
 
-inline std::string ToUtf8(const wchar_t* wide, size_t len)
+inline std::string ToUtf8(const wchar_t* wide, std::size_t len)
 {
     int len8 = ::WideCharToMultiByte(CP_UTF8, 0, wide, static_cast<int>(len),
         nullptr, 0, nullptr, nullptr);
@@ -64,10 +64,10 @@ public
 ref class TrafficStats sealed
 {
 public:
-    property uint64_t bytesSentWifi;
-    property uint64_t bytesRecvdWifi;
-    property uint64_t bytesSentMobile;
-    property uint64_t bytesRecvdMobile;
+    property std::uint64_t bytesSentWifi;
+    property std::uint64_t bytesRecvdWifi;
+    property std::uint64_t bytesSentMobile;
+    property std::uint64_t bytesRecvdMobile;
 };
 
 public
@@ -167,12 +167,12 @@ public:
     virtual ~VoIPControllerWrapper();
     void Start();
     void Connect();
-    void SetPublicEndpoints(const Platform::Array<Endpoint ^> ^ endpoints, bool allowP2P, int32_t connectionMaxLayer);
+    void SetPublicEndpoints(const Platform::Array<Endpoint ^> ^ endpoints, bool allowP2P, std::int32_t connectionMaxLayer);
     void SetNetworkType(NetworkType type);
     void SetMicMute(bool mute);
     void SetEncryptionKey(const Platform::Array<uint8> ^ key, bool isOutgoing);
     void SetConfig(VoIPConfig ^ config);
-    void SetProxy(ProxyProtocol protocol, Platform::String ^ address, uint16_t port, Platform::String ^ username, Platform::String ^ password);
+    void SetProxy(ProxyProtocol protocol, Platform::String ^ address, std::uint16_t port, Platform::String ^ username, Platform::String ^ password);
     int GetSignalBarsCount();
     CallState GetConnectionState();
     TrafficStats ^ GetStats();
@@ -205,7 +205,7 @@ public:
               }
           }
 
-        static int32_t
+        static std::int32_t
         GetConnectionMaxLayer();
     static void UpdateServerConfig(Platform::String ^ json);
     static void SwitchSpeaker(bool external);
@@ -225,18 +225,18 @@ private:
 ref class MicrosoftCryptoImpl
 {
 public:
-    static void AesIgeEncrypt(uint8_t* in, uint8_t* out, size_t len, uint8_t* key, uint8_t* iv);
-    static void AesIgeDecrypt(uint8_t* in, uint8_t* out, size_t len, uint8_t* key, uint8_t* iv);
-    static void AesCtrEncrypt(uint8_t* inout, size_t len, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
-    static void SHA1(uint8_t* msg, size_t len, uint8_t* out);
-    static void SHA256(uint8_t* msg, size_t len, uint8_t* out);
-    static void RandBytes(uint8_t* buffer, size_t len);
+    static void AesIgeEncrypt(std::uint8_t* in, std::uint8_t* out, std::size_t len, std::uint8_t* key, std::uint8_t* iv);
+    static void AesIgeDecrypt(std::uint8_t* in, std::uint8_t* out, std::size_t len, std::uint8_t* key, std::uint8_t* iv);
+    static void AesCtrEncrypt(std::uint8_t* inout, std::size_t len, std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num);
+    static void SHA1(std::uint8_t* msg, std::size_t len, std::uint8_t* out);
+    static void SHA256(std::uint8_t* msg, std::size_t len, std::uint8_t* out);
+    static void RandBytes(std::uint8_t* buffer, std::size_t len);
     static void Init();
 
 private:
-    static inline void XorInt128(uint8_t* a, uint8_t* b, uint8_t* out);
-    static void IBufferToPtr(Windows::Storage::Streams::IBuffer ^ buffer, size_t len, uint8_t* out);
-    static Windows::Storage::Streams::IBuffer ^ IBufferFromPtr(uint8_t* msg, size_t len);
+    static inline void XorInt128(std::uint8_t* a, std::uint8_t* b, std::uint8_t* out);
+    static void IBufferToPtr(Windows::Storage::Streams::IBuffer ^ buffer, std::size_t len, std::uint8_t* out);
+    static Windows::Storage::Streams::IBuffer ^ IBufferFromPtr(std::uint8_t* msg, std::size_t len);
     /*static Windows::Security::Cryptography::Core::CryptographicHash^ sha1Hash;
 		static Windows::Security::Cryptography::Core::CryptographicHash^ sha256Hash;*/
     static Windows::Security::Cryptography::Core::HashAlgorithmProvider ^ sha1Provider;

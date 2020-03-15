@@ -22,15 +22,15 @@ VideoPacketSender::~VideoPacketSender()
 {
 }
 
-void VideoPacketSender::PacketAcknowledged(uint32_t seq, double sendTime, double ackTime, uint8_t type, uint32_t size)
+void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, std::uint8_t type, std::uint32_t size)
 {
-    uint32_t bytesNewlyAcked = 0;
+    std::uint32_t bytesNewlyAcked = 0;
     //if(!videoKeyframeRequested){
     // video frames are stored in sentVideoFrames in order of increasing numbers
     // so if a frame (or part of it) is acknowledged but isn't sentVideoFrames[0], we know there was a packet loss
     for (SentVideoFrame& f : m_sentVideoFrames)
     {
-        for (std::vector<uint32_t>::iterator s = f.unacknowledgedPackets.begin(); s != f.unacknowledgedPackets.end();)
+        for (std::vector<std::uint32_t>::iterator s = f.unacknowledgedPackets.begin(); s != f.unacknowledgedPackets.end();)
         {
             //RecentOutgoingPacket* opkt=GetRecentOutgoingPacket(*s);
             if (/*opkt && opkt->ackTime!=0.0*/ *s == seq)
@@ -67,7 +67,7 @@ void VideoPacketSender::PacketAcknowledged(uint32_t seq, double sendTime, double
     //videoCongestionControl.GetPacingInterval();
 }
 
-void VideoPacketSender::PacketLost(uint32_t seq, uint8_t type, uint32_t size)
+void VideoPacketSender::PacketLost(std::uint32_t seq, std::uint8_t type, std::uint32_t size)
 {
     if (type == PKT_STREAM_EC)
         return;
@@ -75,7 +75,7 @@ void VideoPacketSender::PacketLost(uint32_t seq, uint8_t type, uint32_t size)
     //LOGI("frame count %u", (unsigned int)sentVideoFrames.size());
     for (std::vector<SentVideoFrame>::iterator f = m_sentVideoFrames.begin(); f != m_sentVideoFrames.end(); ++f)
     {
-        std::vector<uint32_t>::iterator pkt = std::find(f->unacknowledgedPackets.begin(), f->unacknowledgedPackets.end(), seq);
+        std::vector<std::uint32_t>::iterator pkt = std::find(f->unacknowledgedPackets.begin(), f->unacknowledgedPackets.end(), seq);
         if (pkt != f->unacknowledgedPackets.end())
         {
             LOGW("Lost packet belongs to frame %u", f->seq);
@@ -115,7 +115,7 @@ void VideoPacketSender::SetSource(VideoSource* source)
         return;
 
     m_sourceChangeTime = m_lastVideoResolutionChangeTime = VoIPController::GetCurrentTime();
-    uint32_t bitrate = m_videoCongestionControl.GetBitrate();
+    std::uint32_t bitrate = m_videoCongestionControl.GetBitrate();
     m_currentVideoBitrate = bitrate;
     source->SetBitrate(bitrate);
     source->Reset(m_stm->codec, m_stm->resolution = GetVideoResolutionForCurrentBitrate());
@@ -131,7 +131,7 @@ void VideoPacketSender::SetSource(VideoSource* source)
     });
 }
 
-void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t rotation)
+void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std::uint32_t rotation)
 {
     std::shared_ptr<Buffer> framePtr = std::make_shared<Buffer>(Buffer::CopyOf(_frame));
     GetMessageThread().Post([this, framePtr, flags, rotation] {
@@ -142,8 +142,8 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
         if (m_firstVideoFrameTime == 0.0)
             m_firstVideoFrameTime = currentTime;
 
-        m_videoCongestionControl.UpdateMediaRate(static_cast<uint32_t>(frame.Length()));
-        uint32_t bitrate = m_videoCongestionControl.GetBitrate();
+        m_videoCongestionControl.UpdateMediaRate(static_cast<std::uint32_t>(frame.Length()));
+        std::uint32_t bitrate = m_videoCongestionControl.GetBitrate();
         if (bitrate != m_currentVideoBitrate)
         {
             m_currentVideoBitrate = bitrate;
@@ -176,7 +176,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             }
         }
 
-        uint32_t pts = m_videoFrameCount++;
+        std::uint32_t pts = m_videoFrameCount++;
         bool csdInvalidated = !m_stm->csdIsValid;
         if (!m_stm->csdIsValid)
         {
@@ -196,9 +196,9 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
         if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
         {
             BufferOutputStream os(256);
-            os.WriteInt16(static_cast<int16_t>(m_stm->width));
-            os.WriteInt16(static_cast<int16_t>(m_stm->height));
-            uint8_t sizeAndFlag = static_cast<uint8_t>(m_stm->codecSpecificData.size());
+            os.WriteInt16(static_cast<std::int16_t>(m_stm->width));
+            os.WriteInt16(static_cast<std::int16_t>(m_stm->height));
+            std::uint8_t sizeAndFlag = static_cast<std::uint8_t>(m_stm->codecSpecificData.size());
             if (csdInvalidated)
                 sizeAndFlag |= 0x80;
             os.WriteByte(sizeAndFlag);
@@ -212,20 +212,20 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
         }
 
         ++m_frameSeq;
-        size_t totalLength = csd.Length() + frame.Length();
-        size_t segmentCount = totalLength / 1024;
+        std::size_t totalLength = csd.Length() + frame.Length();
+        std::size_t segmentCount = totalLength / 1024;
         if (totalLength % 1024 > 0)
             ++segmentCount;
         SentVideoFrame sentFrame;
         sentFrame.seq = m_frameSeq;
-        sentFrame.fragmentCount = static_cast<uint32_t>(segmentCount);
-        sentFrame.fragmentsInQueue = 0; //static_cast<uint32_t>(segmentCount);
-        size_t offset = 0;
-        size_t packetSize = totalLength / segmentCount;
-        for (size_t seg = 0; seg < segmentCount; ++seg)
+        sentFrame.fragmentCount = static_cast<std::uint32_t>(segmentCount);
+        sentFrame.fragmentsInQueue = 0; //static_cast<std::uint32_t>(segmentCount);
+        std::size_t offset = 0;
+        std::size_t packetSize = totalLength / segmentCount;
+        for (std::size_t seg = 0; seg < segmentCount; ++seg)
         {
             BufferOutputStream pkt(1500);
-            size_t len; //=std::min((size_t)1024, frame.Length()-offset);
+            std::size_t len; //=std::min((std::size_t)1024, frame.Length()-offset);
             if (seg == segmentCount - 1)
             {
                 len = frame.Length() - offset;
@@ -237,21 +237,21 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             unsigned char pflags = STREAM_DATA_FLAG_LEN16;
             //pflags |= STREAM_DATA_FLAG_HAS_MORE_FLAGS;
             pkt.WriteByte(static_cast<unsigned char>(m_stm->id | pflags)); // streamID + flags
-            int16_t lengthAndFlags = static_cast<int16_t>(len & 0x7FF);
+            std::int16_t lengthAndFlags = static_cast<std::int16_t>(len & 0x7FF);
             if (segmentCount > 1)
                 lengthAndFlags |= STREAM_DATA_XFLAG_FRAGMENTED;
             if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
                 lengthAndFlags |= STREAM_DATA_XFLAG_KEYFRAME;
             pkt.WriteInt16(lengthAndFlags);
             //pkt.WriteInt32(audioTimestampOut);
-            pkt.WriteInt32(static_cast<int32_t>(pts));
+            pkt.WriteInt32(static_cast<std::int32_t>(pts));
             if (segmentCount > 1)
             {
                 pkt.WriteByte(static_cast<unsigned char>(seg));
                 pkt.WriteByte(static_cast<unsigned char>(segmentCount));
             }
             pkt.WriteByte(static_cast<unsigned char>(m_frameSeq));
-            size_t dataOffset = pkt.GetLength();
+            std::size_t dataOffset = pkt.GetLength();
             if (seg == 0)
             {
                 unsigned char _rotation;
@@ -290,7 +290,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
 
             Buffer packetData(std::move(pkt));
 
-            size_t packetDataLength = packetData.Length();
+            std::size_t packetDataLength = packetData.Length();
             VoIPController::PendingOutgoingPacket p {
                 /*.seq=*/0,
                 /*.type=*/PKT_STREAM_DATA,
@@ -299,7 +299,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
                 /*.endpoint=*/0,
             };
             IncrementUnsentStreamPackets();
-            uint32_t seq = SendPacket(std::move(p));
+            std::uint32_t seq = SendPacket(std::move(p));
             m_videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pkt.GetLength()));
             sentFrame.unacknowledgedPackets.push_back(seq);
             //packetQueue.Put(QueuedPacket{std::move(p), sentFrame.seq});
@@ -317,7 +317,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             out.WriteByte(static_cast<unsigned char>(m_frameSeq));
             out.WriteByte(FEC_SCHEME_XOR);
             out.WriteByte(3);
-            out.WriteInt16(static_cast<int16_t>(fecPacket.Length()));
+            out.WriteInt16(static_cast<std::int16_t>(fecPacket.Length()));
             out.WriteBytes(fecPacket);
 
             VoIPController::PendingOutgoingPacket p {
@@ -326,16 +326,16 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
                 out.GetLength(),
                 Buffer(std::move(out)),
                 0};
-            uint32_t seq = SendPacket(std::move(p));
+            std::uint32_t seq = SendPacket(std::move(p));
         }
         m_sentVideoFrames.push_back(sentFrame);
     });
 }
 
-uint32_t VideoPacketSender::GetVideoResolutionForCurrentBitrate()
+std::uint32_t VideoPacketSender::GetVideoResolutionForCurrentBitrate()
 {
-    uint32_t peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
-    uint32_t resolutionFromBitrate = INIT_VIDEO_RES_1080;
+    std::uint32_t peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
+    std::uint32_t resolutionFromBitrate = INIT_VIDEO_RES_1080;
     if (VoIPController::GetCurrentTime() - m_sourceChangeTime > 10.0)
     {
         // TODO: probably move this to server config
