@@ -28,7 +28,8 @@
 #endif
 // clang-format on
 
-namespace rtc {
+namespace rtc
+{
 #if defined(WEBRTC_WIN)
 typedef DWORD PlatformThreadId;
 typedef DWORD PlatformThreadRef;
@@ -54,6 +55,6 @@ bool IsThreadRefEqual(const PlatformThreadRef& a, const PlatformThreadRef& b);
 // Sets the current thread name.
 void SetCurrentThreadName(const char* name);
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_PLATFORM_THREAD_TYPES_H_
+#endif // RTC_BASE_PLATFORM_THREAD_TYPES_H_

@@ -8,16 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*
  * This file contains resampling functions between 48 kHz and nb/wb.
  * The description header can be found in signal_processing_library.h
  *
  */
 
-#include <string.h>
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 #include "common_audio/signal_processing/resample_by_2_internal.h"
+#include <string.h>
 
 ////////////////////////////
 ///// 48 kHz -> 16 kHz /////
@@ -25,7 +24,7 @@
 
 // 48 -> 16 resampler
 void WebRtcSpl_Resample48khzTo16khz(const int16_t* in, int16_t* out,
-                                    WebRtcSpl_State48khzTo16khz* state, int32_t* tmpmem)
+    WebRtcSpl_State48khzTo16khz* state, int32_t* tmpmem)
 {
     ///// 48 --> 48(LP) /////
     // int16_t  in[480]
@@ -63,7 +62,7 @@ void WebRtcSpl_ResetResample48khzTo16khz(WebRtcSpl_State48khzTo16khz* state)
 
 // 16 -> 48 resampler
 void WebRtcSpl_Resample16khzTo48khz(const int16_t* in, int16_t* out,
-                                    WebRtcSpl_State16khzTo48khz* state, int32_t* tmpmem)
+    WebRtcSpl_State16khzTo48khz* state, int32_t* tmpmem)
 {
     ///// 16 --> 32 /////
     // int16_t  in[160]
@@ -101,7 +100,7 @@ void WebRtcSpl_ResetResample16khzTo48khz(WebRtcSpl_State16khzTo48khz* state)
 
 // 48 -> 8 resampler
 void WebRtcSpl_Resample48khzTo8khz(const int16_t* in, int16_t* out,
-                                   WebRtcSpl_State48khzTo8khz* state, int32_t* tmpmem)
+    WebRtcSpl_State48khzTo8khz* state, int32_t* tmpmem)
 {
     ///// 48 --> 24 /////
     // int16_t  in[480]
@@ -146,7 +145,7 @@ void WebRtcSpl_ResetResample48khzTo8khz(WebRtcSpl_State48khzTo8khz* state)
 
 // 8 -> 48 resampler
 void WebRtcSpl_Resample8khzTo48khz(const int16_t* in, int16_t* out,
-                                   WebRtcSpl_State8khzTo48khz* state, int32_t* tmpmem)
+    WebRtcSpl_State8khzTo48khz* state, int32_t* tmpmem)
 {
     ///// 8 --> 16 /////
     // int16_t  in[80]

@@ -19,7 +19,8 @@
 
 #include <stddef.h>
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Returns a pointer to the first boundry of |alignment| bytes following the
 // address of |ptr|.
@@ -37,21 +38,24 @@ void AlignedFree(void* mem_block);
 // Templated versions to facilitate usage of aligned malloc without casting
 // to and from void*.
 template <typename T>
-T* GetRightAlign(const T* ptr, size_t alignment) {
-  return reinterpret_cast<T*>(
-      GetRightAlign(reinterpret_cast<const void*>(ptr), alignment));
+T* GetRightAlign(const T* ptr, size_t alignment)
+{
+    return reinterpret_cast<T*>(
+        GetRightAlign(reinterpret_cast<const void*>(ptr), alignment));
 }
 template <typename T>
-T* AlignedMalloc(size_t size, size_t alignment) {
-  return reinterpret_cast<T*>(AlignedMalloc(size, alignment));
+T* AlignedMalloc(size_t size, size_t alignment)
+{
+    return reinterpret_cast<T*>(AlignedMalloc(size, alignment));
 }
 
 // Deleter for use with unique_ptr. E.g., use as
 //   std::unique_ptr<Foo, AlignedFreeDeleter> foo;
-struct AlignedFreeDeleter {
-  inline void operator()(void* ptr) const { AlignedFree(ptr); }
+struct AlignedFreeDeleter
+{
+    inline void operator()(void* ptr) const { AlignedFree(ptr); }
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // RTC_BASE_MEMORY_ALIGNED_MALLOC_H_
+#endif // RTC_BASE_MEMORY_ALIGNED_MALLOC_H_

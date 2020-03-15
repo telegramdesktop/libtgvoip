@@ -109,9 +109,9 @@
 // should be counted from two, not one."
 #if ABSL_HAVE_ATTRIBUTE(format) || (defined(__GNUC__) && !defined(__clang__))
 #define ABSL_PRINTF_ATTRIBUTE(string_index, first_to_check) \
-  __attribute__((__format__(__printf__, string_index, first_to_check)))
+    __attribute__((__format__(__printf__, string_index, first_to_check)))
 #define ABSL_SCANF_ATTRIBUTE(string_index, first_to_check) \
-  __attribute__((__format__(__scanf__, string_index, first_to_check)))
+    __attribute__((__format__(__scanf__, string_index, first_to_check)))
 #else
 #define ABSL_PRINTF_ATTRIBUTE(string_index, first_to_check)
 #define ABSL_SCANF_ATTRIBUTE(string_index, first_to_check)
@@ -121,8 +121,7 @@
 // ABSL_ATTRIBUTE_NOINLINE
 //
 // Forces functions to either inline or not inline. Introduced in gcc 3.1.
-#if ABSL_HAVE_ATTRIBUTE(always_inline) || \
-    (defined(__GNUC__) && !defined(__clang__))
+#if ABSL_HAVE_ATTRIBUTE(always_inline) || (defined(__GNUC__) && !defined(__clang__))
 #define ABSL_ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline))
 #define ABSL_HAVE_ATTRIBUTE_ALWAYS_INLINE 1
 #else
@@ -146,7 +145,7 @@
 #elif defined(__GNUC__) && !defined(__clang__)
 #define ABSL_HAVE_ATTRIBUTE_NO_TAIL_CALL 1
 #define ABSL_ATTRIBUTE_NO_TAIL_CALL \
-  __attribute__((optimize("no-optimize-sibling-calls")))
+    __attribute__((optimize("no-optimize-sibling-calls")))
 #else
 #define ABSL_ATTRIBUTE_NO_TAIL_CALL
 #define ABSL_HAVE_ATTRIBUTE_NO_TAIL_CALL 0
@@ -158,9 +157,7 @@
 // Weak attributes currently do not work properly in LLVM's Windows backend,
 // so disable them there. See https://bugs.llvm.org/show_bug.cgi?id=37598
 // for futher information.
-#if (ABSL_HAVE_ATTRIBUTE(weak) || \
-     (defined(__GNUC__) && !defined(__clang__))) && \
-    !(defined(__llvm__) && defined(_WIN32))
+#if (ABSL_HAVE_ATTRIBUTE(weak) || (defined(__GNUC__) && !defined(__clang__))) && !(defined(__llvm__) && defined(_WIN32))
 #undef ABSL_ATTRIBUTE_WEAK
 #define ABSL_ATTRIBUTE_WEAK __attribute__((weak))
 #define ABSL_HAVE_ATTRIBUTE_WEAK 1
@@ -269,10 +266,9 @@
 // where certain behavior (eg. division by zero) is being used intentionally.
 // NOTE: GCC supports UndefinedBehaviorSanitizer(ubsan) since 4.9.
 // https://gcc.gnu.org/gcc-4.9/changes.html
-#if defined(__GNUC__) && \
-    (defined(UNDEFINED_BEHAVIOR_SANITIZER) || defined(ADDRESS_SANITIZER))
+#if defined(__GNUC__) && (defined(UNDEFINED_BEHAVIOR_SANITIZER) || defined(ADDRESS_SANITIZER))
 #define ABSL_ATTRIBUTE_NO_SANITIZE_UNDEFINED \
-  __attribute__((no_sanitize("undefined")))
+    __attribute__((no_sanitize("undefined")))
 #else
 #define ABSL_ATTRIBUTE_NO_SANITIZE_UNDEFINED
 #endif
@@ -290,10 +286,7 @@
 // ABSL_ATTRIBUTE_RETURNS_NONNULL
 //
 // Tells the compiler that a particular function never returns a null pointer.
-#if ABSL_HAVE_ATTRIBUTE(returns_nonnull) || \
-    (defined(__GNUC__) && \
-     (__GNUC__ > 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) && \
-     !defined(__clang__))
+#if ABSL_HAVE_ATTRIBUTE(returns_nonnull) || (defined(__GNUC__) && (__GNUC__ > 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) && !defined(__clang__))
 #define ABSL_ATTRIBUTE_RETURNS_NONNULL __attribute__((returns_nonnull))
 #else
 #define ABSL_ATTRIBUTE_RETURNS_NONNULL
@@ -305,9 +298,7 @@
 // a prerequisite. Labeled sections are not supported on Darwin/iOS.
 #ifdef ABSL_HAVE_ATTRIBUTE_SECTION
 #error ABSL_HAVE_ATTRIBUTE_SECTION cannot be directly set
-#elif (ABSL_HAVE_ATTRIBUTE(section) ||                \
-       (defined(__GNUC__) && !defined(__clang__))) && \
-    !defined(__APPLE__) && ABSL_HAVE_ATTRIBUTE_WEAK
+#elif (ABSL_HAVE_ATTRIBUTE(section) || (defined(__GNUC__) && !defined(__clang__))) && !defined(__APPLE__) && ABSL_HAVE_ATTRIBUTE_WEAK
 #define ABSL_HAVE_ATTRIBUTE_SECTION 1
 
 // ABSL_ATTRIBUTE_SECTION
@@ -320,9 +311,8 @@
 //
 #ifndef ABSL_ATTRIBUTE_SECTION
 #define ABSL_ATTRIBUTE_SECTION(name) \
-  __attribute__((section(#name))) __attribute__((noinline))
+    __attribute__((section(#name))) __attribute__((noinline))
 #endif
-
 
 // ABSL_ATTRIBUTE_SECTION_VARIABLE
 //
@@ -342,9 +332,9 @@
 // a no-op on ELF but not on Mach-O.
 //
 #ifndef ABSL_DECLARE_ATTRIBUTE_SECTION_VARS
-#define ABSL_DECLARE_ATTRIBUTE_SECTION_VARS(name) \
-  extern char __start_##name[] ABSL_ATTRIBUTE_WEAK;    \
-  extern char __stop_##name[] ABSL_ATTRIBUTE_WEAK
+#define ABSL_DECLARE_ATTRIBUTE_SECTION_VARS(name)     \
+    extern char __start_##name[] ABSL_ATTRIBUTE_WEAK; \
+    extern char __stop_##name[] ABSL_ATTRIBUTE_WEAK
 #endif
 #ifndef ABSL_DEFINE_ATTRIBUTE_SECTION_VARS
 #define ABSL_INIT_ATTRIBUTE_SECTION_VARS(name)
@@ -360,11 +350,11 @@
 // link.
 //
 #define ABSL_ATTRIBUTE_SECTION_START(name) \
-  (reinterpret_cast<void *>(__start_##name))
+    (reinterpret_cast<void*>(__start_##name))
 #define ABSL_ATTRIBUTE_SECTION_STOP(name) \
-  (reinterpret_cast<void *>(__stop_##name))
+    (reinterpret_cast<void*>(__stop_##name))
 
-#else  // !ABSL_HAVE_ATTRIBUTE_SECTION
+#else // !ABSL_HAVE_ATTRIBUTE_SECTION
 
 #define ABSL_HAVE_ATTRIBUTE_SECTION 0
 
@@ -374,27 +364,26 @@
 #define ABSL_INIT_ATTRIBUTE_SECTION_VARS(name)
 #define ABSL_DEFINE_ATTRIBUTE_SECTION_VARS(name)
 #define ABSL_DECLARE_ATTRIBUTE_SECTION_VARS(name)
-#define ABSL_ATTRIBUTE_SECTION_START(name) (reinterpret_cast<void *>(0))
-#define ABSL_ATTRIBUTE_SECTION_STOP(name) (reinterpret_cast<void *>(0))
+#define ABSL_ATTRIBUTE_SECTION_START(name) (reinterpret_cast<void*>(0))
+#define ABSL_ATTRIBUTE_SECTION_STOP(name) (reinterpret_cast<void*>(0))
 
-#endif  // ABSL_ATTRIBUTE_SECTION
+#endif // ABSL_ATTRIBUTE_SECTION
 
 // ABSL_ATTRIBUTE_STACK_ALIGN_FOR_OLD_LIBC
 //
 // Support for aligning the stack on 32-bit x86.
-#if ABSL_HAVE_ATTRIBUTE(force_align_arg_pointer) || \
-    (defined(__GNUC__) && !defined(__clang__))
+#if ABSL_HAVE_ATTRIBUTE(force_align_arg_pointer) || (defined(__GNUC__) && !defined(__clang__))
 #if defined(__i386__)
 #define ABSL_ATTRIBUTE_STACK_ALIGN_FOR_OLD_LIBC \
-  __attribute__((force_align_arg_pointer))
+    __attribute__((force_align_arg_pointer))
 #define ABSL_REQUIRE_STACK_ALIGN_TRAMPOLINE (0)
 #elif defined(__x86_64__)
 #define ABSL_REQUIRE_STACK_ALIGN_TRAMPOLINE (1)
 #define ABSL_ATTRIBUTE_STACK_ALIGN_FOR_OLD_LIBC
-#else  // !__i386__ && !__x86_64
+#else // !__i386__ && !__x86_64
 #define ABSL_REQUIRE_STACK_ALIGN_TRAMPOLINE (0)
 #define ABSL_ATTRIBUTE_STACK_ALIGN_FOR_OLD_LIBC
-#endif  // __i386__
+#endif // __i386__
 #else
 #define ABSL_ATTRIBUTE_STACK_ALIGN_FOR_OLD_LIBC
 #define ABSL_REQUIRE_STACK_ALIGN_TRAMPOLINE (0)
@@ -494,8 +483,7 @@
 // packages/targets, as this may lead to conflicting definitions of functions at
 // link-time.
 //
-#if ABSL_HAVE_CPP_ATTRIBUTE(clang::xray_always_instrument) && \
-    !defined(ABSL_NO_XRAY_ATTRIBUTES)
+#if ABSL_HAVE_CPP_ATTRIBUTE(clang::xray_always_instrument) && !defined(ABSL_NO_XRAY_ATTRIBUTES)
 #define ABSL_XRAY_ALWAYS_INSTRUMENT [[clang::xray_always_instrument]]
 #define ABSL_XRAY_NEVER_INSTRUMENT [[clang::xray_never_instrument]]
 #if ABSL_HAVE_CPP_ATTRIBUTE(clang::xray_log_args)
@@ -592,6 +580,6 @@
 #define ABSL_CONST_INIT [[clang::require_constant_initialization]]
 #else
 #define ABSL_CONST_INIT
-#endif  // ABSL_HAVE_CPP_ATTRIBUTE(clang::require_constant_initialization)
+#endif // ABSL_HAVE_CPP_ATTRIBUTE(clang::require_constant_initialization)
 
-#endif  // ABSL_BASE_ATTRIBUTES_H_
+#endif // ABSL_BASE_ATTRIBUTES_H_

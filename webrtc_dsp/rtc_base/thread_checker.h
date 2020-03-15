@@ -24,17 +24,19 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker_impl.h"
 
-namespace rtc {
+namespace rtc
+{
 
 // Do nothing implementation, for use in release mode.
 //
 // Note: You should almost always use the ThreadChecker class to get the
 // right version for your build configuration.
-class ThreadCheckerDoNothing {
- public:
-  bool CalledOnValidThread() const { return true; }
+class ThreadCheckerDoNothing
+{
+public:
+    bool CalledOnValidThread() const { return true; }
 
-  void DetachFromThread() {}
+    void DetachFromThread() {}
 };
 
 // ThreadChecker is a helper class used to help verify that some methods of a
@@ -69,35 +71,43 @@ class ThreadCheckerDoNothing {
 //
 // In Release mode, CalledOnValidThread will always return true.
 #if RTC_ENABLE_THREAD_CHECKER
-class RTC_LOCKABLE ThreadChecker : public ThreadCheckerImpl {};
+class RTC_LOCKABLE ThreadChecker : public ThreadCheckerImpl
+{
+};
 #else
-class RTC_LOCKABLE ThreadChecker : public ThreadCheckerDoNothing {};
-#endif  // RTC_ENABLE_THREAD_CHECKER
+class RTC_LOCKABLE ThreadChecker : public ThreadCheckerDoNothing
+{
+};
+#endif // RTC_ENABLE_THREAD_CHECKER
 
 #undef RTC_ENABLE_THREAD_CHECKER
 
-namespace internal {
-class RTC_SCOPED_LOCKABLE AnnounceOnThread {
- public:
-  template <typename ThreadLikeObject>
-  explicit AnnounceOnThread(const ThreadLikeObject* thread_like_object)
-      RTC_EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
-  ~AnnounceOnThread() RTC_UNLOCK_FUNCTION() {}
+namespace internal
+{
+    class RTC_SCOPED_LOCKABLE AnnounceOnThread
+    {
+    public:
+        template <typename ThreadLikeObject>
+        explicit AnnounceOnThread(const ThreadLikeObject* thread_like_object)
+            RTC_EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
+        ~AnnounceOnThread() RTC_UNLOCK_FUNCTION() {}
 
-  template <typename ThreadLikeObject>
-  static bool IsCurrent(const ThreadLikeObject* thread_like_object) {
-    return thread_like_object->IsCurrent();
-  }
-  static bool IsCurrent(const rtc::ThreadChecker* checker) {
-    return checker->CalledOnValidThread();
-  }
+        template <typename ThreadLikeObject>
+        static bool IsCurrent(const ThreadLikeObject* thread_like_object)
+        {
+            return thread_like_object->IsCurrent();
+        }
+        static bool IsCurrent(const rtc::ThreadChecker* checker)
+        {
+            return checker->CalledOnValidThread();
+        }
 
- private:
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AnnounceOnThread);
-};
+    private:
+        RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AnnounceOnThread);
+    };
 
-}  // namespace internal
-}  // namespace rtc
+} // namespace internal
+} // namespace rtc
 
 // RTC_RUN_ON/RTC_GUARDED_BY/RTC_DCHECK_RUN_ON macros allows to annotate
 // variables are accessed from same thread/task queue.
@@ -162,10 +172,10 @@ class RTC_SCOPED_LOCKABLE AnnounceOnThread {
 
 // Document if a function expected to be called from same thread/task queue.
 #define RTC_RUN_ON(x) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(x))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(x))
 
-#define RTC_DCHECK_RUN_ON(thread_like_object)                           \
-  rtc::internal::AnnounceOnThread thread_announcer(thread_like_object); \
-  RTC_DCHECK(rtc::internal::AnnounceOnThread::IsCurrent(thread_like_object))
+#define RTC_DCHECK_RUN_ON(thread_like_object)                             \
+    rtc::internal::AnnounceOnThread thread_announcer(thread_like_object); \
+    RTC_DCHECK(rtc::internal::AnnounceOnThread::IsCurrent(thread_like_object))
 
-#endif  // RTC_BASE_THREAD_CHECKER_H_
+#endif // RTC_BASE_THREAD_CHECKER_H_

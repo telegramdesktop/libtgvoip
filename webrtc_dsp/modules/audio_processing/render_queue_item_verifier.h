@@ -13,24 +13,29 @@
 
 #include <vector>
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Functor to use when supplying a verifier function for the queue item
 // verifcation.
 template <typename T>
-class RenderQueueItemVerifier {
- public:
-  explicit RenderQueueItemVerifier(size_t minimum_capacity)
-      : minimum_capacity_(minimum_capacity) {}
+class RenderQueueItemVerifier
+{
+public:
+    explicit RenderQueueItemVerifier(size_t minimum_capacity)
+        : minimum_capacity_(minimum_capacity)
+    {
+    }
 
-  bool operator()(const std::vector<T>& v) const {
-    return v.capacity() >= minimum_capacity_;
-  }
+    bool operator()(const std::vector<T>& v) const
+    {
+        return v.capacity() >= minimum_capacity_;
+    }
 
- private:
-  size_t minimum_capacity_;
+private:
+    size_t minimum_capacity_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_RENDER_QUEUE_ITEM_VERIFIER_H__
+#endif // MODULES_AUDIO_PROCESSING_RENDER_QUEUE_ITEM_VERIFIER_H__

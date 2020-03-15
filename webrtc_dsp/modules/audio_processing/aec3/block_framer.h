@@ -17,7 +17,8 @@
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Class for producing frames consisting of 1 or 2 subframes of 80 samples each
 // from 64 sample blocks. The class is designed to work together with the
@@ -25,23 +26,24 @@ namespace webrtc {
 // that, this class produces output frames are the same rate as frames are
 // received by the FrameBlocker class. Note that the internal buffers will
 // overrun if any other rate of packets insertion is used.
-class BlockFramer {
- public:
-  explicit BlockFramer(size_t num_bands);
-  ~BlockFramer();
-  // Adds a 64 sample block into the data that will form the next output frame.
-  void InsertBlock(const std::vector<std::vector<float>>& block);
-  // Adds a 64 sample block and extracts an 80 sample subframe.
-  void InsertBlockAndExtractSubFrame(
-      const std::vector<std::vector<float>>& block,
-      std::vector<rtc::ArrayView<float>>* sub_frame);
+class BlockFramer
+{
+public:
+    explicit BlockFramer(size_t num_bands);
+    ~BlockFramer();
+    // Adds a 64 sample block into the data that will form the next output frame.
+    void InsertBlock(const std::vector<std::vector<float>>& block);
+    // Adds a 64 sample block and extracts an 80 sample subframe.
+    void InsertBlockAndExtractSubFrame(
+        const std::vector<std::vector<float>>& block,
+        std::vector<rtc::ArrayView<float>>* sub_frame);
 
- private:
-  const size_t num_bands_;
-  std::vector<std::vector<float>> buffer_;
+private:
+    const size_t num_bands_;
+    std::vector<std::vector<float>> buffer_;
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BlockFramer);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BlockFramer);
 };
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_BLOCK_FRAMER_H_

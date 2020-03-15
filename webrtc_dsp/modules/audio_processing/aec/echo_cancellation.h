@@ -15,12 +15,14 @@
 
 #include <stddef.h>
 
-extern "C" {
+extern "C"
+{
 #include "common_audio/ring_buffer.h"
 }
 #include "modules/audio_processing/aec/aec_core.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Errors
 #define AEC_UNSPECIFIED_ERROR 12000
@@ -32,84 +34,97 @@ namespace webrtc {
 // Warnings
 #define AEC_BAD_PARAMETER_WARNING 12050
 
-enum { kAecNlpConservative = 0, kAecNlpModerate, kAecNlpAggressive };
+enum
+{
+    kAecNlpConservative = 0,
+    kAecNlpModerate,
+    kAecNlpAggressive
+};
 
-enum { kAecFalse = 0, kAecTrue };
+enum
+{
+    kAecFalse = 0,
+    kAecTrue
+};
 
-typedef struct {
-  int16_t nlpMode;      // default kAecNlpModerate
-  int16_t skewMode;     // default kAecFalse
-  int16_t metricsMode;  // default kAecFalse
-  int delay_logging;    // default kAecFalse
-  // float realSkew;
+typedef struct
+{
+    int16_t nlpMode; // default kAecNlpModerate
+    int16_t skewMode; // default kAecFalse
+    int16_t metricsMode; // default kAecFalse
+    int delay_logging; // default kAecFalse
+    // float realSkew;
 } AecConfig;
 
-typedef struct {
-  int instant;
-  int average;
-  int max;
-  int min;
+typedef struct
+{
+    int instant;
+    int average;
+    int max;
+    int min;
 } AecLevel;
 
-typedef struct {
-  AecLevel rerl;
-  AecLevel erl;
-  AecLevel erle;
-  AecLevel aNlp;
-  float divergent_filter_fraction;
+typedef struct
+{
+    AecLevel rerl;
+    AecLevel erl;
+    AecLevel erle;
+    AecLevel aNlp;
+    float divergent_filter_fraction;
 } AecMetrics;
 
 struct AecCore;
 
 class ApmDataDumper;
 
-typedef struct Aec {
-  Aec();
-  ~Aec();
+typedef struct Aec
+{
+    Aec();
+    ~Aec();
 
-  std::unique_ptr<ApmDataDumper> data_dumper;
+    std::unique_ptr<ApmDataDumper> data_dumper;
 
-  int delayCtr;
-  int sampFreq;
-  int splitSampFreq;
-  int scSampFreq;
-  float sampFactor;  // scSampRate / sampFreq
-  short skewMode;
-  int bufSizeStart;
-  int knownDelay;
-  int rate_factor;
+    int delayCtr;
+    int sampFreq;
+    int splitSampFreq;
+    int scSampFreq;
+    float sampFactor; // scSampRate / sampFreq
+    short skewMode;
+    int bufSizeStart;
+    int knownDelay;
+    int rate_factor;
 
-  short initFlag;  // indicates if AEC has been initialized
+    short initFlag; // indicates if AEC has been initialized
 
-  // Variables used for averaging far end buffer size
-  short counter;
-  int sum;
-  short firstVal;
-  short checkBufSizeCtr;
+    // Variables used for averaging far end buffer size
+    short counter;
+    int sum;
+    short firstVal;
+    short checkBufSizeCtr;
 
-  // Variables used for delay shifts
-  short msInSndCardBuf;
-  short filtDelay;  // Filtered delay estimate.
-  int timeForDelayChange;
-  int startup_phase;
-  int checkBuffSize;
-  short lastDelayDiff;
+    // Variables used for delay shifts
+    short msInSndCardBuf;
+    short filtDelay; // Filtered delay estimate.
+    int timeForDelayChange;
+    int startup_phase;
+    int checkBuffSize;
+    short lastDelayDiff;
 
-  // Structures
-  void* resampler;
+    // Structures
+    void* resampler;
 
-  int skewFrCtr;
-  int resample;  // if the skew is small enough we don't resample
-  int highSkewCtr;
-  float skew;
+    int skewFrCtr;
+    int resample; // if the skew is small enough we don't resample
+    int highSkewCtr;
+    float skew;
 
-  RingBuffer* far_pre_buf;  // Time domain far-end pre-buffer.
+    RingBuffer* far_pre_buf; // Time domain far-end pre-buffer.
 
-  int farend_started;
+    int farend_started;
 
-  // Aec instance counter.
-  static int instance_count;
-  AecCore* aec;
+    // Aec instance counter.
+    static int instance_count;
+    AecCore* aec;
 } Aec;
 
 /*
@@ -160,8 +175,8 @@ int32_t WebRtcAec_Init(void* aecInst, int32_t sampFreq, int32_t scSampFreq);
  *                              12000-12050: error code
  */
 int32_t WebRtcAec_BufferFarend(void* aecInst,
-                               const float* farend,
-                               size_t nrOfSamples);
+    const float* farend,
+    size_t nrOfSamples);
 
 /*
  * Reports any errors that would arise if buffering a farend buffer
@@ -179,8 +194,8 @@ int32_t WebRtcAec_BufferFarend(void* aecInst,
  *                              12000-12050: error code
  */
 int32_t WebRtcAec_GetBufferFarendError(void* aecInst,
-                                       const float* farend,
-                                       size_t nrOfSamples);
+    const float* farend,
+    size_t nrOfSamples);
 
 /*
  * Runs the echo canceller on an 80 or 160 sample blocks of data.
@@ -206,12 +221,12 @@ int32_t WebRtcAec_GetBufferFarendError(void* aecInst,
  *                              12000-12050: error code
  */
 int32_t WebRtcAec_Process(void* aecInst,
-                          const float* const* nearend,
-                          size_t num_bands,
-                          float* const* out,
-                          size_t nrOfSamples,
-                          int16_t msInSndCardBuf,
-                          int32_t skew);
+    const float* const* nearend,
+    size_t num_bands,
+    float* const* out,
+    size_t nrOfSamples,
+    int16_t msInSndCardBuf,
+    int32_t skew);
 
 /*
  * This function enables the user to set certain parameters on-the-fly.
@@ -279,9 +294,9 @@ int WebRtcAec_GetMetrics(void* handle, AecMetrics* metrics);
  *                              12000-12050: error code
  */
 int WebRtcAec_GetDelayMetrics(void* handle,
-                              int* median,
-                              int* std,
-                              float* fraction_poor_delays);
+    int* median,
+    int* std,
+    float* fraction_poor_delays);
 
 // Returns a pointer to the low level AEC handle.
 //
@@ -293,6 +308,6 @@ int WebRtcAec_GetDelayMetrics(void* handle,
 //
 struct AecCore* WebRtcAec_aec_core(void* handle);
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_H_

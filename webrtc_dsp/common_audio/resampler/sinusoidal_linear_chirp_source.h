@@ -17,39 +17,44 @@
 #include "common_audio/resampler/sinc_resampler.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Fake audio source for testing the resampler.  Generates a sinusoidal linear
 // chirp (http://en.wikipedia.org/wiki/Chirp) which can be tuned to stress the
 // resampler for the specific sample rate conversion being used.
-class SinusoidalLinearChirpSource : public SincResamplerCallback {
- public:
-  // |delay_samples| can be used to insert a fractional sample delay into the
-  // source.  It will produce zeros until non-negative time is reached.
-  SinusoidalLinearChirpSource(int sample_rate,
-                              size_t samples,
-                              double max_frequency,
-                              double delay_samples);
+class SinusoidalLinearChirpSource : public SincResamplerCallback
+{
+public:
+    // |delay_samples| can be used to insert a fractional sample delay into the
+    // source.  It will produce zeros until non-negative time is reached.
+    SinusoidalLinearChirpSource(int sample_rate,
+        size_t samples,
+        double max_frequency,
+        double delay_samples);
 
-  ~SinusoidalLinearChirpSource() override {}
+    ~SinusoidalLinearChirpSource() override {}
 
-  void Run(size_t frames, float* destination) override;
+    void Run(size_t frames, float* destination) override;
 
-  double Frequency(size_t position);
+    double Frequency(size_t position);
 
- private:
-  enum { kMinFrequency = 5 };
+private:
+    enum
+    {
+        kMinFrequency = 5
+    };
 
-  int sample_rate_;
-  size_t total_samples_;
-  double max_frequency_;
-  double k_;
-  size_t current_index_;
-  double delay_samples_;
+    int sample_rate_;
+    size_t total_samples_;
+    double max_frequency_;
+    double k_;
+    size_t current_index_;
+    double delay_samples_;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(SinusoidalLinearChirpSource);
+    RTC_DISALLOW_COPY_AND_ASSIGN(SinusoidalLinearChirpSource);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // COMMON_AUDIO_RESAMPLER_SINUSOIDAL_LINEAR_CHIRP_SOURCE_H_
+#endif // COMMON_AUDIO_RESAMPLER_SINUSOIDAL_LINEAR_CHIRP_SOURCE_H_

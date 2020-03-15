@@ -62,14 +62,14 @@ void WebRtc_SoftResetDelayEstimatorFarend(void* handle, int delay_shift);
 //    - handle          : Updated far-end instance.
 //
 int WebRtc_AddFarSpectrumFix(void* handle,
-                             const uint16_t* far_spectrum,
-                             int spectrum_size,
-                             int far_q);
+    const uint16_t* far_spectrum,
+    int spectrum_size,
+    int far_q);
 
 // See WebRtc_AddFarSpectrumFix() for description.
 int WebRtc_AddFarSpectrumFloat(void* handle,
-                               const float* far_spectrum,
-                               int spectrum_size);
+    const float* far_spectrum,
+    int spectrum_size);
 
 // Releases the memory allocated by WebRtc_CreateDelayEstimator(...)
 void WebRtc_FreeDelayEstimator(void* handle);
@@ -211,14 +211,14 @@ int WebRtc_is_robust_validation_enabled(const void* handle);
 //                        -1    - Error.
 //                        -2    - Insufficient data for estimation.
 int WebRtc_DelayEstimatorProcessFix(void* handle,
-                                    const uint16_t* near_spectrum,
-                                    int spectrum_size,
-                                    int near_q);
+    const uint16_t* near_spectrum,
+    int spectrum_size,
+    int near_q);
 
 // See WebRtc_DelayEstimatorProcessFix() for description.
 int WebRtc_DelayEstimatorProcessFloat(void* handle,
-                                      const float* near_spectrum,
-                                      int spectrum_size);
+    const float* near_spectrum,
+    int spectrum_size);
 
 // Returns the last calculated delay updated by the function
 // WebRtc_DelayEstimatorProcess(...).
@@ -241,4 +241,4 @@ int WebRtc_last_delay(void* handle);
 //      - delay_quality : >= 0  - Estimation quality of last calculated delay.
 float WebRtc_last_delay_quality(void* handle);
 
-#endif  // MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_WRAPPER_H_
+#endif // MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_WRAPPER_H_

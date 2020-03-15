@@ -38,7 +38,11 @@
 //     return result;
 //   }
 #if defined(__pnacl__)
-#define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() \
+    if (volatile int x = 0)                 \
+    {                                       \
+        (void)x;                            \
+    }
 #elif defined(__clang__)
 // Clang will not tail call given inline volatile assembly.
 #define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
@@ -50,7 +54,11 @@
 // The __nop() intrinsic blocks the optimisation.
 #define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
 #else
-#define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#define ABSL_BLOCK_TAIL_CALL_OPTIMIZATION() \
+    if (volatile int x = 0)                 \
+    {                                       \
+        (void)x;                            \
+    }
 #endif
 
 // ABSL_CACHELINE_SIZE
@@ -132,7 +140,7 @@
 //    applying it to types. This tends to localize the effect.
 #define ABSL_CACHELINE_ALIGNED __attribute__((aligned(ABSL_CACHELINE_SIZE)))
 
-#else  // not GCC
+#else // not GCC
 #define ABSL_CACHELINE_SIZE 64
 #define ABSL_CACHELINE_ALIGNED
 #endif
@@ -153,8 +161,7 @@
 // Compilers can use the information that a certain branch is not likely to be
 // taken (for instance, a CHECK failure) to optimize for the common case in
 // the absence of better information (ie. compiling gcc with `-fprofile-arcs`).
-#if ABSL_HAVE_BUILTIN(__builtin_expect) || \
-    (defined(__GNUC__) && !defined(__clang__))
+#if ABSL_HAVE_BUILTIN(__builtin_expect) || (defined(__GNUC__) && !defined(__clang__))
 #define ABSL_PREDICT_FALSE(x) (__builtin_expect(x, 0))
 #define ABSL_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
 #else
@@ -162,4 +169,4 @@
 #define ABSL_PREDICT_TRUE(x) (x)
 #endif
 
-#endif  // ABSL_BASE_OPTIMIZATION_H_
+#endif // ABSL_BASE_OPTIMIZATION_H_

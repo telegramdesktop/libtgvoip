@@ -8,18 +8,21 @@
 #include "../Buffers.h"
 #include <vector>
 
-namespace tgvoip{
-	namespace video{
-		class ParityFEC{
-		public:
-			static Buffer Encode(std::vector<Buffer>& packets);
-			static Buffer Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket);
-		};
+namespace tgvoip
+{
+namespace video
+{
+    class ParityFEC
+    {
+    public:
+        static Buffer Encode(std::vector<Buffer>& packets);
+        static Buffer Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket);
+    };
 
-		class CM256FEC{
-
-		};
-	}
+    class CM256FEC
+    {
+    };
+}
 }
 
 #endif //LIBTGVOIP_VIDEOFEC_H

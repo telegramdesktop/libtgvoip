@@ -54,7 +54,7 @@
 #ifdef __cplusplus
 // Included for __GLIBCXX__, _LIBCPP_VERSION
 #include <cstddef>
-#endif  // __cplusplus
+#endif // __cplusplus
 
 #if defined(__APPLE__)
 // Included for TARGET_OS_IPHONE, __IPHONE_OS_VERSION_MIN_REQUIRED,
@@ -101,10 +101,7 @@
 // gcc >= 4.8.1 using libstdc++, and Visual Studio.
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
 #error ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE cannot be directly set
-#elif defined(_LIBCPP_VERSION) ||                                        \
-    (!defined(__clang__) && defined(__GNUC__) && defined(__GLIBCXX__) && \
-     (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))) ||        \
-    defined(_MSC_VER)
+#elif defined(_LIBCPP_VERSION) || (!defined(__clang__) && defined(__GNUC__) && defined(__GLIBCXX__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))) || defined(_MSC_VER)
 #define ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE 1
 #endif
 
@@ -123,11 +120,7 @@
 #error ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE cannot be directly set
 #elif defined(ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE)
 #error ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE cannot directly set
-#elif (defined(__clang__) && defined(_LIBCPP_VERSION)) ||        \
-    (!defined(__clang__) && defined(__GNUC__) &&                 \
-     (__GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ >= 1)) && \
-     (defined(_LIBCPP_VERSION) || defined(__GLIBCXX__))) ||      \
-    defined(_MSC_VER)
+#elif (defined(__clang__) && defined(_LIBCPP_VERSION)) || (!defined(__clang__) && defined(__GNUC__) && (__GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ >= 1)) && (defined(_LIBCPP_VERSION) || defined(__GLIBCXX__))) || defined(_MSC_VER)
 #define ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE 1
 #define ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE 1
 #endif
@@ -149,11 +142,10 @@
 //
 // Otherwise, `__has_feature` is only supported by Clang so it has be inside
 // `defined(__APPLE__)` check.
-#if __has_feature(cxx_thread_local) && \
-    !(TARGET_OS_IPHONE && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_9_0)
+#if __has_feature(cxx_thread_local) && !(TARGET_OS_IPHONE && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_9_0)
 #define ABSL_HAVE_THREAD_LOCAL 1
 #endif
-#else  // !defined(__APPLE__)
+#else // !defined(__APPLE__)
 #define ABSL_HAVE_THREAD_LOCAL 1
 #endif
 
@@ -172,14 +164,12 @@
 #if defined(__ANDROID__) && defined(__clang__)
 #if __has_include(<android/ndk-version.h>)
 #include <android/ndk-version.h>
-#endif  // __has_include(<android/ndk-version.h>)
-#if defined(__ANDROID__) && defined(__clang__) && defined(__NDK_MAJOR__) && \
-    defined(__NDK_MINOR__) &&                                               \
-    ((__NDK_MAJOR__ < 12) || ((__NDK_MAJOR__ == 12) && (__NDK_MINOR__ < 1)))
+#endif // __has_include(<android/ndk-version.h>)
+#if defined(__ANDROID__) && defined(__clang__) && defined(__NDK_MAJOR__) && defined(__NDK_MINOR__) && ((__NDK_MAJOR__ < 12) || ((__NDK_MAJOR__ == 12) && (__NDK_MINOR__ < 1)))
 #undef ABSL_HAVE_TLS
 #undef ABSL_HAVE_THREAD_LOCAL
 #endif
-#endif  // defined(__ANDROID__) && defined(__clang__)
+#endif // defined(__ANDROID__) && defined(__clang__)
 
 // ABSL_HAVE_INTRINSIC_INT128
 //
@@ -199,9 +189,7 @@
 #ifdef ABSL_HAVE_INTRINSIC_INT128
 #error ABSL_HAVE_INTRINSIC_INT128 cannot be directly set
 #elif defined(__SIZEOF_INT128__)
-#if (defined(__clang__) && !defined(_WIN32) && !defined(__aarch64__)) || \
-    (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9) ||                \
-    (defined(__GNUC__) && !defined(__clang__) && !defined(__CUDACC__))
+#if (defined(__clang__) && !defined(_WIN32) && !defined(__aarch64__)) || (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9) || (defined(__GNUC__) && !defined(__clang__) && !defined(__CUDACC__))
 #define ABSL_HAVE_INTRINSIC_INT128 1
 #elif defined(__CUDACC__)
 // __CUDACC_VER__ is a full version number before CUDA 9, and is defined to a
@@ -210,9 +198,9 @@
 // NOTE: `__CUDACC__` could be undefined while `__CUDACC_VER__` is defined.
 #if __CUDACC_VER__ >= 70000
 #define ABSL_HAVE_INTRINSIC_INT128 1
-#endif  // __CUDACC_VER__ >= 70000
-#endif  // defined(__CUDACC__)
-#endif  // ABSL_HAVE_INTRINSIC_INT128
+#endif // __CUDACC_VER__ >= 70000
+#endif // defined(__CUDACC__)
+#endif // ABSL_HAVE_INTRINSIC_INT128
 
 // ABSL_HAVE_EXCEPTIONS
 //
@@ -236,12 +224,10 @@
 //   http://releases.llvm.org/3.6.0/tools/clang/docs/ReleaseNotes.html#the-exceptions-macro
 #if defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
 #define ABSL_HAVE_EXCEPTIONS 1
-#endif  // defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
+#endif // defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
 
 // Handle remaining special cases and default to exceptions being supported.
-#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) &&    \
-    !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions)) && \
-    !(defined(_MSC_VER) && !defined(_CPPUNWIND))
+#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) && !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions)) && !(defined(_MSC_VER) && !defined(_CPPUNWIND))
 #define ABSL_HAVE_EXCEPTIONS 1
 #endif
 
@@ -272,10 +258,7 @@
 // POSIX.1-2001.
 #ifdef ABSL_HAVE_MMAP
 #error ABSL_HAVE_MMAP cannot be directly set
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) ||   \
-    defined(__ros__) || defined(__native_client__) || defined(__asmjs__) || \
-    defined(__wasm__) || defined(__Fuchsia__) || defined(__sun) || \
-    defined(__ASYLO__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__ros__) || defined(__native_client__) || defined(__asmjs__) || defined(__wasm__) || defined(__Fuchsia__) || defined(__sun) || defined(__ASYLO__)
 #define ABSL_HAVE_MMAP 1
 #endif
 
@@ -285,8 +268,7 @@
 // functions as defined in POSIX.1-2001.
 #ifdef ABSL_HAVE_PTHREAD_GETSCHEDPARAM
 #error ABSL_HAVE_PTHREAD_GETSCHEDPARAM cannot be directly set
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || \
-    defined(__ros__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__ros__)
 #define ABSL_HAVE_PTHREAD_GETSCHEDPARAM 1
 #endif
 
@@ -353,11 +335,9 @@
 #error "ABSL_IS_LITTLE_ENDIAN cannot be directly set."
 #endif
 
-#if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
-     __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define ABSL_IS_LITTLE_ENDIAN 1
-#elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
-    __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define ABSL_IS_BIG_ENDIAN 1
 #elif defined(_WIN32)
 #define ABSL_IS_LITTLE_ENDIAN 1
@@ -424,8 +404,7 @@
 // not correctly set by MSVC, so we use `_MSVC_LANG` to check the language
 // version.
 // TODO(zhangxy): fix tests before enabling aliasing for `std::any`.
-#if defined(_MSC_VER) && _MSC_VER >= 1910 && \
-    ((defined(_MSVC_LANG) && _MSVC_LANG > 201402) || __cplusplus > 201402)
+#if defined(_MSC_VER) && _MSC_VER >= 1910 && ((defined(_MSVC_LANG) && _MSVC_LANG > 201402) || __cplusplus > 201402)
 // #define ABSL_HAVE_STD_ANY 1
 #define ABSL_HAVE_STD_OPTIONAL 1
 #define ABSL_HAVE_STD_VARIANT 1
@@ -440,4 +419,4 @@
 #define ABSL_INTERNAL_MSVC_2017_DBG_MODE
 #endif
 
-#endif  // ABSL_BASE_CONFIG_H_
+#endif // ABSL_BASE_CONFIG_H_

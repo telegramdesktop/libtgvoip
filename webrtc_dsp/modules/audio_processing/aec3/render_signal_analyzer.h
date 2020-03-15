@@ -22,41 +22,44 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Provides functionality for analyzing the properties of the render signal.
-class RenderSignalAnalyzer {
- public:
-  explicit RenderSignalAnalyzer(const EchoCanceller3Config& config);
-  ~RenderSignalAnalyzer();
+class RenderSignalAnalyzer
+{
+public:
+    explicit RenderSignalAnalyzer(const EchoCanceller3Config& config);
+    ~RenderSignalAnalyzer();
 
-  // Updates the render signal analysis with the most recent render signal.
-  void Update(const RenderBuffer& render_buffer,
-              const absl::optional<size_t>& delay_partitions);
+    // Updates the render signal analysis with the most recent render signal.
+    void Update(const RenderBuffer& render_buffer,
+        const absl::optional<size_t>& delay_partitions);
 
-  // Returns true if the render signal is poorly exciting.
-  bool PoorSignalExcitation() const {
-    RTC_DCHECK_LT(2, narrow_band_counters_.size());
-    return std::any_of(narrow_band_counters_.begin(),
-                       narrow_band_counters_.end(),
-                       [](size_t a) { return a > 10; });
-  }
+    // Returns true if the render signal is poorly exciting.
+    bool PoorSignalExcitation() const
+    {
+        RTC_DCHECK_LT(2, narrow_band_counters_.size());
+        return std::any_of(narrow_band_counters_.begin(),
+            narrow_band_counters_.end(),
+            [](size_t a) { return a > 10; });
+    }
 
-  // Zeros the array around regions with narrow bands signal characteristics.
-  void MaskRegionsAroundNarrowBands(
-      std::array<float, kFftLengthBy2Plus1>* v) const;
+    // Zeros the array around regions with narrow bands signal characteristics.
+    void MaskRegionsAroundNarrowBands(
+        std::array<float, kFftLengthBy2Plus1>* v) const;
 
-  absl::optional<int> NarrowPeakBand() const { return narrow_peak_band_; }
+    absl::optional<int> NarrowPeakBand() const { return narrow_peak_band_; }
 
- private:
-  const int strong_peak_freeze_duration_;
-  std::array<size_t, kFftLengthBy2 - 1> narrow_band_counters_;
-  absl::optional<int> narrow_peak_band_;
-  size_t narrow_peak_counter_;
+private:
+    const int strong_peak_freeze_duration_;
+    std::array<size_t, kFftLengthBy2 - 1> narrow_band_counters_;
+    absl::optional<int> narrow_peak_band_;
+    size_t narrow_peak_counter_;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(RenderSignalAnalyzer);
+    RTC_DISALLOW_COPY_AND_ASSIGN(RenderSignalAnalyzer);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_RENDER_SIGNAL_ANALYZER_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_RENDER_SIGNAL_ANALYZER_H_

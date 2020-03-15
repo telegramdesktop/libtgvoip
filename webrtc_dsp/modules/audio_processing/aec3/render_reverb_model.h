@@ -15,35 +15,38 @@
 #include "modules/audio_processing/aec3/reverb_model.h"
 #include "modules/audio_processing/aec3/vector_buffer.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // The RenderReverbModel class applies an exponential reverberant model over the
 // render spectrum.
-class RenderReverbModel {
- public:
-  RenderReverbModel();
-  ~RenderReverbModel();
+class RenderReverbModel
+{
+public:
+    RenderReverbModel();
+    ~RenderReverbModel();
 
-  // Resets the state.
-  void Reset();
+    // Resets the state.
+    void Reset();
 
-  // Applies the reverberation model over the render spectrum. It also returns
-  // the reverberation render power spectrum in the array reverb_power_spectrum.
-  void Apply(const VectorBuffer& spectrum_buffer,
-             int delay_blocks,
-             float reverb_decay,
-             rtc::ArrayView<float> reverb_power_spectrum);
+    // Applies the reverberation model over the render spectrum. It also returns
+    // the reverberation render power spectrum in the array reverb_power_spectrum.
+    void Apply(const VectorBuffer& spectrum_buffer,
+        int delay_blocks,
+        float reverb_decay,
+        rtc::ArrayView<float> reverb_power_spectrum);
 
-  // Gets the reverberation spectrum that was added to the render spectrum for
-  // computing the reverberation render spectrum.
-  rtc::ArrayView<const float> GetReverbContributionPowerSpectrum() const {
-    return render_reverb_.GetPowerSpectrum();
-  }
+    // Gets the reverberation spectrum that was added to the render spectrum for
+    // computing the reverberation render spectrum.
+    rtc::ArrayView<const float> GetReverbContributionPowerSpectrum() const
+    {
+        return render_reverb_.GetPowerSpectrum();
+    }
 
- private:
-  ReverbModel render_reverb_;
+private:
+    ReverbModel render_reverb_;
 };
 
-}  // namespace webrtc.
+} // namespace webrtc.
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_RENDER_REVERB_MODEL_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_RENDER_REVERB_MODEL_H_

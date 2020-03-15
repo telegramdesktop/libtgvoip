@@ -16,8 +16,8 @@
 #elif defined(__ANDROID__)
 #include "../os/android/AudioInputAndroid.h"
 #elif defined(__APPLE__)
-#include <TargetConditionals.h>
 #include "../os/darwin/AudioInputAudioUnit.h"
+#include <TargetConditionals.h>
 #if TARGET_OS_OSX
 #include "../os/darwin/AudioInputAudioUnitOSX.h"
 #endif
@@ -40,58 +40,66 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-int32_t AudioInput::estimatedDelay=60;
+int32_t AudioInput::estimatedDelay = 60;
 
-AudioInput::AudioInput() : currentDevice("default"){
-	failed=false;
+AudioInput::AudioInput()
+    : currentDevice("default")
+{
+    failed = false;
 }
 
-AudioInput::AudioInput(std::string deviceID) : currentDevice(deviceID){
-	failed=false;
+AudioInput::AudioInput(std::string deviceID)
+    : currentDevice(deviceID)
+{
+    failed = false;
 }
 
-
-AudioInput::~AudioInput(){
-
+AudioInput::~AudioInput()
+{
 }
 
-bool AudioInput::IsInitialized(){
-	return !failed;
+bool AudioInput::IsInitialized()
+{
+    return !failed;
 }
 
-void AudioInput::EnumerateDevices(std::vector<AudioInputDevice>& devs){
+void AudioInput::EnumerateDevices(std::vector<AudioInputDevice>& devs)
+{
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
-	// not supported
+    // not supported
 #elif defined(__APPLE__) && TARGET_OS_OSX
-	AudioInputAudioUnitLegacy::EnumerateDevices(devs);
+    AudioInputAudioUnitLegacy::EnumerateDevices(devs);
 #elif defined(_WIN32)
 #ifdef TGVOIP_WINXP_COMPAT
-	if(LOBYTE(LOWORD(GetVersion()))<6){
-		AudioInputWave::EnumerateDevices(devs);
-		return;
-	}
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        AudioInputWave::EnumerateDevices(devs);
+        return;
+    }
 #endif
-	AudioInputWASAPI::EnumerateDevices(devs);
+    AudioInputWASAPI::EnumerateDevices(devs);
 #elif defined(__linux__) && !defined(__ANDROID__)
 #if !defined(WITHOUT_PULSE) && !defined(WITHOUT_ALSA)
-	if(!AudioInputPulse::EnumerateDevices(devs))
-		AudioInputALSA::EnumerateDevices(devs);
+    if (!AudioInputPulse::EnumerateDevices(devs))
+        AudioInputALSA::EnumerateDevices(devs);
 #elif defined(WITHOUT_PULSE)
-	AudioInputALSA::EnumerateDevices(devs);
+    AudioInputALSA::EnumerateDevices(devs);
 #else
-	AudioInputPulse::EnumerateDevices(devs);
+    AudioInputPulse::EnumerateDevices(devs);
 #endif
 #endif
 }
 
-std::string AudioInput::GetCurrentDevice(){
-	return currentDevice;
+std::string AudioInput::GetCurrentDevice()
+{
+    return currentDevice;
 }
 
-void AudioInput::SetCurrentDevice(std::string deviceID){
-
+void AudioInput::SetCurrentDevice(std::string deviceID)
+{
 }
 
-int32_t AudioInput::GetEstimatedDelay(){
-	return estimatedDelay;
+int32_t AudioInput::GetEstimatedDelay()
+{
+    return estimatedDelay;
 }

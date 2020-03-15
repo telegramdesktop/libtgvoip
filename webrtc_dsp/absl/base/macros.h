@@ -40,16 +40,18 @@
 // can be used in defining new arrays. If you use this macro on a pointer by
 // mistake, you will get a compile-time error.
 #define ABSL_ARRAYSIZE(array) \
-  (sizeof(::absl::macros_internal::ArraySizeHelper(array)))
+    (sizeof(::absl::macros_internal::ArraySizeHelper(array)))
 
-namespace absl {
-namespace macros_internal {
-// Note: this internal template function declaration is used by ABSL_ARRAYSIZE.
-// The function doesn't need a definition, as we only use its type.
-template <typename T, size_t N>
-auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
-}  // namespace macros_internal
-}  // namespace absl
+namespace absl
+{
+namespace macros_internal
+{
+    // Note: this internal template function declaration is used by ABSL_ARRAYSIZE.
+    // The function doesn't need a definition, as we only use its type.
+    template <typename T, size_t N>
+    auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
+} // namespace macros_internal
+} // namespace absl
 
 // kLinkerInitialized
 //
@@ -71,13 +73,16 @@ auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
 //
 //       // Invocation
 //       static MyClass my_global(absl::base_internal::kLinkerInitialized);
-namespace absl {
-namespace base_internal {
-enum LinkerInitialized {
-  kLinkerInitialized = 0,
-};
-}  // namespace base_internal
-}  // namespace absl
+namespace absl
+{
+namespace base_internal
+{
+    enum LinkerInitialized
+    {
+        kLinkerInitialized = 0,
+    };
+} // namespace base_internal
+} // namespace absl
 
 // ABSL_FALLTHROUGH_INTENDED
 //
@@ -127,8 +132,9 @@ enum LinkerInitialized {
 
 #ifndef ABSL_FALLTHROUGH_INTENDED
 #define ABSL_FALLTHROUGH_INTENDED \
-  do {                            \
-  } while (0)
+    do                            \
+    {                             \
+    } while (0)
 #endif
 
 // ABSL_DEPRECATED()
@@ -173,10 +179,10 @@ enum LinkerInitialized {
 //   #endif // ABSL_BAD_CALL_IF
 
 #if defined(__clang__)
-# if __has_attribute(enable_if)
-#  define ABSL_BAD_CALL_IF(expr, msg) \
+#if __has_attribute(enable_if)
+#define ABSL_BAD_CALL_IF(expr, msg) \
     __attribute__((enable_if(expr, "Bad call trap"), unavailable(msg)))
-# endif
+#endif
 #endif
 
 // ABSL_ASSERT()
@@ -194,19 +200,26 @@ enum LinkerInitialized {
 #if defined(NDEBUG)
 #define ABSL_ASSERT(expr) (false ? (void)(expr) : (void)0)
 #else
-#define ABSL_ASSERT(expr)              \
-  (ABSL_PREDICT_TRUE((expr)) ? (void)0 \
-                             : [] { assert(false && #expr); }())  // NOLINT
+#define ABSL_ASSERT(expr)                \
+    (ABSL_PREDICT_TRUE((expr)) ? (void)0 \
+                               : [] { assert(false && #expr); }()) // NOLINT
 #endif
 
 #ifdef ABSL_HAVE_EXCEPTIONS
 #define ABSL_INTERNAL_TRY try
 #define ABSL_INTERNAL_CATCH_ANY catch (...)
-#define ABSL_INTERNAL_RETHROW do { throw; } while (false)
-#else  // ABSL_HAVE_EXCEPTIONS
+#define ABSL_INTERNAL_RETHROW \
+    do                        \
+    {                         \
+        throw;                \
+    } while (false)
+#else // ABSL_HAVE_EXCEPTIONS
 #define ABSL_INTERNAL_TRY if (true)
 #define ABSL_INTERNAL_CATCH_ANY else if (false)
-#define ABSL_INTERNAL_RETHROW do {} while (false)
-#endif  // ABSL_HAVE_EXCEPTIONS
+#define ABSL_INTERNAL_RETHROW \
+    do                        \
+    {                         \
+    } while (false)
+#endif // ABSL_HAVE_EXCEPTIONS
 
-#endif  // ABSL_BASE_MACROS_H_
+#endif // ABSL_BASE_MACROS_H_

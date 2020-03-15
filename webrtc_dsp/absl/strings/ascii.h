@@ -58,69 +58,78 @@
 #include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 
-namespace absl {
-namespace ascii_internal {
+namespace absl
+{
+namespace ascii_internal
+{
 
-// Declaration for an array of bitfields holding character information.
-extern const unsigned char kPropertyBits[256];
+    // Declaration for an array of bitfields holding character information.
+    extern const unsigned char kPropertyBits[256];
 
-// Declaration for the array of characters to upper-case characters.
-extern const char kToUpper[256];
+    // Declaration for the array of characters to upper-case characters.
+    extern const char kToUpper[256];
 
-// Declaration for the array of characters to lower-case characters.
-extern const char kToLower[256];
+    // Declaration for the array of characters to lower-case characters.
+    extern const char kToLower[256];
 
-}  // namespace ascii_internal
+} // namespace ascii_internal
 
 // ascii_isalpha()
 //
 // Determines whether the given character is an alphabetic character.
-inline bool ascii_isalpha(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x01) != 0;
+inline bool ascii_isalpha(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x01) != 0;
 }
 
 // ascii_isalnum()
 //
 // Determines whether the given character is an alphanumeric character.
-inline bool ascii_isalnum(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x04) != 0;
+inline bool ascii_isalnum(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x04) != 0;
 }
 
 // ascii_isspace()
 //
 // Determines whether the given character is a whitespace character (space,
 // tab, vertical tab, formfeed, linefeed, or carriage return).
-inline bool ascii_isspace(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x08) != 0;
+inline bool ascii_isspace(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x08) != 0;
 }
 
 // ascii_ispunct()
 //
 // Determines whether the given character is a punctuation character.
-inline bool ascii_ispunct(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x10) != 0;
+inline bool ascii_ispunct(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x10) != 0;
 }
 
 // ascii_isblank()
 //
 // Determines whether the given character is a blank character (tab or space).
-inline bool ascii_isblank(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x20) != 0;
+inline bool ascii_isblank(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x20) != 0;
 }
 
 // ascii_iscntrl()
 //
 // Determines whether the given character is a control character.
-inline bool ascii_iscntrl(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x40) != 0;
+inline bool ascii_iscntrl(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x40) != 0;
 }
 
 // ascii_isxdigit()
 //
 // Determines whether the given character can be represented as a hexadecimal
 // digit character (i.e. {0-9} or {A-F}).
-inline bool ascii_isxdigit(unsigned char c) {
-  return (ascii_internal::kPropertyBits[c] & 0x80) != 0;
+inline bool ascii_isxdigit(unsigned char c)
+{
+    return (ascii_internal::kPropertyBits[c] & 0x80) != 0;
 }
 
 // ascii_isdigit()
@@ -158,82 +167,92 @@ inline bool ascii_isascii(unsigned char c) { return c < 128; }
 //
 // Returns an ASCII character, converting to lowercase if uppercase is
 // passed. Note that character values > 127 are simply returned.
-inline char ascii_tolower(unsigned char c) {
-  return ascii_internal::kToLower[c];
+inline char ascii_tolower(unsigned char c)
+{
+    return ascii_internal::kToLower[c];
 }
 
 // Converts the characters in `s` to lowercase, changing the contents of `s`.
 void AsciiStrToLower(std::string* s);
 
 // Creates a lowercase string from a given absl::string_view.
-ABSL_MUST_USE_RESULT inline std::string AsciiStrToLower(absl::string_view s) {
-  std::string result(s);
-  absl::AsciiStrToLower(&result);
-  return result;
+ABSL_MUST_USE_RESULT inline std::string AsciiStrToLower(absl::string_view s)
+{
+    std::string result(s);
+    absl::AsciiStrToLower(&result);
+    return result;
 }
 
 // ascii_toupper()
 //
 // Returns the ASCII character, converting to upper-case if lower-case is
 // passed. Note that characters values > 127 are simply returned.
-inline char ascii_toupper(unsigned char c) {
-  return ascii_internal::kToUpper[c];
+inline char ascii_toupper(unsigned char c)
+{
+    return ascii_internal::kToUpper[c];
 }
 
 // Converts the characters in `s` to uppercase, changing the contents of `s`.
 void AsciiStrToUpper(std::string* s);
 
 // Creates an uppercase string from a given absl::string_view.
-ABSL_MUST_USE_RESULT inline std::string AsciiStrToUpper(absl::string_view s) {
-  std::string result(s);
-  absl::AsciiStrToUpper(&result);
-  return result;
+ABSL_MUST_USE_RESULT inline std::string AsciiStrToUpper(absl::string_view s)
+{
+    std::string result(s);
+    absl::AsciiStrToUpper(&result);
+    return result;
 }
 
 // Returns absl::string_view with whitespace stripped from the beginning of the
 // given string_view.
 ABSL_MUST_USE_RESULT inline absl::string_view StripLeadingAsciiWhitespace(
-    absl::string_view str) {
-  auto it = std::find_if_not(str.begin(), str.end(), absl::ascii_isspace);
-  return str.substr(it - str.begin());
+    absl::string_view str)
+{
+    auto it = std::find_if_not(str.begin(), str.end(), absl::ascii_isspace);
+    return str.substr(it - str.begin());
 }
 
 // Strips in place whitespace from the beginning of the given string.
-inline void StripLeadingAsciiWhitespace(std::string* str) {
-  auto it = std::find_if_not(str->begin(), str->end(), absl::ascii_isspace);
-  str->erase(str->begin(), it);
+inline void StripLeadingAsciiWhitespace(std::string* str)
+{
+    auto it = std::find_if_not(str->begin(), str->end(), absl::ascii_isspace);
+    str->erase(str->begin(), it);
 }
 
 // Returns absl::string_view with whitespace stripped from the end of the given
 // string_view.
 ABSL_MUST_USE_RESULT inline absl::string_view StripTrailingAsciiWhitespace(
-    absl::string_view str) {
-  auto it = std::find_if_not(str.rbegin(), str.rend(), absl::ascii_isspace);
-  return str.substr(0, str.rend() - it);
+    absl::string_view str)
+{
+    auto it = std::find_if_not(str.rbegin(), str.rend(), absl::ascii_isspace);
+    return str.substr(0, str.rend() - it);
 }
 
 // Strips in place whitespace from the end of the given string
-inline void StripTrailingAsciiWhitespace(std::string* str) {
-  auto it = std::find_if_not(str->rbegin(), str->rend(), absl::ascii_isspace);
-  str->erase(str->rend() - it);
+inline void StripTrailingAsciiWhitespace(std::string* str)
+{
+    auto it = std::find_if_not(str->rbegin(), str->rend(), absl::ascii_isspace);
+    str->erase(str->rend() - it);
 }
 
 // Returns absl::string_view with whitespace stripped from both ends of the
 // given string_view.
 ABSL_MUST_USE_RESULT inline absl::string_view StripAsciiWhitespace(
-    absl::string_view str) {
-  return StripTrailingAsciiWhitespace(StripLeadingAsciiWhitespace(str));
+    absl::string_view str)
+{
+    return StripTrailingAsciiWhitespace(StripLeadingAsciiWhitespace(str));
 }
 
 // Strips in place whitespace from both ends of the given string
-inline void StripAsciiWhitespace(std::string* str) {
-  StripTrailingAsciiWhitespace(str);
-  StripLeadingAsciiWhitespace(str);
+inline void StripAsciiWhitespace(std::string* str)
+{
+    StripTrailingAsciiWhitespace(str);
+    StripLeadingAsciiWhitespace(str);
 }
 
 // Removes leading, trailing, and consecutive internal whitespace.
 void RemoveExtraAsciiWhitespace(std::string*);
 
-}  // namespace absl
+} // namespace absl
 
-#endif  // ABSL_STRINGS_ASCII_H_
+#endif // ABSL_STRINGS_ASCII_H_

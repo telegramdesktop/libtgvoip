@@ -16,7 +16,8 @@
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/platform_thread_types.h"
 
-namespace rtc {
+namespace rtc
+{
 
 // Real implementation of ThreadChecker, for use in debug mode, or
 // for temporary use in release mode (e.g. to RTC_CHECK on a threading issue
@@ -24,25 +25,26 @@ namespace rtc {
 //
 // Note: You should almost always use the ThreadChecker class to get the
 // right version for your build configuration.
-class ThreadCheckerImpl {
- public:
-  ThreadCheckerImpl();
-  ~ThreadCheckerImpl();
+class ThreadCheckerImpl
+{
+public:
+    ThreadCheckerImpl();
+    ~ThreadCheckerImpl();
 
-  bool CalledOnValidThread() const;
+    bool CalledOnValidThread() const;
 
-  // Changes the thread that is checked for in CalledOnValidThread.  This may
-  // be useful when an object may be created on one thread and then used
-  // exclusively on another thread.
-  void DetachFromThread();
+    // Changes the thread that is checked for in CalledOnValidThread.  This may
+    // be useful when an object may be created on one thread and then used
+    // exclusively on another thread.
+    void DetachFromThread();
 
- private:
-  CriticalSection lock_;
-  // This is mutable so that CalledOnValidThread can set it.
-  // It's guarded by |lock_|.
-  mutable PlatformThreadRef valid_thread_;
+private:
+    CriticalSection lock_;
+    // This is mutable so that CalledOnValidThread can set it.
+    // It's guarded by |lock_|.
+    mutable PlatformThreadRef valid_thread_;
 };
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_THREAD_CHECKER_IMPL_H_
+#endif // RTC_BASE_THREAD_CHECKER_IMPL_H_

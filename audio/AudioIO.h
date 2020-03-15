@@ -4,62 +4,73 @@
 // you should have received with this source code distribution.
 //
 
-
 #ifndef LIBTGVOIP_AUDIOIO_H
 #define LIBTGVOIP_AUDIOIO_H
 
+#include "../utils.h"
 #include "AudioInput.h"
 #include "AudioOutput.h"
-#include "../utils.h"
 #include <memory>
 #include <string>
 
-namespace tgvoip{
-	namespace audio {
-		class AudioIO{
-		public:
-			AudioIO(){};
-			virtual ~AudioIO(){};
-			TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioIO);
-			static AudioIO* Create(std::string inputDevice, std::string outputDevice);
-			virtual AudioInput* GetInput()=0;
-			virtual AudioOutput* GetOutput()=0;
-			bool Failed();
-			std::string GetErrorDescription();
-		protected:
-			bool failed=false;
-			std::string error;
-		};
+namespace tgvoip
+{
+namespace audio
+{
+    class AudioIO
+    {
+    public:
+        AudioIO() {};
+        virtual ~AudioIO() {};
+        TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioIO);
+        static AudioIO* Create(std::string inputDevice, std::string outputDevice);
+        virtual AudioInput* GetInput() = 0;
+        virtual AudioOutput* GetOutput() = 0;
+        bool Failed();
+        std::string GetErrorDescription();
 
-		template<class I, class O> class ContextlessAudioIO : public AudioIO{
-		public:
-			ContextlessAudioIO(){
-				input=new I();
-				output=new O();
-			}
+    protected:
+        bool failed = false;
+        std::string error;
+    };
 
-			ContextlessAudioIO(std::string inputDeviceID, std::string outputDeviceID){
-				input=new I(inputDeviceID);
-				output=new O(outputDeviceID);
-			}
+    template <class I, class O>
+    class ContextlessAudioIO : public AudioIO
+    {
+    public:
+        ContextlessAudioIO()
+        {
+            input = new I();
+            output = new O();
+        }
 
-			virtual ~ContextlessAudioIO(){
-				delete input;
-				delete output;
-			}
+        ContextlessAudioIO(std::string inputDeviceID, std::string outputDeviceID)
+        {
+            input = new I(inputDeviceID);
+            output = new O(outputDeviceID);
+        }
 
-			virtual AudioInput* GetInput(){
-				return input;
-			}
+        virtual ~ContextlessAudioIO()
+        {
+            delete input;
+            delete output;
+        }
 
-			virtual AudioOutput* GetOutput(){
-				return output;
-			}
-		private:
-			I* input;
-			O* output;
-		};
-	}
+        virtual AudioInput* GetInput()
+        {
+            return input;
+        }
+
+        virtual AudioOutput* GetOutput()
+        {
+            return output;
+        }
+
+    private:
+        I* input;
+        O* output;
+    };
+}
 }
 
 #endif //LIBTGVOIP_AUDIOIO_H

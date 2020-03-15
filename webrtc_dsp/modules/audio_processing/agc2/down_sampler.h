@@ -15,26 +15,28 @@
 #include "modules/audio_processing/agc2/biquad_filter.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 
-class DownSampler {
- public:
-  explicit DownSampler(ApmDataDumper* data_dumper);
-  void Initialize(int sample_rate_hz);
+class DownSampler
+{
+public:
+    explicit DownSampler(ApmDataDumper* data_dumper);
+    void Initialize(int sample_rate_hz);
 
-  void DownSample(rtc::ArrayView<const float> in, rtc::ArrayView<float> out);
+    void DownSample(rtc::ArrayView<const float> in, rtc::ArrayView<float> out);
 
- private:
-  ApmDataDumper* data_dumper_;
-  int sample_rate_hz_;
-  int down_sampling_factor_;
-  BiQuadFilter low_pass_filter_;
+private:
+    ApmDataDumper* data_dumper_;
+    int sample_rate_hz_;
+    int down_sampling_factor_;
+    BiQuadFilter low_pass_filter_;
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DownSampler);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DownSampler);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_DOWN_SAMPLER_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_DOWN_SAMPLER_H_

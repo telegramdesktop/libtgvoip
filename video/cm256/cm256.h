@@ -32,15 +32,16 @@
 #ifndef CM256_H
 #define CM256_H
 
-#include <assert.h>
-#include "gf256.h"
 #include "export.h"
+#include "gf256.h"
+#include <assert.h>
 
 class CM256CC_API CM256
 {
 public:
     // Encoder parameters
-    typedef struct cm256_encoder_params_t {
+    typedef struct cm256_encoder_params_t
+    {
         // Original block count < 256
         int OriginalCount;
 
@@ -52,7 +53,8 @@ public:
     } cm256_encoder_params;
 
     // Descriptor for data block
-    typedef struct cm256_block_t {
+    typedef struct cm256_block_t
+    {
         // Pointer to data received.
         void* Block;
 
@@ -105,8 +107,8 @@ public:
      */
     int cm256_encode(
         cm256_encoder_params params, // Encoder parameters
-        cm256_block* originals,      // Array of pointers to original blocks
-        void* recoveryBlocks);       // Output recovery blocks end-to-end
+        cm256_block* originals, // Array of pointers to original blocks
+        void* recoveryBlocks); // Output recovery blocks end-to-end
 
     /*
      * Cauchy MDS GF(256) decode
@@ -128,7 +130,7 @@ public:
      */
     int cm256_decode(
         cm256_encoder_params params, // Encoder parameters
-        cm256_block* blocks);        // Array of 'originalCount' blocks as described above
+        cm256_block* blocks); // Array of 'originalCount' blocks as described above
 
     /*
      * Commodity functions
@@ -142,7 +144,7 @@ public:
     }
     static inline unsigned char cm256_get_original_block_index(cm256_encoder_params params, int originalBlockIndex)
     {
-        (void) params;
+        (void)params;
         assert(originalBlockIndex >= 0 && originalBlockIndex < params.OriginalCount);
         return (unsigned char)(originalBlockIndex);
     }
@@ -188,13 +190,12 @@ private:
     // Note: This function does not validate input, use with care.
     void cm256_encode_block(
         cm256_encoder_params params, // Encoder parameters
-        cm256_block* originals,      // Array of pointers to original blocks
-        int recoveryBlockIndex,      // Return value from cm256_get_recovery_block_index()
-        void* recoveryBlock);        // Output recovery block
+        cm256_block* originals, // Array of pointers to original blocks
+        int recoveryBlockIndex, // Return value from cm256_get_recovery_block_index()
+        void* recoveryBlock); // Output recovery block
 
     gf256_ctx m_gf256Ctx;
     bool m_initialized;
 };
-
 
 #endif // CM256_H

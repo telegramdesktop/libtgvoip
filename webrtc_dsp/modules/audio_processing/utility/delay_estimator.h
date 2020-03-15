@@ -16,49 +16,51 @@
 
 #include <stdint.h>
 
-static const int32_t kMaxBitCountsQ9 = (32 << 9);  // 32 matching bits in Q9.
+static const int32_t kMaxBitCountsQ9 = (32 << 9); // 32 matching bits in Q9.
 
-typedef struct {
-  // Pointer to bit counts.
-  int* far_bit_counts;
-  // Binary history variables.
-  uint32_t* binary_far_history;
-  int history_size;
+typedef struct
+{
+    // Pointer to bit counts.
+    int* far_bit_counts;
+    // Binary history variables.
+    uint32_t* binary_far_history;
+    int history_size;
 } BinaryDelayEstimatorFarend;
 
-typedef struct {
-  // Pointer to bit counts.
-  int32_t* mean_bit_counts;
-  // Array only used locally in ProcessBinarySpectrum() but whose size is
-  // determined at run-time.
-  int32_t* bit_counts;
+typedef struct
+{
+    // Pointer to bit counts.
+    int32_t* mean_bit_counts;
+    // Array only used locally in ProcessBinarySpectrum() but whose size is
+    // determined at run-time.
+    int32_t* bit_counts;
 
-  // Binary history variables.
-  uint32_t* binary_near_history;
-  int near_history_size;
-  int history_size;
+    // Binary history variables.
+    uint32_t* binary_near_history;
+    int near_history_size;
+    int history_size;
 
-  // Delay estimation variables.
-  int32_t minimum_probability;
-  int last_delay_probability;
+    // Delay estimation variables.
+    int32_t minimum_probability;
+    int last_delay_probability;
 
-  // Delay memory.
-  int last_delay;
+    // Delay memory.
+    int last_delay;
 
-  // Robust validation
-  int robust_validation_enabled;
-  int allowed_offset;
-  int last_candidate_delay;
-  int compare_delay;
-  int candidate_hits;
-  float* histogram;
-  float last_delay_histogram;
+    // Robust validation
+    int robust_validation_enabled;
+    int allowed_offset;
+    int last_candidate_delay;
+    int compare_delay;
+    int candidate_hits;
+    float* histogram;
+    float last_delay_histogram;
 
-  // For dynamically changing the lookahead when using SoftReset...().
-  int lookahead;
+    // For dynamically changing the lookahead when using SoftReset...().
+    int lookahead;
 
-  // Far-end binary spectrum history buffer etc.
-  BinaryDelayEstimatorFarend* farend;
+    // Far-end binary spectrum history buffer etc.
+    BinaryDelayEstimatorFarend* farend;
 } BinaryDelayEstimator;
 
 // Releases the memory allocated by
@@ -97,7 +99,7 @@ BinaryDelayEstimatorFarend* WebRtc_CreateBinaryDelayEstimatorFarend(
 // Return value:
 //      - history_size    : The history size allocated.
 int WebRtc_AllocateFarendBufferMemory(BinaryDelayEstimatorFarend* self,
-                                      int history_size);
+    int history_size);
 
 // Initializes the delay estimation far-end instance created with
 // WebRtc_CreateBinaryDelayEstimatorFarend(...).
@@ -133,7 +135,7 @@ void WebRtc_SoftResetBinaryDelayEstimatorFarend(
 //    - self                  : Updated far-end instance.
 //
 void WebRtc_AddBinaryFarSpectrum(BinaryDelayEstimatorFarend* self,
-                                 uint32_t binary_far_spectrum);
+    uint32_t binary_far_spectrum);
 
 // Releases the memory allocated by WebRtc_CreateBinaryDelayEstimator(...).
 //
@@ -169,7 +171,7 @@ BinaryDelayEstimator* WebRtc_CreateBinaryDelayEstimator(
 // Return value:
 //      - history_size    : The history size allocated.
 int WebRtc_AllocateHistoryBufferMemory(BinaryDelayEstimator* self,
-                                       int history_size);
+    int history_size);
 
 // Initializes the delay estimation instance created with
 // WebRtc_CreateBinaryDelayEstimator(...).
@@ -192,7 +194,7 @@ void WebRtc_InitBinaryDelayEstimator(BinaryDelayEstimator* self);
 //    - actual_shifts : The actual number of shifts performed.
 //
 int WebRtc_SoftResetBinaryDelayEstimator(BinaryDelayEstimator* self,
-                                         int delay_shift);
+    int delay_shift);
 
 // Estimates and returns the delay between the binary far-end and binary near-
 // end spectra. It is assumed the binary far-end spectrum has been added using
@@ -212,7 +214,7 @@ int WebRtc_SoftResetBinaryDelayEstimator(BinaryDelayEstimator* self,
 //                              -2    - Insufficient data for estimation.
 //
 int WebRtc_ProcessBinarySpectrum(BinaryDelayEstimator* self,
-                                 uint32_t binary_near_spectrum);
+    uint32_t binary_near_spectrum);
 
 // Returns the last calculated delay updated by the function
 // WebRtc_ProcessBinarySpectrum(...).
@@ -247,7 +249,7 @@ float WebRtc_binary_last_delay_quality(BinaryDelayEstimator* self);
 //    - mean_value            : Pointer to the mean value.
 //
 void WebRtc_MeanEstimatorFix(int32_t new_value,
-                             int factor,
-                             int32_t* mean_value);
+    int factor,
+    int32_t* mean_value);
 
-#endif  // MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_UTILITY_DELAY_ESTIMATOR_H_

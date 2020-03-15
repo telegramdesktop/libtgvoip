@@ -8,15 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*
  * This file contains the function WebRtcSpl_Sqrt().
  * The description header can be found in signal_processing_library.h
  *
  */
 
-#include "rtc_base/checks.h"
 #include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "rtc_base/checks.h"
 
 int32_t WebRtcSpl_SqrtLocal(int32_t in);
 
@@ -37,7 +36,7 @@ int32_t WebRtcSpl_SqrtLocal(int32_t in)
     B = in / 2;
 
     B = B - ((int32_t)0x40000000); // B = in/2 - 1/2
-    x_half = (int16_t)(B >> 16);  // x_half = x/2 = (in-1)/2
+    x_half = (int16_t)(B >> 16); // x_half = x/2 = (in-1)/2
     B = B + ((int32_t)0x40000000); // B = 1 + x/2
     B = B + ((int32_t)0x40000000); // Add 0.5 twice (since 1.0 does not exist in Q31)
 
@@ -48,16 +47,16 @@ int32_t WebRtcSpl_SqrtLocal(int32_t in)
     A >>= 16;
     A = A * A * 2; // A = (x/2)^4
     t16 = (int16_t)(A >> 16);
-    B += -20480 * t16 * 2;  // B = B - 0.625*A
+    B += -20480 * t16 * 2; // B = B - 0.625*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 - 0.625*(x/2)^4
 
-    A = x_half * t16 * 2;  // A = (x/2)^5
+    A = x_half * t16 * 2; // A = (x/2)^5
     t16 = (int16_t)(A >> 16);
-    B += 28672 * t16 * 2;  // B = B + 0.875*A
+    B += 28672 * t16 * 2; // B = B + 0.875*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 - 0.625*(x/2)^4 + 0.875*(x/2)^5
 
     t16 = (int16_t)(x2 >> 16);
-    A = x_half * t16 * 2;  // A = x/2^3
+    A = x_half * t16 * 2; // A = x/2^3
 
     B = B + (A >> 1); // B = B + 0.5*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 + 0.5*(x/2)^3 - 0.625*(x/2)^4 + 0.875*(x/2)^5
@@ -140,16 +139,22 @@ int32_t WebRtcSpl_Sqrt(int32_t value)
 
     // The convention in this function is to calculate sqrt(abs(A)). Negate the
     // input if it is negative.
-    if (A < 0) {
-        if (A == WEBRTC_SPL_WORD32_MIN) {
+    if (A < 0)
+    {
+        if (A == WEBRTC_SPL_WORD32_MIN)
+        {
             // This number cannot be held in an int32_t after negating.
             // Map it to the maximum positive value.
             A = WEBRTC_SPL_WORD32_MAX;
-        } else {
+        }
+        else
+        {
             A = -A;
         }
-    } else if (A == 0) {
-        return 0;  // sqrt(0) = 0
+    }
+    else if (A == 0)
+    {
+        return 0; // sqrt(0) = 0
     }
 
     sh = WebRtcSpl_NormW32(A); // # shifts to normalize A
@@ -157,12 +162,13 @@ int32_t WebRtcSpl_Sqrt(int32_t value)
     if (A < (WEBRTC_SPL_WORD32_MAX - 32767))
     {
         A = A + ((int32_t)32768); // Round off bit
-    } else
+    }
+    else
     {
         A = WEBRTC_SPL_WORD32_MAX;
     }
 
-    x_norm = (int16_t)(A >> 16);  // x_norm = AH
+    x_norm = (int16_t)(A >> 16); // x_norm = AH
 
     nshift = (sh / 2);
     RTC_DCHECK_GE(nshift, 0);
@@ -171,24 +177,25 @@ int32_t WebRtcSpl_Sqrt(int32_t value)
     A = WEBRTC_SPL_ABS_W32(A); // A = abs(x_norm<<16)
     A = WebRtcSpl_SqrtLocal(A); // A = sqrt(A)
 
-    if (2 * nshift == sh) {
+    if (2 * nshift == sh)
+    {
         // Even shift value case
 
-        t16 = (int16_t)(A >> 16);  // t16 = AH
+        t16 = (int16_t)(A >> 16); // t16 = AH
 
-        A = k_sqrt_2 * t16 * 2;  // A = 1/sqrt(2)*t16
+        A = k_sqrt_2 * t16 * 2; // A = 1/sqrt(2)*t16
         A = A + ((int32_t)32768); // Round off
         A = A & ((int32_t)0x7fff0000); // Round off
 
-        A >>= 15;  // A = A>>16
-
-    } else
+        A >>= 15; // A = A>>16
+    }
+    else
     {
-        A >>= 16;  // A = A>>16
+        A >>= 16; // A = A>>16
     }
 
     A = A & ((int32_t)0x0000ffff);
-    A >>= nshift;  // De-normalize the result.
+    A >>= nshift; // De-normalize the result.
 
     return A;
 }

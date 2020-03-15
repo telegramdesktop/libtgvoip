@@ -11,7 +11,8 @@
 #ifndef MODULES_AUDIO_PROCESSING_VAD_VAD_AUDIO_PROC_INTERNAL_H_
 #define MODULES_AUDIO_PROCESSING_VAD_VAD_AUDIO_PROC_INTERNAL_H_
 
-namespace webrtc {
+namespace webrtc
+{
 
 // These values should match MATLAB counterparts for unit-tests to pass.
 static const double kCorrWeight[] = {
@@ -63,17 +64,15 @@ static const double kLpcAnalWin[] = {
 
 static const size_t kFilterOrder = 2;
 static const float kCoeffNumerator[kFilterOrder + 1] = {0.974827f, -1.949650f,
-                                                        0.974827f};
+    0.974827f};
 static const float kCoeffDenominator[kFilterOrder + 1] = {1.0f, -1.971999f,
-                                                          0.972457f};
+    0.972457f};
 
-static_assert(kFilterOrder + 1 ==
-                  sizeof(kCoeffNumerator) / sizeof(kCoeffNumerator[0]),
-              "numerator coefficients incorrect size");
-static_assert(kFilterOrder + 1 ==
-                  sizeof(kCoeffDenominator) / sizeof(kCoeffDenominator[0]),
-              "denominator coefficients incorrect size");
+static_assert(kFilterOrder + 1 == sizeof(kCoeffNumerator) / sizeof(kCoeffNumerator[0]),
+    "numerator coefficients incorrect size");
+static_assert(kFilterOrder + 1 == sizeof(kCoeffDenominator) / sizeof(kCoeffDenominator[0]),
+    "denominator coefficients incorrect size");
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_VAD_VAD_AUDIO_PROCESSING_H_
+#endif // MODULES_AUDIO_PROCESSING_VAD_VAD_AUDIO_PROCESSING_H_

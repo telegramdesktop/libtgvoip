@@ -11,7 +11,7 @@
 #ifndef RTC_BASE_SANITIZER_H_
 #define RTC_BASE_SANITIZER_H_
 
-#include <stddef.h>  // For size_t.
+#include <stddef.h> // For size_t.
 
 #ifdef __cplusplus
 #include <type_traits>
@@ -52,10 +52,11 @@
 // as being unaddressable, so that reads and writes are not allowed. ASan may
 // narrow the range to the nearest alignment boundaries.
 static inline void rtc_AsanPoison(const volatile void* ptr,
-                                  size_t element_size,
-                                  size_t num_elements) {
+    size_t element_size,
+    size_t num_elements)
+{
 #if RTC_HAS_ASAN
-  ASAN_POISON_MEMORY_REGION(ptr, element_size * num_elements);
+    ASAN_POISON_MEMORY_REGION(ptr, element_size * num_elements);
 #endif
 }
 
@@ -63,20 +64,22 @@ static inline void rtc_AsanPoison(const volatile void* ptr,
 // as being addressable, so that reads and writes are allowed. ASan may widen
 // the range to the nearest alignment boundaries.
 static inline void rtc_AsanUnpoison(const volatile void* ptr,
-                                    size_t element_size,
-                                    size_t num_elements) {
+    size_t element_size,
+    size_t num_elements)
+{
 #if RTC_HAS_ASAN
-  ASAN_UNPOISON_MEMORY_REGION(ptr, element_size * num_elements);
+    ASAN_UNPOISON_MEMORY_REGION(ptr, element_size * num_elements);
 #endif
 }
 
 // Ask MSan to mark the memory range [ptr, ptr + element_size * num_elements)
 // as being uninitialized.
 static inline void rtc_MsanMarkUninitialized(const volatile void* ptr,
-                                             size_t element_size,
-                                             size_t num_elements) {
+    size_t element_size,
+    size_t num_elements)
+{
 #if RTC_HAS_MSAN
-  __msan_poison(ptr, element_size * num_elements);
+    __msan_poison(ptr, element_size * num_elements);
 #endif
 }
 
@@ -84,62 +87,71 @@ static inline void rtc_MsanMarkUninitialized(const volatile void* ptr,
 // element_size * num_elements) are uninitialized the call will crash with an
 // MSan report).
 static inline void rtc_MsanCheckInitialized(const volatile void* ptr,
-                                            size_t element_size,
-                                            size_t num_elements) {
+    size_t element_size,
+    size_t num_elements)
+{
 #if RTC_HAS_MSAN
-  __msan_check_mem_is_initialized(ptr, element_size * num_elements);
+    __msan_check_mem_is_initialized(ptr, element_size * num_elements);
 #endif
 }
 
 #ifdef __cplusplus
 
-namespace rtc {
-namespace sanitizer_impl {
+namespace rtc
+{
+namespace sanitizer_impl
+{
 
-template <typename T>
-constexpr bool IsTriviallyCopyable() {
-/*  return static_cast<bool>(std::is_trivially_copy_constructible<T>::value &&
+    template <typename T>
+    constexpr bool IsTriviallyCopyable()
+    {
+        /*  return static_cast<bool>(std::is_trivially_copy_constructible<T>::value &&
                            (std::is_trivially_copy_assignable<T>::value ||
                             !std::is_copy_assignable<T>::value) &&
                            std::is_trivially_destructible<T>::value);*/
-  return false; // I don't care, just compile please. Grishka
-}
+        return false; // I don't care, just compile please. Grishka
+    }
 
-}  // namespace sanitizer_impl
-
-template <typename T>
-inline void AsanPoison(const T& mem) {
-  rtc_AsanPoison(mem.data(), sizeof(mem.data()[0]), mem.size());
-}
+} // namespace sanitizer_impl
 
 template <typename T>
-inline void AsanUnpoison(const T& mem) {
-  rtc_AsanUnpoison(mem.data(), sizeof(mem.data()[0]), mem.size());
+inline void AsanPoison(const T& mem)
+{
+    rtc_AsanPoison(mem.data(), sizeof(mem.data()[0]), mem.size());
 }
 
 template <typename T>
-inline void MsanMarkUninitialized(const T& mem) {
-  rtc_MsanMarkUninitialized(mem.data(), sizeof(mem.data()[0]), mem.size());
+inline void AsanUnpoison(const T& mem)
+{
+    rtc_AsanUnpoison(mem.data(), sizeof(mem.data()[0]), mem.size());
 }
 
 template <typename T>
-inline T MsanUninitialized(T t) {
+inline void MsanMarkUninitialized(const T& mem)
+{
+    rtc_MsanMarkUninitialized(mem.data(), sizeof(mem.data()[0]), mem.size());
+}
+
+template <typename T>
+inline T MsanUninitialized(T t)
+{
 #if RTC_HAS_MSAN
-  // TODO(bugs.webrtc.org/8762): Switch to std::is_trivially_copyable when it
-  // becomes available in downstream projects.
-  static_assert(sanitizer_impl::IsTriviallyCopyable<T>(), "");
+    // TODO(bugs.webrtc.org/8762): Switch to std::is_trivially_copyable when it
+    // becomes available in downstream projects.
+    static_assert(sanitizer_impl::IsTriviallyCopyable<T>(), "");
 #endif
-  rtc_MsanMarkUninitialized(&t, sizeof(T), 1);
-  return t;
+    rtc_MsanMarkUninitialized(&t, sizeof(T), 1);
+    return t;
 }
 
 template <typename T>
-inline void MsanCheckInitialized(const T& mem) {
-  rtc_MsanCheckInitialized(mem.data(), sizeof(mem.data()[0]), mem.size());
+inline void MsanCheckInitialized(const T& mem)
+{
+    rtc_MsanCheckInitialized(mem.data(), sizeof(mem.data()[0]), mem.size());
 }
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // __cplusplus
+#endif // __cplusplus
 
-#endif  // RTC_BASE_SANITIZER_H_
+#endif // RTC_BASE_SANITIZER_H_

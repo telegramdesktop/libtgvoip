@@ -17,32 +17,34 @@
 #include "modules/audio_processing/include/audio_generator.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Provides looping audio from a file. The file is read in its entirety on
 // construction and then closed. This class wraps a webrtc::WavReader, and is
 // hence unsuitable for non-diagnostic code.
-class FileAudioGenerator : public AudioGenerator {
- public:
-  // Reads the playout audio from a given WAV file.
-  explicit FileAudioGenerator(std::unique_ptr<WavReader> input_audio_file);
+class FileAudioGenerator : public AudioGenerator
+{
+public:
+    // Reads the playout audio from a given WAV file.
+    explicit FileAudioGenerator(std::unique_ptr<WavReader> input_audio_file);
 
-  ~FileAudioGenerator() override;
+    ~FileAudioGenerator() override;
 
-  // Fill |audio| with audio from a file.
-  void FillFrame(AudioFrameView<float> audio) override;
+    // Fill |audio| with audio from a file.
+    void FillFrame(AudioFrameView<float> audio) override;
 
-  size_t NumChannels() override;
+    size_t NumChannels() override;
 
-  size_t SampleRateHz() override;
+    size_t SampleRateHz() override;
 
- private:
-  size_t num_channels_;
-  size_t sample_rate_hz_;
+private:
+    size_t num_channels_;
+    size_t sample_rate_hz_;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(FileAudioGenerator);
+    RTC_DISALLOW_COPY_AND_ASSIGN(FileAudioGenerator);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AUDIO_GENERATOR_FILE_AUDIO_GENERATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_AUDIO_GENERATOR_FILE_AUDIO_GENERATOR_H_

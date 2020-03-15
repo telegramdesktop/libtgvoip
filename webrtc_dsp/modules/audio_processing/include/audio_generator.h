@@ -13,24 +13,26 @@
 
 #include "modules/audio_processing/include/audio_frame_view.h"
 
-namespace webrtc {
+namespace webrtc
+{
 // This class is used as input sink for the APM, for diagnostic purposes.
 // Generates an infinite audio signal, [-1, 1] floating point values, in frames
 // of fixed channel count and sample rate.
-class AudioGenerator {
- public:
-  virtual ~AudioGenerator() {}
+class AudioGenerator
+{
+public:
+    virtual ~AudioGenerator() {}
 
-  // Fill |audio| with the next samples of the audio signal.
-  virtual void FillFrame(AudioFrameView<float> audio) = 0;
+    // Fill |audio| with the next samples of the audio signal.
+    virtual void FillFrame(AudioFrameView<float> audio) = 0;
 
-  // Return the number of channels output by the AudioGenerator.
-  virtual size_t NumChannels() = 0;
+    // Return the number of channels output by the AudioGenerator.
+    virtual size_t NumChannels() = 0;
 
-  // Return the sample rate output by the AudioGenerator.
-  virtual size_t SampleRateHz() = 0;
+    // Return the sample rate output by the AudioGenerator.
+    virtual size_t SampleRateHz() = 0;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_GENERATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_GENERATOR_H_

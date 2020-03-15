@@ -13,7 +13,8 @@
 
 #include <stddef.h>
 
-namespace webrtc {
+namespace webrtc
+{
 
 constexpr float kMinFloatS16Value = -32768.f;
 constexpr float kMaxFloatS16Value = 32767.f;
@@ -27,8 +28,7 @@ constexpr float kAttackFilterConstant = 0.f;
 
 // Adaptive digital gain applier settings below.
 constexpr float kMaxGainChangePerSecondDb = 3.f;
-constexpr float kMaxGainChangePerFrameDb =
-    kMaxGainChangePerSecondDb * kFrameDurationMs / 1000.f;
+constexpr float kMaxGainChangePerFrameDb = kMaxGainChangePerSecondDb * kFrameDurationMs / 1000.f;
 constexpr float kHeadroomDbfs = 1.f;
 constexpr float kMaxGainDb = 30.f;
 constexpr float kInitialAdaptiveDigitalGainDb = 8.f;
@@ -55,11 +55,10 @@ float GetExtraSaturationMarginOffsetDb();
 
 constexpr size_t kPeakEnveloperSuperFrameLengthMs = 400;
 static_assert(kFullBufferSizeMs % kPeakEnveloperSuperFrameLengthMs == 0,
-              "Full buffer size should be a multiple of super frame length for "
-              "optimal Saturation Protector performance.");
+    "Full buffer size should be a multiple of super frame length for "
+    "optimal Saturation Protector performance.");
 
-constexpr size_t kPeakEnveloperBufferSize =
-    kFullBufferSizeMs / kPeakEnveloperSuperFrameLengthMs + 1;
+constexpr size_t kPeakEnveloperBufferSize = kFullBufferSizeMs / kPeakEnveloperSuperFrameLengthMs + 1;
 
 // This value is 10 ** (-1/20 * frame_size_ms / satproc_attack_ms),
 // where satproc_attack_ms is 5000.
@@ -80,9 +79,8 @@ constexpr float kDecayFilterConstant = 0.9998848773724686f;
 // the limiter parameters and allowing a maximum error of +/- 32768^-1.
 constexpr size_t kInterpolatedGainCurveKneePoints = 22;
 constexpr size_t kInterpolatedGainCurveBeyondKneePoints = 10;
-constexpr size_t kInterpolatedGainCurveTotalPoints =
-    kInterpolatedGainCurveKneePoints + kInterpolatedGainCurveBeyondKneePoints;
+constexpr size_t kInterpolatedGainCurveTotalPoints = kInterpolatedGainCurveKneePoints + kInterpolatedGainCurveBeyondKneePoints;
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_AGC2_COMMON_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_AGC2_COMMON_H_

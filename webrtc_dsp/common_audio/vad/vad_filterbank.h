@@ -38,8 +38,8 @@
 // - returns            : Total energy of the signal (NOTE! This value is not
 //                        exact. It is only used in a comparison.)
 int16_t WebRtcVad_CalculateFeatures(VadInstT* self,
-                                    const int16_t* data_in,
-                                    size_t data_length,
-                                    int16_t* features);
+    const int16_t* data_in,
+    size_t data_length,
+    int16_t* features);
 
-#endif  // COMMON_AUDIO_VAD_VAD_FILTERBANK_H_
+#endif // COMMON_AUDIO_VAD_VAD_FILTERBANK_H_

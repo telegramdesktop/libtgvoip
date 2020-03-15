@@ -21,13 +21,13 @@
 // This will cause the compiler to not emit -Wundef warnings for that file.
 
 #ifdef __clang__
-#define RTC_PUSH_IGNORING_WUNDEF() \
-  _Pragma("clang diagnostic push") \
-      _Pragma("clang diagnostic ignored \"-Wundef\"")
+#define RTC_PUSH_IGNORING_WUNDEF()   \
+    _Pragma("clang diagnostic push") \
+        _Pragma("clang diagnostic ignored \"-Wundef\"")
 #define RTC_POP_IGNORING_WUNDEF() _Pragma("clang diagnostic pop")
 #else
 #define RTC_PUSH_IGNORING_WUNDEF()
 #define RTC_POP_IGNORING_WUNDEF()
-#endif  // __clang__
+#endif // __clang__
 
-#endif  // RTC_BASE_IGNORE_WUNDEF_H_
+#endif // RTC_BASE_IGNORE_WUNDEF_H_

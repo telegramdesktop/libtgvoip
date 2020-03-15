@@ -17,13 +17,14 @@ static const int kSampleRateHz = 16000;
 static const size_t kLength10Ms = kSampleRateHz / 100;
 static const size_t kMaxNumFrames = 4;
 
-struct AudioFeatures {
-  double log_pitch_gain[kMaxNumFrames];
-  double pitch_lag_hz[kMaxNumFrames];
-  double spectral_peak[kMaxNumFrames];
-  double rms[kMaxNumFrames];
-  size_t num_frames;
-  bool silence;
+struct AudioFeatures
+{
+    double log_pitch_gain[kMaxNumFrames];
+    double pitch_lag_hz[kMaxNumFrames];
+    double spectral_peak[kMaxNumFrames];
+    double rms[kMaxNumFrames];
+    size_t num_frames;
+    bool silence;
 };
 
-#endif  // MODULES_AUDIO_PROCESSING_VAD_COMMON_H_
+#endif // MODULES_AUDIO_PROCESSING_VAD_COMMON_H_

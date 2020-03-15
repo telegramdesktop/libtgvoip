@@ -13,24 +13,26 @@
 
 #include <stddef.h>
 
-namespace webrtc {
+namespace webrtc
+{
 
-class MovingMax {
- public:
-  explicit MovingMax(size_t window_size);
-  ~MovingMax();
+class MovingMax
+{
+public:
+    explicit MovingMax(size_t window_size);
+    ~MovingMax();
 
-  void Update(float value);
-  float max() const;
-  // Reset all of the state in this class.
-  void Clear();
+    void Update(float value);
+    float max() const;
+    // Reset all of the state in this class.
+    void Clear();
 
- private:
-  float max_value_ = 0.f;
-  size_t counter_ = 0;
-  size_t window_size_ = 1;
+private:
+    float max_value_ = 0.f;
+    size_t counter_ = 0;
+    size_t window_size_ = 1;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MOVING_MAX_H_
+#endif // MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MOVING_MAX_H_

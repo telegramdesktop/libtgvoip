@@ -13,33 +13,36 @@
 
 #include "modules/audio_processing/aec3/subtractor_output.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Class for analyzing the properties subtractor output
-class SubtractorOutputAnalyzer {
- public:
-  SubtractorOutputAnalyzer();
-  ~SubtractorOutputAnalyzer() = default;
+class SubtractorOutputAnalyzer
+{
+public:
+    SubtractorOutputAnalyzer();
+    ~SubtractorOutputAnalyzer() = default;
 
-  // Analyses the subtractor output.
-  void Update(const SubtractorOutput& subtractor_output);
+    // Analyses the subtractor output.
+    void Update(const SubtractorOutput& subtractor_output);
 
-  bool ConvergedFilter() const {
-    return main_filter_converged_ || shadow_filter_converged_;
-  }
+    bool ConvergedFilter() const
+    {
+        return main_filter_converged_ || shadow_filter_converged_;
+    }
 
-  bool DivergedFilter() const { return filter_diverged_; }
+    bool DivergedFilter() const { return filter_diverged_; }
 
-  // Handle echo path change.
-  void HandleEchoPathChange();
+    // Handle echo path change.
+    void HandleEchoPathChange();
 
- private:
-  const bool strict_divergence_check_;
-  bool shadow_filter_converged_ = false;
-  bool main_filter_converged_ = false;
-  bool filter_diverged_ = false;
+private:
+    const bool strict_divergence_check_;
+    bool shadow_filter_converged_ = false;
+    bool main_filter_converged_ = false;
+    bool filter_diverged_ = false;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_SUBTRACTOR_OUTPUT_ANALYZER_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_SUBTRACTOR_OUTPUT_ANALYZER_H_

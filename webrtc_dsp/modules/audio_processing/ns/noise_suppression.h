@@ -17,24 +17,25 @@
 typedef struct NsHandleT NsHandle;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/*
+    /*
  * This function creates an instance of the floating point Noise Suppression.
  */
-NsHandle* WebRtcNs_Create(void);
+    NsHandle* WebRtcNs_Create(void);
 
-/*
+    /*
  * This function frees the dynamic memory of a specified noise suppression
  * instance.
  *
  * Input:
  *      - NS_inst       : Pointer to NS instance that should be freed
  */
-void WebRtcNs_Free(NsHandle* NS_inst);
+    void WebRtcNs_Free(NsHandle* NS_inst);
 
-/*
+    /*
  * This function initializes a NS instance and has to be called before any other
  * processing is made.
  *
@@ -48,9 +49,9 @@ void WebRtcNs_Free(NsHandle* NS_inst);
  * Return value         :  0 - Ok
  *                        -1 - Error
  */
-int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs);
+    int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs);
 
-/*
+    /*
  * This changes the aggressiveness of the noise suppression method.
  *
  * Input:
@@ -63,9 +64,9 @@ int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs);
  * Return value         :  0 - Ok
  *                        -1 - Error
  */
-int WebRtcNs_set_policy(NsHandle* NS_inst, int mode);
+    int WebRtcNs_set_policy(NsHandle* NS_inst, int mode);
 
-/*
+    /*
  * This functions estimates the background noise for the inserted speech frame.
  * The input and output signals should always be 10ms (80 or 160 samples).
  *
@@ -76,9 +77,9 @@ int WebRtcNs_set_policy(NsHandle* NS_inst, int mode);
  * Output:
  *      - NS_inst       : Updated NS instance
  */
-void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe);
+    void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe);
 
-/*
+    /*
  * This functions does Noise Suppression for the inserted speech frame. The
  * input and output signals should always be 10ms (80 or 160 samples).
  *
@@ -91,12 +92,12 @@ void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe);
  *      - NS_inst       : Updated NS instance
  *      - outframe      : Pointer to output frame for each band
  */
-void WebRtcNs_Process(NsHandle* NS_inst,
-                      const float* const* spframe,
-                      size_t num_bands,
-                      float* const* outframe);
+    void WebRtcNs_Process(NsHandle* NS_inst,
+        const float* const* spframe,
+        size_t num_bands,
+        float* const* outframe);
 
-/* Returns the internally used prior speech probability of the current frame.
+    /* Returns the internally used prior speech probability of the current frame.
  * There is a frequency bin based one as well, with which this should not be
  * confused.
  *
@@ -106,9 +107,9 @@ void WebRtcNs_Process(NsHandle* NS_inst,
  * Return value         : Prior speech probability in interval [0.0, 1.0].
  *                        -1 - NULL pointer or uninitialized instance.
  */
-float WebRtcNs_prior_speech_probability(NsHandle* handle);
+    float WebRtcNs_prior_speech_probability(NsHandle* handle);
 
-/* Returns a pointer to the noise estimate per frequency bin. The number of
+    /* Returns a pointer to the noise estimate per frequency bin. The number of
  * frequency bins can be provided using WebRtcNs_num_freq().
  *
  * Input
@@ -118,17 +119,17 @@ float WebRtcNs_prior_speech_probability(NsHandle* handle);
  *                        Returns NULL if the input is a NULL pointer or an
  *                        uninitialized instance.
  */
-const float* WebRtcNs_noise_estimate(const NsHandle* handle);
+    const float* WebRtcNs_noise_estimate(const NsHandle* handle);
 
-/* Returns the number of frequency bins, which is the length of the noise
+    /* Returns the number of frequency bins, which is the length of the noise
  * estimate for example.
  *
  * Return value         : Number of frequency bins.
  */
-size_t WebRtcNs_num_freq(void);
+    size_t WebRtcNs_num_freq(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // MODULES_AUDIO_PROCESSING_NS_NOISE_SUPPRESSION_H_
+#endif // MODULES_AUDIO_PROCESSING_NS_NOISE_SUPPRESSION_H_

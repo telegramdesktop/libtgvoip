@@ -1,15 +1,17 @@
 #ifndef LIBTGVOIP_WINDOWS_SPECIFIC_H
 #define LIBTGVOIP_WINDOWS_SPECIFIC_H
 
-#include <string>
 #include <Windows.h>
+#include <string>
 
-namespace tgvoip{
+namespace tgvoip
+{
 
-	class WindowsSpecific{
-	public:
-		static std::string GetErrorMessage(DWORD code);
-	};
+class WindowsSpecific
+{
+public:
+    static std::string GetErrorMessage(DWORD code);
+};
 
 }
 

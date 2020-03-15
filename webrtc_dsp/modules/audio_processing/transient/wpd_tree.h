@@ -11,12 +11,13 @@
 #ifndef MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
 #define MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
 
-#include <stddef.h>
 #include <memory>
+#include <stddef.h>
 
 #include "modules/audio_processing/transient/wpd_node.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Tree of a Wavelet Packet Decomposition (WPD).
 //
@@ -37,55 +38,56 @@ namespace webrtc {
 // Left Child: Current node index * 2.
 // Right Child: Current node index * 2 + 1.
 // Parent: Current Node Index / 2 (Integer division).
-class WPDTree {
- public:
-  // Creates a WPD tree using the data length and coefficients provided.
-  WPDTree(size_t data_length,
-          const float* high_pass_coefficients,
-          const float* low_pass_coefficients,
-          size_t coefficients_length,
-          int levels);
-  ~WPDTree();
+class WPDTree
+{
+public:
+    // Creates a WPD tree using the data length and coefficients provided.
+    WPDTree(size_t data_length,
+        const float* high_pass_coefficients,
+        const float* low_pass_coefficients,
+        size_t coefficients_length,
+        int levels);
+    ~WPDTree();
 
-  // Returns the number of nodes at any given level.
-  static int NumberOfNodesAtLevel(int level) { return 1 << level; }
+    // Returns the number of nodes at any given level.
+    static int NumberOfNodesAtLevel(int level) { return 1 << level; }
 
-  // Returns a pointer to the node at the given level and index(of that level).
-  // Level goes from 0 to levels().
-  // Index goes from 0 to the number of NumberOfNodesAtLevel(level) - 1.
-  //
-  // You can use the following formulas to get any node within the tree:
-  // Notation: (Level, Index of node in that level).
-  // Root node: (0/0).
-  // Left Child: (Current node level + 1, Current node index * 2).
-  // Right Child: (Current node level + 1, Current node index * 2 + 1).
-  // Parent: (Current node level - 1, Current node index / 2) (Integer division)
-  //
-  // If level or index are out of bounds the function will return NULL.
-  WPDNode* NodeAt(int level, int index);
+    // Returns a pointer to the node at the given level and index(of that level).
+    // Level goes from 0 to levels().
+    // Index goes from 0 to the number of NumberOfNodesAtLevel(level) - 1.
+    //
+    // You can use the following formulas to get any node within the tree:
+    // Notation: (Level, Index of node in that level).
+    // Root node: (0/0).
+    // Left Child: (Current node level + 1, Current node index * 2).
+    // Right Child: (Current node level + 1, Current node index * 2 + 1).
+    // Parent: (Current node level - 1, Current node index / 2) (Integer division)
+    //
+    // If level or index are out of bounds the function will return NULL.
+    WPDNode* NodeAt(int level, int index);
 
-  // Updates all the nodes of the tree with the new data. |data_length| must be
-  // teh same that was used for the creation of the tree.
-  // Returns 0 if correct, and -1 otherwise.
-  int Update(const float* data, size_t data_length);
+    // Updates all the nodes of the tree with the new data. |data_length| must be
+    // teh same that was used for the creation of the tree.
+    // Returns 0 if correct, and -1 otherwise.
+    int Update(const float* data, size_t data_length);
 
-  // Returns the total number of levels below the root. Root is cosidered level
-  // 0.
-  int levels() const { return levels_; }
+    // Returns the total number of levels below the root. Root is cosidered level
+    // 0.
+    int levels() const { return levels_; }
 
-  // Returns the total number of nodes.
-  int num_nodes() const { return num_nodes_; }
+    // Returns the total number of nodes.
+    int num_nodes() const { return num_nodes_; }
 
-  // Returns the total number of leaves.
-  int num_leaves() const { return 1 << levels_; }
+    // Returns the total number of leaves.
+    int num_leaves() const { return 1 << levels_; }
 
- private:
-  size_t data_length_;
-  int levels_;
-  int num_nodes_;
-  std::unique_ptr<std::unique_ptr<WPDNode>[]> nodes_;
+private:
+    size_t data_length_;
+    int levels_;
+    int num_nodes_;
+    std::unique_ptr<std::unique_ptr<WPDNode>[]> nodes_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_
+#endif // MODULES_AUDIO_PROCESSING_TRANSIENT_WPD_TREE_H_

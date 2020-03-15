@@ -22,7 +22,7 @@
 #if defined(__clang__) && (!defined(SWIG))
 #define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
 #else
-#define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x)  // no-op
+#define RTC_THREAD_ANNOTATION_ATTRIBUTE__(x) // no-op
 #endif
 
 // Document if a shared variable/field needs to be protected by a lock.
@@ -44,24 +44,24 @@
 // (i.e. You don't have to annotate both locks with both ACQUIRED_AFTER
 // and ACQUIRED_BEFORE.)
 #define RTC_ACQUIRED_AFTER(x) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(acquired_after(x))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(acquired_after(x))
 #define RTC_ACQUIRED_BEFORE(x) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(acquired_before(x))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(acquired_before(x))
 
 // The following three annotations document the lock requirements for
 // functions/methods.
 
 // Document if a function expects certain locks to be held before it is called
 #define RTC_EXCLUSIVE_LOCKS_REQUIRED(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(__VA_ARGS__))
 #define RTC_SHARED_LOCKS_REQUIRED(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_locks_required(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_locks_required(__VA_ARGS__))
 
 // Document the locks acquired in the body of the function. These locks
 // cannot be held when calling this function (as google3's Mutex locks are
 // non-reentrant).
 #define RTC_LOCKS_EXCLUDED(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(locks_excluded(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(locks_excluded(__VA_ARGS__))
 
 // Document the lock the annotated function returns without acquiring it.
 #define RTC_LOCK_RETURNED(x) RTC_THREAD_ANNOTATION_ATTRIBUTE__(lock_returned(x))
@@ -74,22 +74,22 @@
 
 // The following annotations specify lock and unlock primitives.
 #define RTC_EXCLUSIVE_LOCK_FUNCTION(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_lock_function(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_lock_function(__VA_ARGS__))
 
 #define RTC_SHARED_LOCK_FUNCTION(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_lock_function(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_lock_function(__VA_ARGS__))
 
 #define RTC_EXCLUSIVE_TRYLOCK_FUNCTION(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_trylock_function(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_trylock_function(__VA_ARGS__))
 
 #define RTC_SHARED_TRYLOCK_FUNCTION(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_trylock_function(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(shared_trylock_function(__VA_ARGS__))
 
 #define RTC_UNLOCK_FUNCTION(...) \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(unlock_function(__VA_ARGS__))
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(unlock_function(__VA_ARGS__))
 
 // An escape hatch for thread safety analysis to ignore the annotated function.
 #define RTC_NO_THREAD_SAFETY_ANALYSIS \
-  RTC_THREAD_ANNOTATION_ATTRIBUTE__(no_thread_safety_analysis)
+    RTC_THREAD_ANNOTATION_ATTRIBUTE__(no_thread_safety_analysis)
 
-#endif  // RTC_BASE_THREAD_ANNOTATIONS_H_
+#endif // RTC_BASE_THREAD_ANNOTATIONS_H_

@@ -20,36 +20,39 @@
 #include "modules/audio_processing/aec3/echo_path_variability.h"
 #include "modules/audio_processing/aec3/render_buffer.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Class for removing the echo from the capture signal.
-class EchoRemover {
- public:
-  static EchoRemover* Create(const EchoCanceller3Config& config,
-                             int sample_rate_hz);
-  virtual ~EchoRemover() = default;
+class EchoRemover
+{
+public:
+    static EchoRemover* Create(const EchoCanceller3Config& config,
+        int sample_rate_hz);
+    virtual ~EchoRemover() = default;
 
-  // Get current metrics.
-  virtual void GetMetrics(EchoControl::Metrics* metrics) const = 0;
+    // Get current metrics.
+    virtual void GetMetrics(EchoControl::Metrics* metrics) const = 0;
 
-  // Removes the echo from a block of samples from the capture signal. The
-  // supplied render signal is assumed to be pre-aligned with the capture
-  // signal.
-  virtual void ProcessCapture(
-      EchoPathVariability echo_path_variability,
-      bool capture_signal_saturation,
-      const absl::optional<DelayEstimate>& external_delay,
-      RenderBuffer* render_buffer,
-      std::vector<std::vector<float>>* capture) = 0;
+    // Removes the echo from a block of samples from the capture signal. The
+    // supplied render signal is assumed to be pre-aligned with the capture
+    // signal.
+    virtual void ProcessCapture(
+        EchoPathVariability echo_path_variability,
+        bool capture_signal_saturation,
+        const absl::optional<DelayEstimate>& external_delay,
+        RenderBuffer* render_buffer,
+        std::vector<std::vector<float>>* capture)
+        = 0;
 
-  // Returns the internal delay estimate in blocks.
-  virtual absl::optional<int> Delay() const = 0;
+    // Returns the internal delay estimate in blocks.
+    virtual absl::optional<int> Delay() const = 0;
 
-  // Updates the status on whether echo leakage is detected in the output of the
-  // echo remover.
-  virtual void UpdateEchoLeakageStatus(bool leakage_detected) = 0;
+    // Updates the status on whether echo leakage is detected in the output of the
+    // echo remover.
+    virtual void UpdateEchoLeakageStatus(bool leakage_detected) = 0;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_ECHO_REMOVER_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_ECHO_REMOVER_H_

@@ -11,21 +11,30 @@
 #ifndef MODULES_AUDIO_PROCESSING_AEC3_DELAY_ESTIMATE_H_
 #define MODULES_AUDIO_PROCESSING_AEC3_DELAY_ESTIMATE_H_
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Stores delay_estimates.
-struct DelayEstimate {
-  enum class Quality { kCoarse, kRefined };
+struct DelayEstimate
+{
+    enum class Quality
+    {
+        kCoarse,
+        kRefined
+    };
 
-  DelayEstimate(Quality quality, size_t delay)
-      : quality(quality), delay(delay) {}
+    DelayEstimate(Quality quality, size_t delay)
+        : quality(quality)
+        , delay(delay)
+    {
+    }
 
-  Quality quality;
-  size_t delay;
-  size_t blocks_since_last_change = 0;
-  size_t blocks_since_last_update = 0;
+    Quality quality;
+    size_t delay;
+    size_t blocks_since_last_change = 0;
+    size_t blocks_since_last_update = 0;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_DELAY_ESTIMATE_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_DELAY_ESTIMATE_H_

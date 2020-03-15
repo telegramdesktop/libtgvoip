@@ -12,14 +12,15 @@
 #define COMMON_AUDIO_THIRD_PARTY_FFT4G_FFT4G_H_
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
-// Refer to fft4g.c for documentation.
-void WebRtc_rdft(size_t n, int isgn, float* a, size_t* ip, float* w);
+    // Refer to fft4g.c for documentation.
+    void WebRtc_rdft(size_t n, int isgn, float* a, size_t* ip, float* w);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif  /* COMMON_AUDIO_THIRD_PARTY_FFT4G_FFT4G_H_ */
+#endif /* COMMON_AUDIO_THIRD_PARTY_FFT4G_FFT4G_H_ */

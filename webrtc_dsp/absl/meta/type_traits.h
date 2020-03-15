@@ -35,93 +35,106 @@
 #ifndef ABSL_META_TYPE_TRAITS_H_
 #define ABSL_META_TYPE_TRAITS_H_
 
-#include <stddef.h>
 #include <functional>
+#include <stddef.h>
 #include <type_traits>
 
 #include "absl/base/config.h"
 
-namespace absl {
+namespace absl
+{
 
-namespace type_traits_internal {
+namespace type_traits_internal
+{
 
-template <typename... Ts>
-struct VoidTImpl {
-  using type = void;
-};
+    template <typename... Ts>
+    struct VoidTImpl
+    {
+        using type = void;
+    };
 
-// This trick to retrieve a default alignment is necessary for our
-// implementation of aligned_storage_t to be consistent with any implementation
-// of std::aligned_storage.
-template <size_t Len, typename T = std::aligned_storage<Len>>
-struct default_alignment_of_aligned_storage;
+    // This trick to retrieve a default alignment is necessary for our
+    // implementation of aligned_storage_t to be consistent with any implementation
+    // of std::aligned_storage.
+    template <size_t Len, typename T = std::aligned_storage<Len>>
+    struct default_alignment_of_aligned_storage;
 
-template <size_t Len, size_t Align>
-struct default_alignment_of_aligned_storage<Len,
-                                            std::aligned_storage<Len, Align>> {
-  static constexpr size_t value = Align;
-};
+    template <size_t Len, size_t Align>
+    struct default_alignment_of_aligned_storage<Len,
+        std::aligned_storage<Len, Align>>
+    {
+        static constexpr size_t value = Align;
+    };
 
-////////////////////////////////
-// Library Fundamentals V2 TS //
-////////////////////////////////
+    ////////////////////////////////
+    // Library Fundamentals V2 TS //
+    ////////////////////////////////
 
-// NOTE: The `is_detected` family of templates here differ from the library
-// fundamentals specification in that for library fundamentals, `Op<Args...>` is
-// evaluated as soon as the type `is_detected<Op, Args...>` undergoes
-// substitution, regardless of whether or not the `::value` is accessed. That
-// is inconsistent with all other standard traits and prevents lazy evaluation
-// in larger contexts (such as if the `is_detected` check is a trailing argument
-// of a `conjunction`. This implementation opts to instead be lazy in the same
-// way that the standard traits are (this "defect" of the detection idiom
-// specifications has been reported).
+    // NOTE: The `is_detected` family of templates here differ from the library
+    // fundamentals specification in that for library fundamentals, `Op<Args...>` is
+    // evaluated as soon as the type `is_detected<Op, Args...>` undergoes
+    // substitution, regardless of whether or not the `::value` is accessed. That
+    // is inconsistent with all other standard traits and prevents lazy evaluation
+    // in larger contexts (such as if the `is_detected` check is a trailing argument
+    // of a `conjunction`. This implementation opts to instead be lazy in the same
+    // way that the standard traits are (this "defect" of the detection idiom
+    // specifications has been reported).
 
-template <class Enabler, template <class...> class Op, class... Args>
-struct is_detected_impl {
-  using type = std::false_type;
-};
+    template <class Enabler, template <class...> class Op, class... Args>
+    struct is_detected_impl
+    {
+        using type = std::false_type;
+    };
 
-template <template <class...> class Op, class... Args>
-struct is_detected_impl<typename VoidTImpl<Op<Args...>>::type, Op, Args...> {
-  using type = std::true_type;
-};
+    template <template <class...> class Op, class... Args>
+    struct is_detected_impl<typename VoidTImpl<Op<Args...>>::type, Op, Args...>
+    {
+        using type = std::true_type;
+    };
 
-template <template <class...> class Op, class... Args>
-struct is_detected : is_detected_impl<void, Op, Args...>::type {};
+    template <template <class...> class Op, class... Args>
+    struct is_detected : is_detected_impl<void, Op, Args...>::type
+    {
+    };
 
-template <class Enabler, class To, template <class...> class Op, class... Args>
-struct is_detected_convertible_impl {
-  using type = std::false_type;
-};
+    template <class Enabler, class To, template <class...> class Op, class... Args>
+    struct is_detected_convertible_impl
+    {
+        using type = std::false_type;
+    };
 
-template <class To, template <class...> class Op, class... Args>
-struct is_detected_convertible_impl<
-    typename std::enable_if<std::is_convertible<Op<Args...>, To>::value>::type,
-    To, Op, Args...> {
-  using type = std::true_type;
-};
+    template <class To, template <class...> class Op, class... Args>
+    struct is_detected_convertible_impl<
+        typename std::enable_if<std::is_convertible<Op<Args...>, To>::value>::type,
+        To, Op, Args...>
+    {
+        using type = std::true_type;
+    };
 
-template <class To, template <class...> class Op, class... Args>
-struct is_detected_convertible
-    : is_detected_convertible_impl<void, To, Op, Args...>::type {};
+    template <class To, template <class...> class Op, class... Args>
+    struct is_detected_convertible
+        : is_detected_convertible_impl<void, To, Op, Args...>::type
+    {
+    };
 
-template <typename T>
-using IsCopyAssignableImpl =
-    decltype(std::declval<T&>() = std::declval<const T&>());
+    template <typename T>
+    using IsCopyAssignableImpl = decltype(std::declval<T&>() = std::declval<const T&>());
 
-template <typename T>
-using IsMoveAssignableImpl = decltype(std::declval<T&>() = std::declval<T&&>());
+    template <typename T>
+    using IsMoveAssignableImpl = decltype(std::declval<T&>() = std::declval<T&&>());
 
-}  // namespace type_traits_internal
+} // namespace type_traits_internal
 
 template <typename T>
 struct is_copy_assignable : type_traits_internal::is_detected<
-                                type_traits_internal::IsCopyAssignableImpl, T> {
+                                type_traits_internal::IsCopyAssignableImpl, T>
+{
 };
 
 template <typename T>
 struct is_move_assignable : type_traits_internal::is_detected<
-                                type_traits_internal::IsMoveAssignableImpl, T> {
+                                type_traits_internal::IsMoveAssignableImpl, T>
+{
 };
 
 // void_t()
@@ -153,13 +166,19 @@ struct conjunction;
 
 template <typename T, typename... Ts>
 struct conjunction<T, Ts...>
-    : std::conditional<T::value, conjunction<Ts...>, T>::type {};
+    : std::conditional<T::value, conjunction<Ts...>, T>::type
+{
+};
 
 template <typename T>
-struct conjunction<T> : T {};
+struct conjunction<T> : T
+{
+};
 
 template <>
-struct conjunction<> : std::true_type {};
+struct conjunction<> : std::true_type
+{
+};
 
 // disjunction
 //
@@ -174,14 +193,19 @@ template <typename... Ts>
 struct disjunction;
 
 template <typename T, typename... Ts>
-struct disjunction<T, Ts...> :
-      std::conditional<T::value, T, disjunction<Ts...>>::type {};
+struct disjunction<T, Ts...> : std::conditional<T::value, T, disjunction<Ts...>>::type
+{
+};
 
 template <typename T>
-struct disjunction<T> : T {};
+struct disjunction<T> : T
+{
+};
 
 template <>
-struct disjunction<> : std::false_type {};
+struct disjunction<> : std::false_type
+{
+};
 
 // negation
 //
@@ -191,7 +215,9 @@ struct disjunction<> : std::false_type {};
 // This metafunction is designed to be a drop-in replacement for the C++17
 // `std::negation` metafunction.
 template <typename T>
-struct negation : std::integral_constant<bool, !T::value> {};
+struct negation : std::integral_constant<bool, !T::value>
+{
+};
 
 // is_trivially_destructible()
 //
@@ -209,19 +235,18 @@ struct negation : std::integral_constant<bool, !T::value> {};
 // https://gcc.gnu.org/onlinedocs/gcc/Type-Traits.html#Type-Traits.
 template <typename T>
 struct is_trivially_destructible
-    : std::integral_constant<bool, __has_trivial_destructor(T) &&
-                                   std::is_destructible<T>::value> {
+    : std::integral_constant<bool, __has_trivial_destructor(T) && std::is_destructible<T>::value>
+{
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
- private:
-  static constexpr bool compliant = std::is_trivially_destructible<T>::value ==
-                                    is_trivially_destructible::value;
-  static_assert(compliant || std::is_trivially_destructible<T>::value,
-                "Not compliant with std::is_trivially_destructible; "
-                "Standard: false, Implementation: true");
-  static_assert(compliant || !std::is_trivially_destructible<T>::value,
-                "Not compliant with std::is_trivially_destructible; "
-                "Standard: true, Implementation: false");
-#endif  // ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
+private:
+    static constexpr bool compliant = std::is_trivially_destructible<T>::value == is_trivially_destructible::value;
+    static_assert(compliant || std::is_trivially_destructible<T>::value,
+        "Not compliant with std::is_trivially_destructible; "
+        "Standard: false, Implementation: true");
+    static_assert(compliant || !std::is_trivially_destructible<T>::value,
+        "Not compliant with std::is_trivially_destructible; "
+        "Standard: true, Implementation: false");
+#endif // ABSL_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
 };
 
 // is_trivially_default_constructible()
@@ -258,21 +283,18 @@ struct is_trivially_destructible
 // Nontrivially destructible types will cause the expression to be nontrivial.
 template <typename T>
 struct is_trivially_default_constructible
-    : std::integral_constant<bool, __has_trivial_constructor(T) &&
-                                   std::is_default_constructible<T>::value &&
-                                   is_trivially_destructible<T>::value> {
+    : std::integral_constant<bool, __has_trivial_constructor(T) && std::is_default_constructible<T>::value && is_trivially_destructible<T>::value>
+{
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
- private:
-  static constexpr bool compliant =
-      std::is_trivially_default_constructible<T>::value ==
-      is_trivially_default_constructible::value;
-  static_assert(compliant || std::is_trivially_default_constructible<T>::value,
-                "Not compliant with std::is_trivially_default_constructible; "
-                "Standard: false, Implementation: true");
-  static_assert(compliant || !std::is_trivially_default_constructible<T>::value,
-                "Not compliant with std::is_trivially_default_constructible; "
-                "Standard: true, Implementation: false");
-#endif  // ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
+private:
+    static constexpr bool compliant = std::is_trivially_default_constructible<T>::value == is_trivially_default_constructible::value;
+    static_assert(compliant || std::is_trivially_default_constructible<T>::value,
+        "Not compliant with std::is_trivially_default_constructible; "
+        "Standard: false, Implementation: true");
+    static_assert(compliant || !std::is_trivially_default_constructible<T>::value,
+        "Not compliant with std::is_trivially_default_constructible; "
+        "Standard: true, Implementation: false");
+#endif // ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
 };
 
 // is_trivially_copy_constructible()
@@ -290,21 +312,18 @@ struct is_trivially_default_constructible
 // expression to be nontrivial.
 template <typename T>
 struct is_trivially_copy_constructible
-    : std::integral_constant<bool, __has_trivial_copy(T) &&
-                                   std::is_copy_constructible<T>::value &&
-                                   is_trivially_destructible<T>::value> {
+    : std::integral_constant<bool, __has_trivial_copy(T) && std::is_copy_constructible<T>::value && is_trivially_destructible<T>::value>
+{
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
- private:
-  static constexpr bool compliant =
-      std::is_trivially_copy_constructible<T>::value ==
-      is_trivially_copy_constructible::value;
-  static_assert(compliant || std::is_trivially_copy_constructible<T>::value,
-                "Not compliant with std::is_trivially_copy_constructible; "
-                "Standard: false, Implementation: true");
-  static_assert(compliant || !std::is_trivially_copy_constructible<T>::value,
-                "Not compliant with std::is_trivially_copy_constructible; "
-                "Standard: true, Implementation: false");
-#endif  // ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
+private:
+    static constexpr bool compliant = std::is_trivially_copy_constructible<T>::value == is_trivially_copy_constructible::value;
+    static_assert(compliant || std::is_trivially_copy_constructible<T>::value,
+        "Not compliant with std::is_trivially_copy_constructible; "
+        "Standard: false, Implementation: true");
+    static_assert(compliant || !std::is_trivially_copy_constructible<T>::value,
+        "Not compliant with std::is_trivially_copy_constructible; "
+        "Standard: true, Implementation: false");
+#endif // ABSL_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE
 };
 
 // is_trivially_copy_assignable()
@@ -325,20 +344,18 @@ struct is_trivially_copy_constructible
 template <typename T>
 struct is_trivially_copy_assignable
     : std::integral_constant<
-          bool, __has_trivial_assign(typename std::remove_reference<T>::type) &&
-                    absl::is_copy_assignable<T>::value> {
+          bool, __has_trivial_assign(typename std::remove_reference<T>::type) && absl::is_copy_assignable<T>::value>
+{
 #ifdef ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE
- private:
-  static constexpr bool compliant =
-      std::is_trivially_copy_assignable<T>::value ==
-      is_trivially_copy_assignable::value;
-  static_assert(compliant || std::is_trivially_copy_assignable<T>::value,
-                "Not compliant with std::is_trivially_copy_assignable; "
-                "Standard: false, Implementation: true");
-  static_assert(compliant || !std::is_trivially_copy_assignable<T>::value,
-                "Not compliant with std::is_trivially_copy_assignable; "
-                "Standard: true, Implementation: false");
-#endif  // ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE
+private:
+    static constexpr bool compliant = std::is_trivially_copy_assignable<T>::value == is_trivially_copy_assignable::value;
+    static_assert(compliant || std::is_trivially_copy_assignable<T>::value,
+        "Not compliant with std::is_trivially_copy_assignable; "
+        "Standard: false, Implementation: true");
+    static_assert(compliant || !std::is_trivially_copy_assignable<T>::value,
+        "Not compliant with std::is_trivially_copy_assignable; "
+        "Standard: true, Implementation: false");
+#endif // ABSL_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE
 };
 
 // -----------------------------------------------------------------------------
@@ -390,8 +407,7 @@ using remove_extent_t = typename std::remove_extent<T>::type;
 template <typename T>
 using remove_all_extents_t = typename std::remove_all_extents<T>::type;
 
-template <size_t Len, size_t Align = type_traits_internal::
-                          default_alignment_of_aligned_storage<Len>::value>
+template <size_t Len, size_t Align = type_traits_internal::default_alignment_of_aligned_storage<Len>::value>
 using aligned_storage_t = typename std::aligned_storage<Len, Align>::type;
 
 template <typename T>
@@ -412,25 +428,32 @@ using underlying_type_t = typename std::underlying_type<T>::type;
 template <typename T>
 using result_of_t = typename std::result_of<T>::type;
 
-namespace type_traits_internal {
-template <typename Key, typename = size_t>
-struct IsHashable : std::false_type {};
+namespace type_traits_internal
+{
+    template <typename Key, typename = size_t>
+    struct IsHashable : std::false_type
+    {
+    };
 
-template <typename Key>
-struct IsHashable<Key,
-                  decltype(std::declval<std::hash<Key>>()(std::declval<Key>()))>
-    : std::true_type {};
+    template <typename Key>
+    struct IsHashable<Key,
+        decltype(std::declval<std::hash<Key>>()(std::declval<Key>()))>
+        : std::true_type
+    {
+    };
 
-template <typename Key>
-struct IsHashEnabled
-    : absl::conjunction<std::is_default_constructible<std::hash<Key>>,
-                        std::is_copy_constructible<std::hash<Key>>,
-                        std::is_destructible<std::hash<Key>>,
-                        absl::is_copy_assignable<std::hash<Key>>,
-                        IsHashable<Key>> {};
+    template <typename Key>
+    struct IsHashEnabled
+        : absl::conjunction<std::is_default_constructible<std::hash<Key>>,
+              std::is_copy_constructible<std::hash<Key>>,
+              std::is_destructible<std::hash<Key>>,
+              absl::is_copy_assignable<std::hash<Key>>,
+              IsHashable<Key>>
+    {
+    };
 
-}  // namespace type_traits_internal
+} // namespace type_traits_internal
 
-}  // namespace absl
+} // namespace absl
 
-#endif  // ABSL_META_TYPE_TRAITS_H_
+#endif // ABSL_META_TYPE_TRAITS_H_

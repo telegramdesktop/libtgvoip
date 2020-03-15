@@ -20,4 +20,4 @@ double Db2Loudness(double db);
 
 double Dbfs2Loudness(double dbfs);
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_UTILITY_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC_UTILITY_H_

@@ -29,13 +29,15 @@
 
 #include <optional>
 
-namespace absl {
+namespace absl
+{
 using std::bad_optional_access;
-}  // namespace absl
+} // namespace absl
 
-#else  // ABSL_HAVE_STD_OPTIONAL
+#else // ABSL_HAVE_STD_OPTIONAL
 
-namespace absl {
+namespace absl
+{
 
 // -----------------------------------------------------------------------------
 // bad_optional_access
@@ -54,21 +56,23 @@ namespace absl {
 //   } catch(const absl::bad_optional_access& e) {
 //     std::cout << "Bad optional access: " << e.what() << '\n';
 //   }
-class bad_optional_access : public std::exception {
- public:
-  bad_optional_access() = default;
-  ~bad_optional_access() override;
-  const char* what() const noexcept override;
+class bad_optional_access : public std::exception
+{
+public:
+    bad_optional_access() = default;
+    ~bad_optional_access() override;
+    const char* what() const noexcept override;
 };
 
-namespace optional_internal {
+namespace optional_internal
+{
 
-// throw delegator
-[[noreturn]] void throw_bad_optional_access();
+    // throw delegator
+    [[noreturn]] void throw_bad_optional_access();
 
-}  // namespace optional_internal
-}  // namespace absl
+} // namespace optional_internal
+} // namespace absl
 
-#endif  // ABSL_HAVE_STD_OPTIONAL
+#endif // ABSL_HAVE_STD_OPTIONAL
 
-#endif  // ABSL_TYPES_BAD_OPTIONAL_ACCESS_H_
+#endif // ABSL_TYPES_BAD_OPTIONAL_ACCESS_H_

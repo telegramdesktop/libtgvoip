@@ -17,15 +17,17 @@
 
 #include "modules/audio_processing/include/audio_generator.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class AudioGeneratorFactory {
- public:
-  // Creates an AudioGenerator that reads the playout audio from a given 16-bit
-  // int-encoded WAV file.
-  static std::unique_ptr<AudioGenerator> Create(const std::string& file_name);
+class AudioGeneratorFactory
+{
+public:
+    // Creates an AudioGenerator that reads the playout audio from a given 16-bit
+    // int-encoded WAV file.
+    static std::unique_ptr<AudioGenerator> Create(const std::string& file_name);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_GENERATOR_FACTORY_H_
+#endif // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_GENERATOR_FACTORY_H_

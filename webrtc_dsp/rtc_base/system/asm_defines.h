@@ -69,4 +69,4 @@ strheq \reg1, \reg2, \num
 
 // clang-format on
 
-#endif  // RTC_BASE_SYSTEM_ASM_DEFINES_H_
+#endif // RTC_BASE_SYSTEM_ASM_DEFINES_H_

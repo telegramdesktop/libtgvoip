@@ -17,50 +17,56 @@
 #include "rtc_base/arraysize.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class BiQuadFilter {
- public:
-  // Normalized filter coefficients.
-  //        b_0 + b_1 • z^(-1) + b_2 • z^(-2)
-  // H(z) = ---------------------------------
-  //         1 + a_1 • z^(-1) + a_2 • z^(-2)
-  struct BiQuadCoefficients {
-    float b[3];
-    float a[2];
-  };
+class BiQuadFilter
+{
+public:
+    // Normalized filter coefficients.
+    //        b_0 + b_1 • z^(-1) + b_2 • z^(-2)
+    // H(z) = ---------------------------------
+    //         1 + a_1 • z^(-1) + a_2 • z^(-2)
+    struct BiQuadCoefficients
+    {
+        float b[3];
+        float a[2];
+    };
 
-  BiQuadFilter() = default;
+    BiQuadFilter() = default;
 
-  void Initialize(const BiQuadCoefficients& coefficients) {
-    coefficients_ = coefficients;
-  }
-
-  void Reset() { biquad_state_.Reset(); }
-
-  // Produces a filtered output y of the input x. Both x and y need to
-  // have the same length. In-place modification is allowed.
-  void Process(rtc::ArrayView<const float> x, rtc::ArrayView<float> y);
-
- private:
-  struct BiQuadState {
-    BiQuadState() { Reset(); }
-
-    void Reset() {
-      std::fill(b, b + arraysize(b), 0.f);
-      std::fill(a, a + arraysize(a), 0.f);
+    void Initialize(const BiQuadCoefficients& coefficients)
+    {
+        coefficients_ = coefficients;
     }
 
-    float b[2];
-    float a[2];
-  };
+    void Reset() { biquad_state_.Reset(); }
 
-  BiQuadState biquad_state_;
-  BiQuadCoefficients coefficients_;
+    // Produces a filtered output y of the input x. Both x and y need to
+    // have the same length. In-place modification is allowed.
+    void Process(rtc::ArrayView<const float> x, rtc::ArrayView<float> y);
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(BiQuadFilter);
+private:
+    struct BiQuadState
+    {
+        BiQuadState() { Reset(); }
+
+        void Reset()
+        {
+            std::fill(b, b + arraysize(b), 0.f);
+            std::fill(a, a + arraysize(a), 0.f);
+        }
+
+        float b[2];
+        float a[2];
+    };
+
+    BiQuadState biquad_state_;
+    BiQuadCoefficients coefficients_;
+
+    RTC_DISALLOW_COPY_AND_ASSIGN(BiQuadFilter);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_

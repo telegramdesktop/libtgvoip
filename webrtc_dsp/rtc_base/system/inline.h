@@ -28,4 +28,4 @@
 
 #endif
 
-#endif  // RTC_BASE_SYSTEM_INLINE_H_
+#endif // RTC_BASE_SYSTEM_INLINE_H_

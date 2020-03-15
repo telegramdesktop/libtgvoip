@@ -17,7 +17,8 @@
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/thread_checker.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 
@@ -33,46 +34,47 @@ class ApmDataDumper;
 //    getting and setting the volume level. It just caches this value to be used
 //    in VoiceEngine later.
 class GainControlForExperimentalAgc : public GainControl,
-                                      public VolumeCallbacks {
- public:
-  GainControlForExperimentalAgc(GainControl* gain_control,
-                                rtc::CriticalSection* crit_capture);
-  ~GainControlForExperimentalAgc() override;
+                                      public VolumeCallbacks
+{
+public:
+    GainControlForExperimentalAgc(GainControl* gain_control,
+        rtc::CriticalSection* crit_capture);
+    ~GainControlForExperimentalAgc() override;
 
-  // GainControl implementation.
-  int Enable(bool enable) override;
-  bool is_enabled() const override;
-  int set_stream_analog_level(int level) override;
-  int stream_analog_level() override;
-  int set_mode(Mode mode) override;
-  Mode mode() const override;
-  int set_target_level_dbfs(int level) override;
-  int target_level_dbfs() const override;
-  int set_compression_gain_db(int gain) override;
-  int compression_gain_db() const override;
-  int enable_limiter(bool enable) override;
-  bool is_limiter_enabled() const override;
-  int set_analog_level_limits(int minimum, int maximum) override;
-  int analog_level_minimum() const override;
-  int analog_level_maximum() const override;
-  bool stream_is_saturated() const override;
+    // GainControl implementation.
+    int Enable(bool enable) override;
+    bool is_enabled() const override;
+    int set_stream_analog_level(int level) override;
+    int stream_analog_level() override;
+    int set_mode(Mode mode) override;
+    Mode mode() const override;
+    int set_target_level_dbfs(int level) override;
+    int target_level_dbfs() const override;
+    int set_compression_gain_db(int gain) override;
+    int compression_gain_db() const override;
+    int enable_limiter(bool enable) override;
+    bool is_limiter_enabled() const override;
+    int set_analog_level_limits(int minimum, int maximum) override;
+    int analog_level_minimum() const override;
+    int analog_level_maximum() const override;
+    bool stream_is_saturated() const override;
 
-  // VolumeCallbacks implementation.
-  void SetMicVolume(int volume) override;
-  int GetMicVolume() override;
+    // VolumeCallbacks implementation.
+    void SetMicVolume(int volume) override;
+    int GetMicVolume() override;
 
-  void Initialize();
+    void Initialize();
 
- private:
-  std::unique_ptr<ApmDataDumper> data_dumper_;
-  GainControl* real_gain_control_;
-  int volume_;
-  rtc::CriticalSection* crit_capture_;
-  bool do_log_level_ = true;
-  static int instance_counter_;
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(GainControlForExperimentalAgc);
+private:
+    std::unique_ptr<ApmDataDumper> data_dumper_;
+    GainControl* real_gain_control_;
+    int volume_;
+    rtc::CriticalSection* crit_capture_;
+    bool do_log_level_ = true;
+    static int instance_counter_;
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(GainControlForExperimentalAgc);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_GAIN_CONTROL_FOR_EXPERIMENTAL_AGC_H_
+#endif // MODULES_AUDIO_PROCESSING_GAIN_CONTROL_FOR_EXPERIMENTAL_AGC_H_

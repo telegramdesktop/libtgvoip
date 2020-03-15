@@ -16,33 +16,38 @@
 #include "modules/audio_processing/agc2/rnn_vad/rnn.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 
-namespace webrtc {
-class VadWithLevel {
- public:
-  struct LevelAndProbability {
-    constexpr LevelAndProbability(float prob, float rms, float peak)
-        : speech_probability(prob),
-          speech_rms_dbfs(rms),
-          speech_peak_dbfs(peak) {}
-    LevelAndProbability() = default;
-    float speech_probability = 0;
-    float speech_rms_dbfs = 0;  // Root mean square in decibels to full-scale.
-    float speech_peak_dbfs = 0;
-  };
+namespace webrtc
+{
+class VadWithLevel
+{
+public:
+    struct LevelAndProbability
+    {
+        constexpr LevelAndProbability(float prob, float rms, float peak)
+            : speech_probability(prob)
+            , speech_rms_dbfs(rms)
+            , speech_peak_dbfs(peak)
+        {
+        }
+        LevelAndProbability() = default;
+        float speech_probability = 0;
+        float speech_rms_dbfs = 0; // Root mean square in decibels to full-scale.
+        float speech_peak_dbfs = 0;
+    };
 
-  VadWithLevel();
-  ~VadWithLevel();
+    VadWithLevel();
+    ~VadWithLevel();
 
-  LevelAndProbability AnalyzeFrame(AudioFrameView<const float> frame);
+    LevelAndProbability AnalyzeFrame(AudioFrameView<const float> frame);
 
- private:
-  void SetSampleRate(int sample_rate_hz);
+private:
+    void SetSampleRate(int sample_rate_hz);
 
-  rnn_vad::RnnBasedVad rnn_vad_;
-  rnn_vad::FeaturesExtractor features_extractor_;
-  PushResampler<float> resampler_;
+    rnn_vad::RnnBasedVad rnn_vad_;
+    rnn_vad::FeaturesExtractor features_extractor_;
+    PushResampler<float> resampler_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_VAD_WITH_LEVEL_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_VAD_WITH_LEVEL_H_

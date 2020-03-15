@@ -16,18 +16,21 @@
 #ifndef ABSL_BASE_INTERNAL_IDENTITY_H_
 #define ABSL_BASE_INTERNAL_IDENTITY_H_
 
-namespace absl {
-namespace internal {
+namespace absl
+{
+namespace internal
+{
 
-template <typename T>
-struct identity {
-  typedef T type;
-};
+    template <typename T>
+    struct identity
+    {
+        typedef T type;
+    };
 
-template <typename T>
-using identity_t = typename identity<T>::type;
+    template <typename T>
+    using identity_t = typename identity<T>::type;
 
-}  // namespace internal
-}  // namespace absl
+} // namespace internal
+} // namespace absl
 
-#endif  // ABSL_BASE_INTERNAL_IDENTITY_H_
+#endif // ABSL_BASE_INTERNAL_IDENTITY_H_

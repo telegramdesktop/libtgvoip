@@ -86,7 +86,7 @@
 // TODO(pbos): Use webrtc/base/basictypes.h instead to include fixed-size ints.
 #include <stdint.h>
 
-#if defined(_MSC_VER) && _MSC_VER<=1800 && !defined(__cplusplus)
+#if defined(_MSC_VER) && _MSC_VER <= 1800 && !defined(__cplusplus)
 #define inline __inline
 #endif
 
@@ -98,18 +98,18 @@
 // libjingle are merged.
 #if !defined(WARN_UNUSED_RESULT)
 #if defined(__GNUC__) || defined(__clang__)
-#define WARN_UNUSED_RESULT __attribute__ ((__warn_unused_result__))
+#define WARN_UNUSED_RESULT __attribute__((__warn_unused_result__))
 #else
 #define WARN_UNUSED_RESULT
 #endif
-#endif  // WARN_UNUSED_RESULT
+#endif // WARN_UNUSED_RESULT
 
 // Put after a variable that might not be used, to prevent compiler warnings:
 //   int result ATTRIBUTE_UNUSED = DoSomething();
 //   assert(result == 17);
 #ifndef ATTRIBUTE_UNUSED
 #if defined(__GNUC__) || defined(__clang__)
-#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
+#define ATTRIBUTE_UNUSED __attribute__((__unused__))
 #else
 #define ATTRIBUTE_UNUSED
 #endif
@@ -121,7 +121,10 @@
 #if defined(__clang__)
 #define FALLTHROUGH() [[clang::fallthrough]]
 #else
-#define FALLTHROUGH() do { } while (0)
+#define FALLTHROUGH() \
+    do                \
+    {                 \
+    } while (0)
 #endif
 #endif
 
@@ -129,9 +132,9 @@
 #if defined(_MSC_VER)
 #define NO_RETURN __declspec(noreturn)
 #elif defined(__GNUC__)
-#define NO_RETURN __attribute__ ((__noreturn__))
+#define NO_RETURN __attribute__((__noreturn__))
 #else
 #define NO_RETURN
 #endif
 
-#endif  // WEBRTC_TYPEDEFS_H_
+#endif // WEBRTC_TYPEDEFS_H_

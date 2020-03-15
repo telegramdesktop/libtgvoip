@@ -16,6 +16,11 @@
 // Example:
 //   COMPILE_ASSERT(sizeof(foo) < 128);
 // Note: In C++, use static_assert instead!
-#define COMPILE_ASSERT(expression) switch (0) {case 0: case expression:;}
+#define COMPILE_ASSERT(expression) \
+    switch (0)                     \
+    {                              \
+    case 0:                        \
+    case expression:;              \
+    }
 
-#endif  // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_COMPILE_ASSERT_H_
+#endif // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_COMPILE_ASSERT_H_

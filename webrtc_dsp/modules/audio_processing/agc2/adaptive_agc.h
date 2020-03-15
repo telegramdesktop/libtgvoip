@@ -18,27 +18,29 @@
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
-namespace webrtc {
+namespace webrtc
+{
 class ApmDataDumper;
 
-class AdaptiveAgc {
- public:
-  explicit AdaptiveAgc(ApmDataDumper* apm_data_dumper);
-  AdaptiveAgc(ApmDataDumper* apm_data_dumper,
-              const AudioProcessing::Config::GainController2& config);
-  ~AdaptiveAgc();
+class AdaptiveAgc
+{
+public:
+    explicit AdaptiveAgc(ApmDataDumper* apm_data_dumper);
+    AdaptiveAgc(ApmDataDumper* apm_data_dumper,
+        const AudioProcessing::Config::GainController2& config);
+    ~AdaptiveAgc();
 
-  void Process(AudioFrameView<float> float_frame, float last_audio_level);
-  void Reset();
+    void Process(AudioFrameView<float> float_frame, float last_audio_level);
+    void Reset();
 
- private:
-  AdaptiveModeLevelEstimator speech_level_estimator_;
-  VadWithLevel vad_;
-  AdaptiveDigitalGainApplier gain_applier_;
-  ApmDataDumper* const apm_data_dumper_;
-  NoiseLevelEstimator noise_level_estimator_;
+private:
+    AdaptiveModeLevelEstimator speech_level_estimator_;
+    VadWithLevel vad_;
+    AdaptiveDigitalGainApplier gain_applier_;
+    ApmDataDumper* const apm_data_dumper_;
+    NoiseLevelEstimator noise_level_estimator_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_

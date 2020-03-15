@@ -7,4 +7,3 @@
 #include "BlockingQueue.h"
 
 using namespace tgvoip;
-

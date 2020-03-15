@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*
  * This file contains the function WebRtcSpl_FilterAR().
  * The description header can be found in signal_processing_library.h
@@ -20,16 +19,16 @@
 #include "rtc_base/checks.h"
 
 size_t WebRtcSpl_FilterAR(const int16_t* a,
-                          size_t a_length,
-                          const int16_t* x,
-                          size_t x_length,
-                          int16_t* state,
-                          size_t state_length,
-                          int16_t* state_low,
-                          size_t state_low_length,
-                          int16_t* filtered,
-                          int16_t* filtered_low,
-                          size_t filtered_low_length)
+    size_t a_length,
+    const int16_t* x,
+    size_t x_length,
+    int16_t* state,
+    size_t state_length,
+    int16_t* state_low,
+    size_t state_low_length,
+    int16_t* filtered,
+    int16_t* filtered_low,
+    size_t filtered_low_length)
 {
     int64_t o;
     int32_t oLOW;
@@ -55,21 +54,20 @@ size_t WebRtcSpl_FilterAR(const int16_t* a,
         stop = (i < a_length) ? i + 1 : a_length;
         for (j = 1; j < stop; j++)
         {
-          RTC_DCHECK_GE(filtered_ix, 0);
-          o -= *a_ptr * filtered[filtered_ix];
-          oLOW -= *a_ptr++ * filtered_low[filtered_ix];
-          --filtered_ix;
+            RTC_DCHECK_GE(filtered_ix, 0);
+            o -= *a_ptr * filtered[filtered_ix];
+            oLOW -= *a_ptr++ * filtered_low[filtered_ix];
+            --filtered_ix;
         }
         for (j = i + 1; j < a_length; j++)
         {
-          o -= *a_ptr * *state_ptr--;
-          oLOW -= *a_ptr++ * *state_low_ptr--;
+            o -= *a_ptr * *state_ptr--;
+            oLOW -= *a_ptr++ * *state_low_ptr--;
         }
 
         o += (oLOW >> 12);
         *filteredFINAL_ptr = (int16_t)((o + (int32_t)2048) >> 12);
-        *filteredFINAL_LOW_ptr++ =
-            (int16_t)(o - ((int32_t)(*filteredFINAL_ptr++) * (1 << 12)));
+        *filteredFINAL_LOW_ptr++ = (int16_t)(o - ((int32_t)(*filteredFINAL_ptr++) * (1 << 12)));
     }
 
     // Save the filter state
@@ -77,7 +75,8 @@ size_t WebRtcSpl_FilterAR(const int16_t* a,
     {
         WebRtcSpl_CopyFromEndW16(filtered, x_length, a_length - 1, state);
         WebRtcSpl_CopyFromEndW16(filtered_low, x_length, a_length - 1, state_low);
-    } else
+    }
+    else
     {
         for (i = 0; i < state_length - x_length; i++)
         {

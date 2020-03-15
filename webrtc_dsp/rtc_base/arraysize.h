@@ -29,4 +29,4 @@ char (&ArraySizeHelper(T (&array)[N]))[N];
 
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
-#endif  // RTC_BASE_ARRAYSIZE_H_
+#endif // RTC_BASE_ARRAYSIZE_H_

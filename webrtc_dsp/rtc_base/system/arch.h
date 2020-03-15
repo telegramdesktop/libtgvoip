@@ -77,4 +77,4 @@
 #error Define either WEBRTC_ARCH_LITTLE_ENDIAN or WEBRTC_ARCH_BIG_ENDIAN
 #endif
 
-#endif  // RTC_BASE_SYSTEM_ARCH_H_
+#endif // RTC_BASE_SYSTEM_ARCH_H_

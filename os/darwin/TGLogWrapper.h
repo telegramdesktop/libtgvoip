@@ -8,10 +8,11 @@
 #define TGVOIP_TGLOGWRAPPER_H
 
 #if defined __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void __tgvoip_call_tglog(const char* format, ...);
+    void __tgvoip_call_tglog(const char* format, ...);
 
 #if defined __cplusplus
 };

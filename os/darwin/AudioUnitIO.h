@@ -7,52 +7,57 @@
 #ifndef LIBTGVOIP_AUDIOUNITIO_H
 #define LIBTGVOIP_AUDIOUNITIO_H
 
-#include <AudioUnit/AudioUnit.h>
-#include <AudioToolbox/AudioToolbox.h>
-#include "../../threading.h"
-#include <string>
-#include <atomic>
 #include "../../audio/AudioIO.h"
+#include "../../threading.h"
+#include <AudioToolbox/AudioToolbox.h>
+#include <AudioUnit/AudioUnit.h>
+#include <atomic>
+#include <string>
 
-namespace tgvoip{ namespace audio{
-class AudioInputAudioUnit;
-class AudioOutputAudioUnit;
+namespace tgvoip
+{
+namespace audio
+{
+    class AudioInputAudioUnit;
+    class AudioOutputAudioUnit;
 
-	class AudioUnitIO : public AudioIO{
-	public:
-		AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID);
-		~AudioUnitIO();
-		void EnableInput(bool enabled);
-		void EnableOutput(bool enabled);
-		virtual AudioInput* GetInput();
-		virtual AudioOutput* GetOutput();
+    class AudioUnitIO : public AudioIO
+    {
+    public:
+        AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID);
+        ~AudioUnitIO();
+        void EnableInput(bool enabled);
+        void EnableOutput(bool enabled);
+        virtual AudioInput* GetInput();
+        virtual AudioOutput* GetOutput();
 #if TARGET_OS_OSX
-		void SetCurrentDevice(bool input, std::string deviceID);
-		void SetDuckingEnabled(bool enabled);
+        void SetCurrentDevice(bool input, std::string deviceID);
+        void SetDuckingEnabled(bool enabled);
 #endif
 
-	private:
-		static OSStatus BufferCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData);
-		void BufferCallback(AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 bus, UInt32 numFrames, AudioBufferList* ioData);
-		void StartIfNeeded();
+    private:
+        static OSStatus BufferCallback(void* inRefCon, AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList* ioData);
+        void BufferCallback(AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 bus, UInt32 numFrames, AudioBufferList* ioData);
+        void StartIfNeeded();
 #if TARGET_OS_OSX
-		static OSStatus DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses, void *inClientData);
-		std::string currentInputDevice;
-		std::string currentOutputDevice;
-		bool duckingEnabled=true;
+        static OSStatus DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* inClientData);
+        std::string currentInputDevice;
+        std::string currentOutputDevice;
+        bool duckingEnabled = true;
 #ifndef TGVOIP_NO_OSX_PRIVATE_API
-		bool actualDuckingEnabled=true;
+        bool actualDuckingEnabled = true;
 #endif // TGVOIP_NO_OSX_PRIVATE_API
-		AudioDeviceID currentOutputDeviceID;
+        AudioDeviceID currentOutputDeviceID;
 #endif
-		AudioComponentInstance unit;
-		AudioInputAudioUnit* input;
-		AudioOutputAudioUnit* output;
-		AudioBufferList inBufferList;
-		std::atomic<bool> inputEnabled;
-		std::atomic<bool> outputEnabled;
-		bool started;
-	};
-}}
+        AudioComponentInstance unit;
+        AudioInputAudioUnit* input;
+        AudioOutputAudioUnit* output;
+        AudioBufferList inBufferList;
+        std::atomic<bool> inputEnabled;
+        std::atomic<bool> outputEnabled;
+        bool started;
+    };
+}
+}
 
 #endif /* LIBTGVOIP_AUDIOUNITIO_H */

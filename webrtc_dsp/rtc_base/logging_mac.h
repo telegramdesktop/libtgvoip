@@ -18,11 +18,12 @@
 
 #include <string>
 
-namespace rtc {
+namespace rtc
+{
 
 // Returns a UTF8 description from an OS X Status error.
 std::string DescriptionFromOSStatus(OSStatus err);
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_LOGGING_MAC_H_
+#endif // RTC_BASE_LOGGING_MAC_H_

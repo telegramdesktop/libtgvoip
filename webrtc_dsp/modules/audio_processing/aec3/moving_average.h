@@ -16,29 +16,32 @@
 
 #include "api/array_view.h"
 
-namespace webrtc {
-namespace aec3 {
+namespace webrtc
+{
+namespace aec3
+{
 
-class MovingAverage {
- public:
-  // Creates an instance of MovingAverage that accepts inputs of length num_elem
-  // and averages over mem_len inputs.
-  MovingAverage(size_t num_elem, size_t mem_len);
-  ~MovingAverage();
+    class MovingAverage
+    {
+    public:
+        // Creates an instance of MovingAverage that accepts inputs of length num_elem
+        // and averages over mem_len inputs.
+        MovingAverage(size_t num_elem, size_t mem_len);
+        ~MovingAverage();
 
-  // Computes the average of input and mem_len-1 previous inputs and stores the
-  // result in output.
-  void Average(rtc::ArrayView<const float> input, rtc::ArrayView<float> output);
+        // Computes the average of input and mem_len-1 previous inputs and stores the
+        // result in output.
+        void Average(rtc::ArrayView<const float> input, rtc::ArrayView<float> output);
 
- private:
-  const size_t num_elem_;
-  const size_t mem_len_;
-  const float scaling_;
-  std::vector<float> memory_;
-  size_t mem_index_;
-};
+    private:
+        const size_t num_elem_;
+        const size_t mem_len_;
+        const float scaling_;
+        std::vector<float> memory_;
+        size_t mem_index_;
+    };
 
-}  // namespace aec3
-}  // namespace webrtc
+} // namespace aec3
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_MOVING_AVERAGE_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_MOVING_AVERAGE_H_

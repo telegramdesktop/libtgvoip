@@ -16,14 +16,16 @@
 #include "absl/types/optional.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class SmoothingFilter {
- public:
-  virtual ~SmoothingFilter() = default;
-  virtual void AddSample(float sample) = 0;
-  virtual absl::optional<float> GetAverage() = 0;
-  virtual bool SetTimeConstantMs(int time_constant_ms) = 0;
+class SmoothingFilter
+{
+public:
+    virtual ~SmoothingFilter() = default;
+    virtual void AddSample(float sample) = 0;
+    virtual absl::optional<float> GetAverage() = 0;
+    virtual bool SetTimeConstantMs(int time_constant_ms) = 0;
 };
 
 // SmoothingFilterImpl applies an exponential filter
@@ -32,42 +34,43 @@ class SmoothingFilter {
 // This implies a sample rate of 1000 Hz, i.e., 1 sample / ms.
 // But SmoothingFilterImpl allows sparse samples. All missing samples will be
 // assumed to equal the last received sample.
-class SmoothingFilterImpl final : public SmoothingFilter {
- public:
-  // |init_time_ms| is initialization time. It defines a period starting from
-  // the arriving time of the first sample. During this period, the exponential
-  // filter uses a varying time constant so that a smaller time constant will be
-  // applied to the earlier samples. This is to allow the the filter to adapt to
-  // earlier samples quickly. After the initialization period, the time constant
-  // will be set to |init_time_ms| first and can be changed through
-  // |SetTimeConstantMs|.
-  explicit SmoothingFilterImpl(int init_time_ms);
-  ~SmoothingFilterImpl() override;
+class SmoothingFilterImpl final : public SmoothingFilter
+{
+public:
+    // |init_time_ms| is initialization time. It defines a period starting from
+    // the arriving time of the first sample. During this period, the exponential
+    // filter uses a varying time constant so that a smaller time constant will be
+    // applied to the earlier samples. This is to allow the the filter to adapt to
+    // earlier samples quickly. After the initialization period, the time constant
+    // will be set to |init_time_ms| first and can be changed through
+    // |SetTimeConstantMs|.
+    explicit SmoothingFilterImpl(int init_time_ms);
+    ~SmoothingFilterImpl() override;
 
-  void AddSample(float sample) override;
-  absl::optional<float> GetAverage() override;
-  bool SetTimeConstantMs(int time_constant_ms) override;
+    void AddSample(float sample) override;
+    absl::optional<float> GetAverage() override;
+    bool SetTimeConstantMs(int time_constant_ms) override;
 
-  // Methods used for unittests.
-  float alpha() const { return alpha_; }
+    // Methods used for unittests.
+    float alpha() const { return alpha_; }
 
- private:
-  void UpdateAlpha(int time_constant_ms);
-  void ExtrapolateLastSample(int64_t time_ms);
+private:
+    void UpdateAlpha(int time_constant_ms);
+    void ExtrapolateLastSample(int64_t time_ms);
 
-  const int init_time_ms_;
-  const float init_factor_;
-  const float init_const_;
+    const int init_time_ms_;
+    const float init_factor_;
+    const float init_const_;
 
-  absl::optional<int64_t> init_end_time_ms_;
-  float last_sample_;
-  float alpha_;
-  float state_;
-  int64_t last_state_time_ms_;
+    absl::optional<int64_t> init_end_time_ms_;
+    float last_sample_;
+    float alpha_;
+    float state_;
+    int64_t last_state_time_ms_;
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SmoothingFilterImpl);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SmoothingFilterImpl);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // COMMON_AUDIO_SMOOTHING_FILTER_H_
+#endif // COMMON_AUDIO_SMOOTHING_FILTER_H_

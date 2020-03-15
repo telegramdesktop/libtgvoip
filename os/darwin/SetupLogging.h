@@ -1,3 +1,3 @@
 #import <Foundation/Foundation.h>
 
-extern void (*TGVoipLoggingFunction)(NSString *);
+extern void (*TGVoipLoggingFunction)(NSString*);

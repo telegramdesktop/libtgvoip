@@ -42,4 +42,4 @@
 #define RTC_DEPRECATED
 #endif
 
-#endif  // RTC_BASE_DEPRECATION_H_
+#endif // RTC_BASE_DEPRECATION_H_

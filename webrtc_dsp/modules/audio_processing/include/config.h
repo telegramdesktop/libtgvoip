@@ -16,26 +16,28 @@
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/system/rtc_export.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Only add new values to the end of the enumeration and never remove (only
 // deprecate) to maintain binary compatibility.
-enum class ConfigOptionID {
-  kMyExperimentForTest,
-  kAlgo1CostFunctionForTest,
-  kTemporalLayersFactory,  // Deprecated
-  kNetEqCapacityConfig,    // Deprecated
-  kNetEqFastAccelerate,    // Deprecated
-  kVoicePacing,            // Deprecated
-  kExtendedFilter,
-  kDelayAgnostic,
-  kExperimentalAgc,
-  kExperimentalNs,
-  kBeamforming,      // Deprecated
-  kIntelligibility,  // Deprecated
-  kEchoCanceller3,   // Deprecated
-  kAecRefinedAdaptiveFilter,
-  kLevelControl  // Deprecated
+enum class ConfigOptionID
+{
+    kMyExperimentForTest,
+    kAlgo1CostFunctionForTest,
+    kTemporalLayersFactory, // Deprecated
+    kNetEqCapacityConfig, // Deprecated
+    kNetEqFastAccelerate, // Deprecated
+    kVoicePacing, // Deprecated
+    kExtendedFilter,
+    kDelayAgnostic,
+    kExperimentalAgc,
+    kExperimentalNs,
+    kBeamforming, // Deprecated
+    kIntelligibility, // Deprecated
+    kEchoCanceller3, // Deprecated
+    kAecRefinedAdaptiveFilter,
+    kLevelControl // Deprecated
 };
 
 // Class Config is designed to ease passing a set of options across webrtc code.
@@ -58,76 +60,88 @@ enum class ConfigOptionID {
 //    config.Set<Algo1_CostFunction>(new SqrCost());
 //
 // Note: This class is thread-compatible (like STL containers).
-class RTC_EXPORT Config {
- public:
-  // Returns the option if set or a default constructed one.
-  // Callers that access options too often are encouraged to cache the result.
-  // Returned references are owned by this.
-  //
-  // Requires std::is_default_constructible<T>
-  template <typename T>
-  const T& Get() const;
+class RTC_EXPORT Config
+{
+public:
+    // Returns the option if set or a default constructed one.
+    // Callers that access options too often are encouraged to cache the result.
+    // Returned references are owned by this.
+    //
+    // Requires std::is_default_constructible<T>
+    template <typename T>
+    const T& Get() const;
 
-  // Set the option, deleting any previous instance of the same.
-  // This instance gets ownership of the newly set value.
-  template <typename T>
-  void Set(T* value);
+    // Set the option, deleting any previous instance of the same.
+    // This instance gets ownership of the newly set value.
+    template <typename T>
+    void Set(T* value);
 
-  Config();
-  ~Config();
+    Config();
+    ~Config();
 
- private:
-  struct BaseOption {
-    virtual ~BaseOption() {}
-  };
+private:
+    struct BaseOption
+    {
+        virtual ~BaseOption() {}
+    };
 
-  template <typename T>
-  struct Option : BaseOption {
-    explicit Option(T* v) : value(v) {}
-    ~Option() { delete value; }
-    T* value;
-  };
+    template <typename T>
+    struct Option : BaseOption
+    {
+        explicit Option(T* v)
+            : value(v)
+        {
+        }
+        ~Option() { delete value; }
+        T* value;
+    };
 
-  template <typename T>
-  static ConfigOptionID identifier() {
-    return T::identifier;
-  }
+    template <typename T>
+    static ConfigOptionID identifier()
+    {
+        return T::identifier;
+    }
 
-  // Used to instantiate a default constructed object that doesn't needs to be
-  // owned. This allows Get<T> to be implemented without requiring explicitly
-  // locks.
-  template <typename T>
-  static const T& default_value() {
-    static const T* const def = new T();
-    return *def;
-  }
+    // Used to instantiate a default constructed object that doesn't needs to be
+    // owned. This allows Get<T> to be implemented without requiring explicitly
+    // locks.
+    template <typename T>
+    static const T& default_value()
+    {
+        static const T* const def = new T();
+        return *def;
+    }
 
-  typedef std::map<ConfigOptionID, BaseOption*> OptionMap;
-  OptionMap options_;
+    typedef std::map<ConfigOptionID, BaseOption*> OptionMap;
+    OptionMap options_;
 
-  // RTC_DISALLOW_COPY_AND_ASSIGN
-  Config(const Config&);
-  void operator=(const Config&);
+    // RTC_DISALLOW_COPY_AND_ASSIGN
+    Config(const Config&);
+    void operator=(const Config&);
 };
 
 template <typename T>
-const T& Config::Get() const {
-  OptionMap::const_iterator it = options_.find(identifier<T>());
-  if (it != options_.end()) {
-    const T* t = static_cast<Option<T>*>(it->second)->value;
-    if (t) {
-      return *t;
+const T& Config::Get() const
+{
+    OptionMap::const_iterator it = options_.find(identifier<T>());
+    if (it != options_.end())
+    {
+        const T* t = static_cast<Option<T>*>(it->second)->value;
+        if (t)
+        {
+            return *t;
+        }
     }
-  }
-  return default_value<T>();
+    return default_value<T>();
 }
 
 template <typename T>
-void Config::Set(T* value) {
-  BaseOption*& it = options_[identifier<T>()];
-  delete it;
-  it = new Option<T>(value);
+void Config::Set(T* value)
+{
+    BaseOption*& it = options_[identifier<T>()];
+    delete it;
+    it = new Option<T>(value);
 }
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_
+#endif // MODULES_AUDIO_PROCESSING_INCLUDE_CONFIG_H_

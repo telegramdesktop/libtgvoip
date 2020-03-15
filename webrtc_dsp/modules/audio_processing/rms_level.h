@@ -17,7 +17,8 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Computes the root mean square (RMS) level in dBFs (decibels from digital
 // full-scale) of audio data. The computation follows RFC 6465:
@@ -27,50 +28,52 @@ namespace webrtc {
 // The expected approach is to provide constant-sized chunks of audio to
 // Analyze(). When enough chunks have been accumulated to form a packet, call
 // Average() to get the audio level indicator for the RTP header.
-class RmsLevel {
- public:
-  struct Levels {
-    int average;
-    int peak;
-  };
+class RmsLevel
+{
+public:
+    struct Levels
+    {
+        int average;
+        int peak;
+    };
 
-  static constexpr int kMinLevelDb = 127;
+    static constexpr int kMinLevelDb = 127;
 
-  RmsLevel();
-  ~RmsLevel();
+    RmsLevel();
+    ~RmsLevel();
 
-  // Can be called to reset internal states, but is not required during normal
-  // operation.
-  void Reset();
+    // Can be called to reset internal states, but is not required during normal
+    // operation.
+    void Reset();
 
-  // Pass each chunk of audio to Analyze() to accumulate the level.
-  void Analyze(rtc::ArrayView<const int16_t> data);
+    // Pass each chunk of audio to Analyze() to accumulate the level.
+    void Analyze(rtc::ArrayView<const int16_t> data);
 
-  // If all samples with the given |length| have a magnitude of zero, this is
-  // a shortcut to avoid some computation.
-  void AnalyzeMuted(size_t length);
+    // If all samples with the given |length| have a magnitude of zero, this is
+    // a shortcut to avoid some computation.
+    void AnalyzeMuted(size_t length);
 
-  // Computes the RMS level over all data passed to Analyze() since the last
-  // call to Average(). The returned value is positive but should be interpreted
-  // as negative as per the RFC. It is constrained to [0, 127]. Resets the
-  // internal state to start a new measurement period.
-  int Average();
+    // Computes the RMS level over all data passed to Analyze() since the last
+    // call to Average(). The returned value is positive but should be interpreted
+    // as negative as per the RFC. It is constrained to [0, 127]. Resets the
+    // internal state to start a new measurement period.
+    int Average();
 
-  // Like Average() above, but also returns the RMS peak value. Resets the
-  // internal state to start a new measurement period.
-  Levels AverageAndPeak();
+    // Like Average() above, but also returns the RMS peak value. Resets the
+    // internal state to start a new measurement period.
+    Levels AverageAndPeak();
 
- private:
-  // Compares |block_size| with |block_size_|. If they are different, calls
-  // Reset() and stores the new size.
-  void CheckBlockSize(size_t block_size);
+private:
+    // Compares |block_size| with |block_size_|. If they are different, calls
+    // Reset() and stores the new size.
+    void CheckBlockSize(size_t block_size);
 
-  float sum_square_;
-  size_t sample_count_;
-  float max_sum_square_;
-  absl::optional<size_t> block_size_;
+    float sum_square_;
+    size_t sample_count_;
+    float max_sum_square_;
+    absl::optional<size_t> block_size_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_RMS_LEVEL_H_
+#endif // MODULES_AUDIO_PROCESSING_RMS_LEVEL_H_

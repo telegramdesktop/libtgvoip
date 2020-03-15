@@ -33,26 +33,27 @@
 #define FFT_MAXFFTSIZE 2048
 #define FFT_NFACTOR 11
 
-typedef struct {
-  unsigned int SpaceAlloced;
-  unsigned int MaxPermAlloced;
-  double Tmp0[FFT_MAXFFTSIZE];
-  double Tmp1[FFT_MAXFFTSIZE];
-  double Tmp2[FFT_MAXFFTSIZE];
-  double Tmp3[FFT_MAXFFTSIZE];
-  int Perm[FFT_MAXFFTSIZE];
-  int factor[FFT_NFACTOR];
+typedef struct
+{
+    unsigned int SpaceAlloced;
+    unsigned int MaxPermAlloced;
+    double Tmp0[FFT_MAXFFTSIZE];
+    double Tmp1[FFT_MAXFFTSIZE];
+    double Tmp2[FFT_MAXFFTSIZE];
+    double Tmp3[FFT_MAXFFTSIZE];
+    int Perm[FFT_MAXFFTSIZE];
+    int factor[FFT_NFACTOR];
 
 } FFTstr;
 
 /* double precision routine */
 
 int WebRtcIsac_Fftns(unsigned int ndim,
-                     const int dims[],
-                     double Re[],
-                     double Im[],
-                     int isign,
-                     double scaling,
-                     FFTstr* fftstate);
+    const int dims[],
+    double Re[],
+    double Im[],
+    int isign,
+    double scaling,
+    FFTstr* fftstate);
 
 #endif /* MODULES_THIRD_PARTY_FFT_FFT_H_ */

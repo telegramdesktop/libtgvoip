@@ -59,9 +59,9 @@
 #define ENABLE_CPP_VERSION 0
 
 #if GCC
-#define FORCE_INLINE                    inline __attribute__((always_inline))
+#define FORCE_INLINE inline __attribute__((always_inline))
 #else
-#define FORCE_INLINE                    inline
+#define FORCE_INLINE inline
 #endif
 
 #include "arm_neon.h"
@@ -76,8 +76,7 @@
 /* places in fp1 of result. fp0 is the same for fp0 of */
 /* result                                              */
 /*******************************************************/
-#define _MM_SHUFFLE(fp3,fp2,fp1,fp0) (((fp3) << 6) | ((fp2) << 4) | \
-    ((fp1) << 2) | ((fp0)))
+#define _MM_SHUFFLE(fp3, fp2, fp1, fp0) (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
 
 typedef float32x4_t __m128;
 typedef int32x4_t __m128i;
@@ -113,14 +112,14 @@ FORCE_INLINE __m128 _mm_set_ps1(float _w)
 // Sets the four single-precision, floating-point values to the four inputs. https://msdn.microsoft.com/en-us/library/vstudio/afh0zf75(v=vs.100).aspx
 FORCE_INLINE __m128 _mm_set_ps(float w, float z, float y, float x)
 {
-    float __attribute__((aligned(16))) data[4] = { x, y, z, w };
+    float __attribute__((aligned(16))) data[4] = {x, y, z, w};
     return vld1q_f32(data);
 }
 
 // Sets the four single-precision, floating-point values to the four inputs in reverse order. https://msdn.microsoft.com/en-us/library/vstudio/d2172ct3(v=vs.100).aspx
-FORCE_INLINE __m128 _mm_setr_ps(float w, float z , float y , float x )
+FORCE_INLINE __m128 _mm_setr_ps(float w, float z, float y, float x)
 {
-    float __attribute__ ((aligned (16))) data[4] = { w, z, y, x };
+    float __attribute__((aligned(16))) data[4] = {w, z, y, x};
     return vld1q_f32(data);
 }
 
@@ -133,30 +132,30 @@ FORCE_INLINE __m128i _mm_set1_epi32(int _i)
 // Sets the 4 signed 32-bit integer values. https://msdn.microsoft.com/en-us/library/vstudio/019beekt(v=vs.100).aspx
 FORCE_INLINE __m128i _mm_set_epi32(int i3, int i2, int i1, int i0)
 {
-    int32_t __attribute__((aligned(16))) data[4] = { i0, i1, i2, i3 };
+    int32_t __attribute__((aligned(16))) data[4] = {i0, i1, i2, i3};
     return vld1q_s32(data);
 }
 
 // Stores four single-precision, floating-point values. https://msdn.microsoft.com/en-us/library/vstudio/s3h4ay6y(v=vs.100).aspx
-FORCE_INLINE void _mm_store_ps(float *p, __m128 a)
+FORCE_INLINE void _mm_store_ps(float* p, __m128 a)
 {
     vst1q_f32(p, a);
 }
 
 // Stores four single-precision, floating-point values. https://msdn.microsoft.com/en-us/library/44e30x22(v=vs.100).aspx
-FORCE_INLINE void _mm_storeu_ps(float *p, __m128 a)
+FORCE_INLINE void _mm_storeu_ps(float* p, __m128 a)
 {
     vst1q_f32(p, a);
 }
 
 // Stores four 32-bit integer values as (as a __m128i value) at the address p. https://msdn.microsoft.com/en-us/library/vstudio/edk11s13(v=vs.100).aspx
-FORCE_INLINE void _mm_store_si128(__m128i *p, __m128i a )
+FORCE_INLINE void _mm_store_si128(__m128i* p, __m128i a)
 {
-    vst1q_s32((int32_t*) p,a);
+    vst1q_s32((int32_t*)p, a);
 }
 
 // Stores the lower single - precision, floating - point value. https://msdn.microsoft.com/en-us/library/tzz10fbx(v=vs.100).aspx
-FORCE_INLINE void _mm_store_ss(float *p, __m128 a)
+FORCE_INLINE void _mm_store_ss(float* p, __m128 a)
 {
     vst1q_lane_f32(p, a, 0);
 }
@@ -168,31 +167,30 @@ FORCE_INLINE void _mm_storel_epi64(__m128i* a, __m128i b)
 }
 
 // Loads a single single-precision, floating-point value, copying it into all four words https://msdn.microsoft.com/en-us/library/vstudio/5cdkf716(v=vs.100).aspx
-FORCE_INLINE __m128 _mm_load1_ps(const float * p)
+FORCE_INLINE __m128 _mm_load1_ps(const float* p)
 {
     return vld1q_dup_f32(p);
 }
 
 // Loads four single-precision, floating-point values. https://msdn.microsoft.com/en-us/library/vstudio/zzd50xxt(v=vs.100).aspx
-FORCE_INLINE __m128 _mm_load_ps(const float * p)
+FORCE_INLINE __m128 _mm_load_ps(const float* p)
 {
     return vld1q_f32(p);
 }
 
 // Loads four single-precision, floating-point values.  https://msdn.microsoft.com/en-us/library/x1b16s7z%28v=vs.90%29.aspx
-FORCE_INLINE __m128 _mm_loadu_ps(const float * p)
+FORCE_INLINE __m128 _mm_loadu_ps(const float* p)
 {
     // for neon, alignment doesn't matter, so _mm_load_ps and _mm_loadu_ps are equivalent for neon
     return vld1q_f32(p);
 }
 
 // Loads an single - precision, floating - point value into the low word and clears the upper three words.  https://msdn.microsoft.com/en-us/library/548bb9h4%28v=vs.90%29.aspx
-FORCE_INLINE __m128 _mm_load_ss(const float * p)
+FORCE_INLINE __m128 _mm_load_ss(const float* p)
 {
     __m128 result = vdupq_n_f32(0);
     return vsetq_lane_f32(*p, result, 0);
 }
-
 
 // ******************************************
 // Logic/Binary operations
@@ -257,11 +255,11 @@ FORCE_INLINE __m128i _mm_xor_si128(__m128i a, __m128i b)
 FORCE_INLINE int _mm_movemask_ps(__m128 a)
 {
 #if ENABLE_CPP_VERSION // I am not yet convinced that the NEON version is faster than the C version of this
-    uint32x4_t &ia = *(uint32x4_t *)&a;
+    uint32x4_t& ia = *(uint32x4_t*)&a;
     return (ia[0] >> 31) | ((ia[1] >> 30) & 2) | ((ia[2] >> 29) & 4) | ((ia[3] >> 28) & 8);
 #else
-    static const uint32x4_t movemask = { 1, 2, 4, 8 };
-    static const uint32x4_t highbit = { 0x80000000, 0x80000000, 0x80000000, 0x80000000 };
+    static const uint32x4_t movemask = {1, 2, 4, 8};
+    static const uint32x4_t highbit = {0x80000000, 0x80000000, 0x80000000, 0x80000000};
     uint32x4_t t0 = vreinterpretq_u32_f32(a);
     uint32x4_t t1 = vtstq_u32(t0, highbit);
     uint32x4_t t2 = vandq_u32(t1, movemask);
@@ -346,7 +344,6 @@ FORCE_INLINE __m128 _mm_shuffle_ps_2032(__m128 a, __m128 b)
     return vcombine_f32(vget_high_f32(a), bVal);
 }
 
-
 // NEON does not support a general purpose permute intrinsic
 // Currently I am not sure whether the C implementation is faster or slower than the NEON version.
 // Note, this has to be expanded as a template because the shuffle value must be an immediate value.
@@ -371,27 +368,50 @@ FORCE_INLINE __m128 _mm_shuffle_ps_default(__m128 a, __m128 b)
 #endif
 }
 
-template <int i >
+template <int i>
 FORCE_INLINE __m128 _mm_shuffle_ps_function(__m128 a, __m128 b)
 {
     switch (i)
     {
-        case _MM_SHUFFLE(1, 0, 3, 2): return _mm_shuffle_ps_1032(a, b); break;
-        case _MM_SHUFFLE(2, 3, 0, 1): return _mm_shuffle_ps_2301(a, b); break;
-        case _MM_SHUFFLE(3, 2, 1, 0): return _mm_shuffle_ps_3210(a, b); break;
-        case _MM_SHUFFLE(0, 0, 1, 1): return _mm_shuffle_ps_0011(a, b); break;
-        case _MM_SHUFFLE(0, 0, 2, 2): return _mm_shuffle_ps_0022(a, b); break;
-        case _MM_SHUFFLE(2, 2, 0, 0): return _mm_shuffle_ps_2200(a, b); break;
-        case _MM_SHUFFLE(3, 2, 0, 2): return _mm_shuffle_ps_3202(a, b); break;
-        case _MM_SHUFFLE(1, 1, 3, 3): return _mm_shuffle_ps_1133(a, b); break;
-        case _MM_SHUFFLE(2, 0, 1, 0): return _mm_shuffle_ps_2010(a, b); break;
-        case _MM_SHUFFLE(2, 0, 0, 1): return _mm_shuffle_ps_2001(a, b); break;
-        case _MM_SHUFFLE(2, 0, 3, 2): return _mm_shuffle_ps_2032(a, b); break;
-        default: _mm_shuffle_ps_default<i>(a, b);
+    case _MM_SHUFFLE(1, 0, 3, 2):
+        return _mm_shuffle_ps_1032(a, b);
+        break;
+    case _MM_SHUFFLE(2, 3, 0, 1):
+        return _mm_shuffle_ps_2301(a, b);
+        break;
+    case _MM_SHUFFLE(3, 2, 1, 0):
+        return _mm_shuffle_ps_3210(a, b);
+        break;
+    case _MM_SHUFFLE(0, 0, 1, 1):
+        return _mm_shuffle_ps_0011(a, b);
+        break;
+    case _MM_SHUFFLE(0, 0, 2, 2):
+        return _mm_shuffle_ps_0022(a, b);
+        break;
+    case _MM_SHUFFLE(2, 2, 0, 0):
+        return _mm_shuffle_ps_2200(a, b);
+        break;
+    case _MM_SHUFFLE(3, 2, 0, 2):
+        return _mm_shuffle_ps_3202(a, b);
+        break;
+    case _MM_SHUFFLE(1, 1, 3, 3):
+        return _mm_shuffle_ps_1133(a, b);
+        break;
+    case _MM_SHUFFLE(2, 0, 1, 0):
+        return _mm_shuffle_ps_2010(a, b);
+        break;
+    case _MM_SHUFFLE(2, 0, 0, 1):
+        return _mm_shuffle_ps_2001(a, b);
+        break;
+    case _MM_SHUFFLE(2, 0, 3, 2):
+        return _mm_shuffle_ps_2032(a, b);
+        break;
+    default:
+        _mm_shuffle_ps_default<i>(a, b);
     }
 }
 
-#define _mm_shuffle_ps(a,b,i) _mm_shuffle_ps_function<i>(a,b)
+#define _mm_shuffle_ps(a, b, i) _mm_shuffle_ps_function<i>(a, b)
 
 // Takes the upper 64 bits of a and places it in the low end of the result
 // Takes the lower 64 bits of b and places it into the high end of the result.
@@ -457,7 +477,7 @@ FORCE_INLINE __m128i _mm_shuffle_epi_3332(__m128i a, __m128i b)
     return vcombine_s32(vget_high_s32(a), vdup_n_s32(vgetq_lane_s32(b, 3)));
 }
 
-template <int i >
+template <int i>
 FORCE_INLINE __m128i _mm_shuffle_epi32_default(__m128i a, __m128i b)
 {
 #if ENABLE_CPP_VERSION
@@ -476,26 +496,47 @@ FORCE_INLINE __m128i _mm_shuffle_epi32_default(__m128i a, __m128i b)
 #endif
 }
 
-template <int i >
+template <int i>
 FORCE_INLINE __m128i _mm_shuffle_epi32_function(__m128i a, __m128i b)
 {
     switch (i)
     {
-        case _MM_SHUFFLE(1, 0, 3, 2): return _mm_shuffle_epi_1032(a, b); break;
-        case _MM_SHUFFLE(2, 3, 0, 1): return _mm_shuffle_epi_2301(a, b); break;
-        case _MM_SHUFFLE(0, 3, 2, 1): return _mm_shuffle_epi_0321(a, b); break;
-        case _MM_SHUFFLE(2, 1, 0, 3): return _mm_shuffle_epi_2103(a, b); break;
-        case _MM_SHUFFLE(1, 0, 1, 0): return _mm_shuffle_epi_1010(a, b); break;
-        case _MM_SHUFFLE(1, 0, 0, 1): return _mm_shuffle_epi_1001(a, b); break;
-        case _MM_SHUFFLE(0, 1, 0, 1): return _mm_shuffle_epi_0101(a, b); break;
-        case _MM_SHUFFLE(2, 2, 1, 1): return _mm_shuffle_epi_2211(a, b); break;
-        case _MM_SHUFFLE(0, 1, 2, 2): return _mm_shuffle_epi_0122(a, b); break;
-        case _MM_SHUFFLE(3, 3, 3, 2): return _mm_shuffle_epi_3332(a, b); break;
-        default: return _mm_shuffle_epi32_default<i>(a, b);
+    case _MM_SHUFFLE(1, 0, 3, 2):
+        return _mm_shuffle_epi_1032(a, b);
+        break;
+    case _MM_SHUFFLE(2, 3, 0, 1):
+        return _mm_shuffle_epi_2301(a, b);
+        break;
+    case _MM_SHUFFLE(0, 3, 2, 1):
+        return _mm_shuffle_epi_0321(a, b);
+        break;
+    case _MM_SHUFFLE(2, 1, 0, 3):
+        return _mm_shuffle_epi_2103(a, b);
+        break;
+    case _MM_SHUFFLE(1, 0, 1, 0):
+        return _mm_shuffle_epi_1010(a, b);
+        break;
+    case _MM_SHUFFLE(1, 0, 0, 1):
+        return _mm_shuffle_epi_1001(a, b);
+        break;
+    case _MM_SHUFFLE(0, 1, 0, 1):
+        return _mm_shuffle_epi_0101(a, b);
+        break;
+    case _MM_SHUFFLE(2, 2, 1, 1):
+        return _mm_shuffle_epi_2211(a, b);
+        break;
+    case _MM_SHUFFLE(0, 1, 2, 2):
+        return _mm_shuffle_epi_0122(a, b);
+        break;
+    case _MM_SHUFFLE(3, 3, 3, 2):
+        return _mm_shuffle_epi_3332(a, b);
+        break;
+    default:
+        return _mm_shuffle_epi32_default<i>(a, b);
     }
 }
 
-template <int i >
+template <int i>
 FORCE_INLINE __m128i _mm_shuffle_epi32_splat(__m128i a)
 {
     return vdupq_n_s32(vgetq_lane_s32(a, i));
@@ -506,16 +547,25 @@ FORCE_INLINE __m128i _mm_shuffle_epi32_single(__m128i a)
 {
     switch (i)
     {
-        case _MM_SHUFFLE(0, 0, 0, 0): return _mm_shuffle_epi32_splat<0>(a); break;
-        case _MM_SHUFFLE(1, 1, 1, 1): return _mm_shuffle_epi32_splat<1>(a); break;
-        case _MM_SHUFFLE(2, 2, 2, 2): return _mm_shuffle_epi32_splat<2>(a); break;
-        case _MM_SHUFFLE(3, 3, 3, 3): return _mm_shuffle_epi32_splat<3>(a); break;
-        default: return _mm_shuffle_epi32_function<i>(a, a);
+    case _MM_SHUFFLE(0, 0, 0, 0):
+        return _mm_shuffle_epi32_splat<0>(a);
+        break;
+    case _MM_SHUFFLE(1, 1, 1, 1):
+        return _mm_shuffle_epi32_splat<1>(a);
+        break;
+    case _MM_SHUFFLE(2, 2, 2, 2):
+        return _mm_shuffle_epi32_splat<2>(a);
+        break;
+    case _MM_SHUFFLE(3, 3, 3, 3):
+        return _mm_shuffle_epi32_splat<3>(a);
+        break;
+    default:
+        return _mm_shuffle_epi32_function<i>(a, a);
     }
 }
 
 // Shuffles the 4 signed or unsigned 32-bit integers in a as specified by imm.  https://msdn.microsoft.com/en-us/library/56f67xbk%28v=vs.90%29.aspx
-#define _mm_shuffle_epi32(a,i) _mm_shuffle_epi32_single<i>(a)
+#define _mm_shuffle_epi32(a, i) _mm_shuffle_epi32_single<i>(a)
 
 template <int i>
 FORCE_INLINE __m128i _mm_shufflehi_epi16_function(__m128i a)
@@ -530,23 +580,23 @@ FORCE_INLINE __m128i _mm_shufflehi_epi16_function(__m128i a)
 }
 
 // Shuffles the upper 4 signed or unsigned 16 - bit integers in a as specified by imm.  https://msdn.microsoft.com/en-us/library/13ywktbs(v=vs.100).aspx
-#define _mm_shufflehi_epi16(a,i) _mm_shufflehi_epi16_function<i>(a)
+#define _mm_shufflehi_epi16(a, i) _mm_shufflehi_epi16_function<i>(a)
 
 // Shifts the 4 signed or unsigned 32-bit integers in a left by count bits while shifting in zeros. : https://msdn.microsoft.com/en-us/library/z2k3bbtb%28v=vs.90%29.aspx
-#define _mm_slli_epi32(a, imm) (__m128i)vshlq_n_s32(a,imm)
+#define _mm_slli_epi32(a, imm) (__m128i) vshlq_n_s32(a, imm)
 
 //Shifts the 4 signed or unsigned 32-bit integers in a right by count bits while shifting in zeros.  https://msdn.microsoft.com/en-us/library/w486zcfa(v=vs.100).aspx
-#define _mm_srli_epi32( a, imm ) (__m128i)vshrq_n_u32((uint32x4_t)a, imm)
+#define _mm_srli_epi32(a, imm) (__m128i) vshrq_n_u32((uint32x4_t)a, imm)
 
 // Shifts the 4 signed 32 - bit integers in a right by count bits while shifting in the sign bit.  https://msdn.microsoft.com/en-us/library/z1939387(v=vs.100).aspx
-#define _mm_srai_epi32( a, imm ) vshrq_n_s32(a, imm)
+#define _mm_srai_epi32(a, imm) vshrq_n_s32(a, imm)
 
 // Shifts the 128 - bit value in a right by imm bytes while shifting in zeros.imm must be an immediate. https://msdn.microsoft.com/en-us/library/305w28yz(v=vs.100).aspx
 //#define _mm_srli_si128( a, imm ) (__m128i)vmaxq_s8((int8x16_t)a, vextq_s8((int8x16_t)a, vdupq_n_s8(0), imm))
-#define _mm_srli_si128( a, imm ) (__m128i)vextq_s8((int8x16_t)a, vdupq_n_s8(0), (imm))
+#define _mm_srli_si128(a, imm) (__m128i) vextq_s8((int8x16_t)a, vdupq_n_s8(0), (imm))
 
 // Shifts the 128-bit value in a left by imm bytes while shifting in zeros. imm must be an immediate.  https://msdn.microsoft.com/en-us/library/34d3k2kt(v=vs.100).aspx
-#define _mm_slli_si128( a, imm ) (__m128i)vextq_s8(vdupq_n_s8(0), (int8x16_t)a, 16 - (imm))
+#define _mm_slli_si128(a, imm) (__m128i) vextq_s8(vdupq_n_s8(0), (int8x16_t)a, 16 - (imm))
 
 // NEON does not provide a version of this function, here is an article about some ways to repro the results.
 // http://stackoverflow.com/questions/11870910/sse-mm-movemask-epi8-equivalent-method-for-arm-neon
@@ -554,7 +604,7 @@ FORCE_INLINE __m128i _mm_shufflehi_epi16_function(__m128i a)
 FORCE_INLINE int _mm_movemask_epi8(__m128i _a)
 {
     uint8x16_t input = (uint8x16_t)_a;
-    const int8_t __attribute__((aligned(16))) xr[8] = { -7, -6, -5, -4, -3, -2, -1, 0 };
+    const int8_t __attribute__((aligned(16))) xr[8] = {-7, -6, -5, -4, -3, -2, -1, 0};
     uint8x8_t mask_and = vdup_n_u8(0x80);
     int8x8_t mask_shift = vld1_s8(xr);
 
@@ -577,7 +627,6 @@ FORCE_INLINE int _mm_movemask_epi8(__m128i _a)
 
     return ((hi[0] << 8) | (lo[0] & 0xFF));
 }
-
 
 // ******************************************
 // Math operations
@@ -620,9 +669,9 @@ FORCE_INLINE __m128i _mm_mullo_epi16(__m128i a, __m128i b)
 }
 
 // Multiplies the 4 signed or unsigned 32-bit integers from a by the 4 signed or unsigned 32-bit integers from b. https://msdn.microsoft.com/en-us/library/vstudio/bb531409(v=vs.100).aspx
-FORCE_INLINE __m128i _mm_mullo_epi32 (__m128i a, __m128i b)
+FORCE_INLINE __m128i _mm_mullo_epi32(__m128i a, __m128i b)
 {
-    return (__m128i)vmulq_s32((int32x4_t)a,(int32x4_t)b);
+    return (__m128i)vmulq_s32((int32x4_t)a, (int32x4_t)b);
 }
 
 // Multiplies the four single-precision, floating-point values of a and b. https://msdn.microsoft.com/en-us/library/vstudio/22kbk6t9(v=vs.100).aspx
@@ -636,7 +685,7 @@ FORCE_INLINE __m128 _mm_mul_ps(__m128 a, __m128 b)
 FORCE_INLINE __m128 recipq_newton(__m128 in, int n)
 {
     __m128 recip = vrecpeq_f32(in);
-    for (int i = 0; i<n; ++i)
+    for (int i = 0; i < n; ++i)
     {
         recip = vmulq_f32(recip, vrecpsq_f32(recip, in));
     }
@@ -651,7 +700,6 @@ FORCE_INLINE __m128 _mm_rcp_ps(__m128 in)
     return recip;
 }
 
-
 // Computes the approximations of square roots of the four single-precision, floating-point values of a. First computes reciprocal square roots and then reciprocals of the four values. https://msdn.microsoft.com/en-us/library/vstudio/8z67bwwk(v=vs.100).aspx
 FORCE_INLINE __m128 _mm_sqrt_ps(__m128 in)
 {
@@ -660,7 +708,6 @@ FORCE_INLINE __m128 _mm_sqrt_ps(__m128 in)
     // ??? use step versions of both sqrt and recip for better accuracy?
     return sq;
 }
-
 
 // Computes the maximums of the four single-precision, floating-point values of a and b. https://msdn.microsoft.com/en-us/library/vstudio/ff5d607a(v=vs.100).aspx
 FORCE_INLINE __m128 _mm_max_ps(__m128 a, __m128 b)
@@ -682,15 +729,15 @@ FORCE_INLINE __m128i _mm_min_epi16(__m128i a, __m128i b)
 
 // epi versions of min/max
 // Computes the pariwise maximums of the four signed 32-bit integer values of a and b. https://msdn.microsoft.com/en-us/library/vstudio/bb514055(v=vs.100).aspx
-FORCE_INLINE __m128i _mm_max_epi32(__m128i a, __m128i b )
+FORCE_INLINE __m128i _mm_max_epi32(__m128i a, __m128i b)
 {
-    return vmaxq_s32(a,b);
+    return vmaxq_s32(a, b);
 }
 
 // Computes the pariwise minima of the four signed 32-bit integer values of a and b. https://msdn.microsoft.com/en-us/library/vstudio/bb531476(v=vs.100).aspx
-FORCE_INLINE __m128i _mm_min_epi32(__m128i a, __m128i b )
+FORCE_INLINE __m128i _mm_min_epi32(__m128i a, __m128i b)
 {
-    return vminq_s32(a,b);
+    return vminq_s32(a, b);
 }
 
 // Multiplies the 8 signed 16-bit integers from a by the 8 signed 16-bit integers from b. https://msdn.microsoft.com/en-us/library/vstudio/59hddw1d(v=vs.100).aspx
@@ -703,21 +750,21 @@ FORCE_INLINE __m128i _mm_mulhi_epi16(__m128i a, __m128i b)
 
 // Computes pairwise add of each argument as single-precision, floating-point values a and b.
 //https://msdn.microsoft.com/en-us/library/yd9wecaa.aspx
-FORCE_INLINE __m128 _mm_hadd_ps(__m128 a, __m128 b )
+FORCE_INLINE __m128 _mm_hadd_ps(__m128 a, __m128 b)
 {
-// This does not work, no vpaddq...
-//  return (__m128) vpaddq_f32(a,b);
-        //
-        // get two f32x2_t values from a
-        // do vpadd
-        // put result in low half of f32x4 result
-        //
-        // get two f32x2_t values from b
-        // do vpadd
-        // put result in high half of f32x4 result
-        //
-        // combine
-        return vcombine_f32( vpadd_f32( vget_low_f32(a), vget_high_f32(a) ), vpadd_f32( vget_low_f32(b), vget_high_f32(b) ) );
+    // This does not work, no vpaddq...
+    //  return (__m128) vpaddq_f32(a,b);
+    //
+    // get two f32x2_t values from a
+    // do vpadd
+    // put result in low half of f32x4 result
+    //
+    // get two f32x2_t values from b
+    // do vpadd
+    // put result in high half of f32x4 result
+    //
+    // combine
+    return vcombine_f32(vpadd_f32(vget_low_f32(a), vget_high_f32(a)), vpadd_f32(vget_low_f32(b), vget_high_f32(b)));
 }
 
 // ******************************************
@@ -770,12 +817,12 @@ FORCE_INLINE __m128i _mm_cmpgt_epi32(__m128i a, __m128i b)
 // see also:
 // http://stackoverflow.com/questions/8627331/what-does-ordered-unordered-comparison-mean
 // http://stackoverflow.com/questions/29349621/neon-isnanval-intrinsics
-FORCE_INLINE __m128 _mm_cmpord_ps(__m128 a, __m128 b )
+FORCE_INLINE __m128 _mm_cmpord_ps(__m128 a, __m128 b)
 {
-        // Note: NEON does not have ordered compare builtin
-        // Need to compare a eq a and b eq b to check for NaN
-        // Do AND of results to get final
-    return (__m128) vreinterpretq_f32_u32( vandq_u32( vceqq_f32(a,a), vceqq_f32(b,b) ) );
+    // Note: NEON does not have ordered compare builtin
+    // Need to compare a eq a and b eq b to check for NaN
+    // Do AND of results to get final
+    return (__m128)vreinterpretq_f32_u32(vandq_u32(vceqq_f32(a, a), vceqq_f32(b, b)));
 }
 
 // ******************************************
@@ -821,7 +868,6 @@ FORCE_INLINE __m128i _mm_cvtsi32_si128(int a)
     return vsetq_lane_s32(a, result, 0);
 }
 
-
 // Applies a type cast to reinterpret four 32-bit floating point values passed in as a 128-bit parameter as packed 32-bit integers. https://msdn.microsoft.com/en-us/library/bb514099.aspx
 FORCE_INLINE __m128i _mm_castps_si128(__m128 a)
 {
@@ -837,9 +883,9 @@ FORCE_INLINE __m128 _mm_castsi128_ps(__m128i a)
 }
 
 // Loads 128-bit value. : https://msdn.microsoft.com/en-us/library/atzzad1h(v=vs.80).aspx
-FORCE_INLINE __m128i _mm_load_si128(const __m128i *p)
+FORCE_INLINE __m128i _mm_load_si128(const __m128i* p)
 {
-    return vld1q_s32((int32_t *)p);
+    return vld1q_s32((int32_t*)p);
 }
 
 // ******************************************
@@ -923,7 +969,7 @@ FORCE_INLINE __m128i _mm_unpackhi_epi32(__m128i a, __m128i b)
 }
 
 // Extracts the selected signed or unsigned 16-bit integer from a and zero extends.  https://msdn.microsoft.com/en-us/library/6dceta0c(v=vs.100).aspx
-#define _mm_extract_epi16( a, imm ) vgetq_lane_s16((int16x8_t)a, imm)
+#define _mm_extract_epi16(a, imm) vgetq_lane_s16((int16x8_t)a, imm)
 
 // ******************************************
 // Streaming Extensions
@@ -936,13 +982,14 @@ FORCE_INLINE void _mm_sfence(void)
 }
 
 // Stores the data in a to the address p without polluting the caches.  If the cache line containing address p is already in the cache, the cache will be updated.Address p must be 16 - byte aligned.  https://msdn.microsoft.com/en-us/library/ba08y07y%28v=vs.90%29.aspx
-FORCE_INLINE void _mm_stream_si128(__m128i *p, __m128i a)
+FORCE_INLINE void _mm_stream_si128(__m128i* p, __m128i a)
 {
     *p = a;
 }
 
 // Cache line containing p is flushed and invalidated from all caches in the coherency domain.
-FORCE_INLINE void _mm_clflush(void const*p __attribute__((unused))) {
+FORCE_INLINE void _mm_clflush(void const* p __attribute__((unused)))
+{
     // no corollary for Neon?
 }
 
@@ -951,63 +998,63 @@ FORCE_INLINE void _mm_clflush(void const*p __attribute__((unused))) {
 // ******************************************
 
 FORCE_INLINE __m128i _mm_set_epi8(uint8_t i15, uint8_t i14, uint8_t i13, uint8_t i12, uint8_t i11, uint8_t i10, uint8_t i9, uint8_t i8,
-        uint8_t i7, uint8_t i6, uint8_t i5, uint8_t i4, uint8_t i3, uint8_t i2, uint8_t i1, uint8_t i0)
+    uint8_t i7, uint8_t i6, uint8_t i5, uint8_t i4, uint8_t i3, uint8_t i2, uint8_t i1, uint8_t i0)
 {
-    int32_t a0 =  i0 |  (i1<<8) |  (i2<<16) |  (i3<<24);
-    int32_t a1 =  i4 |  (i5<<8) |  (i6<<16) |  (i7<<24);
-    int32_t a2 =  i8 |  (i9<<8) | (i10<<16) | (i11<<24);
-    int32_t a3 = i12 | (i13<<8) | (i14<<16) | (i15<<24);
+    int32_t a0 = i0 | (i1 << 8) | (i2 << 16) | (i3 << 24);
+    int32_t a1 = i4 | (i5 << 8) | (i6 << 16) | (i7 << 24);
+    int32_t a2 = i8 | (i9 << 8) | (i10 << 16) | (i11 << 24);
+    int32_t a3 = i12 | (i13 << 8) | (i14 << 16) | (i15 << 24);
 
     return _mm_set_epi32(a3, a2, a1, a0);
 }
 
 FORCE_INLINE __m128i _mm_set1_epi8(uint8_t i)
 {
-    int32_t a = i | (i<<8) | (i<<16) | (i<<24);
+    int32_t a = i | (i << 8) | (i << 16) | (i << 24);
     return _mm_set1_epi32(a);
 }
 
-FORCE_INLINE __m128i _mm_loadu_si128(const __m128i *p )
+FORCE_INLINE __m128i _mm_loadu_si128(const __m128i* p)
 {
-    return vld1q_s32((int32_t*) p);
+    return vld1q_s32((int32_t*)p);
 }
 
-FORCE_INLINE void _mm_storeu_si128(__m128i *p, __m128i a )
+FORCE_INLINE void _mm_storeu_si128(__m128i* p, __m128i a)
 {
     _mm_store_si128(p, a);
-//    vst1q_s32((int32_t*) p,a);
+    //    vst1q_s32((int32_t*) p,a);
 }
 
 FORCE_INLINE __m128i _mm_shuffle_epi8(__m128i ia, __m128i ib)
 {
-    uint8_t *a = (uint8_t *) &ia; // input a
-    uint8_t *b = (uint8_t *) &ib; // input b
+    uint8_t* a = (uint8_t*)&ia; // input a
+    uint8_t* b = (uint8_t*)&ib; // input b
     int32_t r[4];
 
-    r[0] = ((b[3] & 0x80) ? 0 : a[b[3] % 16])<<24;
-    r[0] |= ((b[2] & 0x80) ? 0 : a[b[2] % 16])<<16;
-    r[0] |= ((b[1] & 0x80) ? 0 : a[b[1] % 16])<<8;
+    r[0] = ((b[3] & 0x80) ? 0 : a[b[3] % 16]) << 24;
+    r[0] |= ((b[2] & 0x80) ? 0 : a[b[2] % 16]) << 16;
+    r[0] |= ((b[1] & 0x80) ? 0 : a[b[1] % 16]) << 8;
     r[0] |= ((b[0] & 0x80) ? 0 : a[b[0] % 16]);
 
-    r[1] = ((b[7] & 0x80) ? 0 : a[b[7] % 16])<<24;
-    r[1] |= ((b[6] & 0x80) ? 0 : a[b[6] % 16])<<16;
-    r[1] |= ((b[5] & 0x80) ? 0 : a[b[5] % 16])<<8;
+    r[1] = ((b[7] & 0x80) ? 0 : a[b[7] % 16]) << 24;
+    r[1] |= ((b[6] & 0x80) ? 0 : a[b[6] % 16]) << 16;
+    r[1] |= ((b[5] & 0x80) ? 0 : a[b[5] % 16]) << 8;
     r[1] |= ((b[4] & 0x80) ? 0 : a[b[4] % 16]);
 
-    r[2] = ((b[11] & 0x80) ? 0 : a[b[11] % 16])<<24;
-    r[2] |= ((b[10] & 0x80) ? 0 : a[b[10] % 16])<<16;
-    r[2] |= ((b[9] & 0x80) ? 0 : a[b[9] % 16])<<8;
+    r[2] = ((b[11] & 0x80) ? 0 : a[b[11] % 16]) << 24;
+    r[2] |= ((b[10] & 0x80) ? 0 : a[b[10] % 16]) << 16;
+    r[2] |= ((b[9] & 0x80) ? 0 : a[b[9] % 16]) << 8;
     r[2] |= ((b[8] & 0x80) ? 0 : a[b[8] % 16]);
 
-    r[3] = ((b[15] & 0x80) ? 0 : a[b[15] % 16])<<24;
-    r[3] |= ((b[14] & 0x80) ? 0 : a[b[14] % 16])<<16;
-    r[3] |= ((b[13] & 0x80) ? 0 : a[b[13] % 16])<<8;
+    r[3] = ((b[15] & 0x80) ? 0 : a[b[15] % 16]) << 24;
+    r[3] |= ((b[14] & 0x80) ? 0 : a[b[14] % 16]) << 16;
+    r[3] |= ((b[13] & 0x80) ? 0 : a[b[13] % 16]) << 8;
     r[3] |= ((b[12] & 0x80) ? 0 : a[b[12] % 16]);
 
     return vld1q_s32(r);
 }
 
-#define _mm_srli_epi64( a, imm ) (__m128i)vshrq_n_u64((uint64x2_t)a, imm)
+#define _mm_srli_epi64(a, imm) (__m128i) vshrq_n_u64((uint64x2_t)a, imm)
 
 #endif
 

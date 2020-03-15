@@ -10,18 +10,21 @@
 
 #ifndef MODULES_AUDIO_PROCESSING_TRANSIENT_COMMON_H_
 #define MODULES_AUDIO_PROCESSING_TRANSIENT_COMMON_H_
-namespace webrtc {
-namespace ts {
+namespace webrtc
+{
+namespace ts
+{
 
-static const float kPi = 3.14159265358979323846f;
-static const int kChunkSizeMs = 10;
-enum {
-  kSampleRate8kHz = 8000,
-  kSampleRate16kHz = 16000,
-  kSampleRate32kHz = 32000,
-  kSampleRate48kHz = 48000
-};
+    static const float kPi = 3.14159265358979323846f;
+    static const int kChunkSizeMs = 10;
+    enum
+    {
+        kSampleRate8kHz = 8000,
+        kSampleRate16kHz = 16000,
+        kSampleRate32kHz = 32000,
+        kSampleRate48kHz = 48000
+    };
 
-}  // namespace ts
-}  // namespace webrtc
-#endif  // MODULES_AUDIO_PROCESSING_TRANSIENT_COMMON_H_
+} // namespace ts
+} // namespace webrtc
+#endif // MODULES_AUDIO_PROCESSING_TRANSIENT_COMMON_H_

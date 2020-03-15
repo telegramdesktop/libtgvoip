@@ -34,45 +34,48 @@
 #include <complex>
 #include <vector>
 
-namespace rnnoise {
+namespace rnnoise
+{
 
-class KissFft {
- public:
-  // Example: an FFT of length 128 has 4 factors as far as kissfft is concerned
-  // (namely, 4*4*4*2).
-  static const size_t kMaxFactors = 8;
+class KissFft
+{
+public:
+    // Example: an FFT of length 128 has 4 factors as far as kissfft is concerned
+    // (namely, 4*4*4*2).
+    static const size_t kMaxFactors = 8;
 
-  class KissFftState {
-   public:
-    KissFftState(int num_fft_points);
-    KissFftState(const KissFftState&) = delete;
-    KissFftState& operator=(const KissFftState&) = delete;
-    ~KissFftState();
+    class KissFftState
+    {
+    public:
+        KissFftState(int num_fft_points);
+        KissFftState(const KissFftState&) = delete;
+        KissFftState& operator=(const KissFftState&) = delete;
+        ~KissFftState();
 
-    const int nfft;
-    const float scale;
-    std::array<int16_t, 2 * kMaxFactors> factors;
-    std::vector<int16_t> bitrev;
-    std::vector<std::complex<float>> twiddles;
-  };
+        const int nfft;
+        const float scale;
+        std::array<int16_t, 2 * kMaxFactors> factors;
+        std::vector<int16_t> bitrev;
+        std::vector<std::complex<float>> twiddles;
+    };
 
-  explicit KissFft(const int nfft);
-  KissFft(const KissFft&) = delete;
-  KissFft& operator=(const KissFft&) = delete;
-  ~KissFft();
-  void ForwardFft(const size_t in_size,
-                  const std::complex<float>* in,
-                  const size_t out_size,
-                  std::complex<float>* out);
-  void ReverseFft(const size_t in_size,
-                  const std::complex<float>* in,
-                  const size_t out_size,
-                  std::complex<float>* out);
+    explicit KissFft(const int nfft);
+    KissFft(const KissFft&) = delete;
+    KissFft& operator=(const KissFft&) = delete;
+    ~KissFft();
+    void ForwardFft(const size_t in_size,
+        const std::complex<float>* in,
+        const size_t out_size,
+        std::complex<float>* out);
+    void ReverseFft(const size_t in_size,
+        const std::complex<float>* in,
+        const size_t out_size,
+        std::complex<float>* out);
 
- private:
-  KissFftState state_;
+private:
+    KissFftState state_;
 };
 
-}  // namespace rnnoise
+} // namespace rnnoise
 
-#endif  // THIRD_PARTY_RNNOISE_SRC_KISS_FFT_H_
+#endif // THIRD_PARTY_RNNOISE_SRC_KISS_FFT_H_

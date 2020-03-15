@@ -12,31 +12,30 @@
 #define RTC_BASE_TIMEUTILS_H_
 
 #include <stdint.h>
-#include <time.h>
 #include <string>
+#include <time.h>
 
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
 
-namespace rtc {
+namespace rtc
+{
 
 static const int64_t kNumMillisecsPerSec = INT64_C(1000);
 static const int64_t kNumMicrosecsPerSec = INT64_C(1000000);
 static const int64_t kNumNanosecsPerSec = INT64_C(1000000000);
 
-static const int64_t kNumMicrosecsPerMillisec =
-    kNumMicrosecsPerSec / kNumMillisecsPerSec;
-static const int64_t kNumNanosecsPerMillisec =
-    kNumNanosecsPerSec / kNumMillisecsPerSec;
-static const int64_t kNumNanosecsPerMicrosec =
-    kNumNanosecsPerSec / kNumMicrosecsPerSec;
+static const int64_t kNumMicrosecsPerMillisec = kNumMicrosecsPerSec / kNumMillisecsPerSec;
+static const int64_t kNumNanosecsPerMillisec = kNumNanosecsPerSec / kNumMillisecsPerSec;
+static const int64_t kNumNanosecsPerMicrosec = kNumNanosecsPerSec / kNumMicrosecsPerSec;
 
 // TODO(honghaiz): Define a type for the time value specifically.
 
-class ClockInterface {
- public:
-  virtual ~ClockInterface() {}
-  virtual int64_t TimeNanos() const = 0;
+class ClockInterface
+{
+public:
+    virtual ~ClockInterface() {}
+    virtual int64_t TimeNanos() const = 0;
 };
 
 // Sets the global source of time. This is useful mainly for unit tests.
@@ -69,8 +68,9 @@ uint32_t Time32();
 // Returns the current time in milliseconds in 64 bits.
 int64_t TimeMillis();
 // Deprecated. Do not use this in any new code.
-inline int64_t Time() {
-  return TimeMillis();
+inline int64_t Time()
+{
+    return TimeMillis();
 }
 
 // Returns the current time in microseconds.
@@ -88,24 +88,27 @@ int64_t TimeDiff(int64_t later, int64_t earlier);
 int32_t TimeDiff32(uint32_t later, uint32_t earlier);
 
 // The number of milliseconds that have elapsed since 'earlier'.
-inline int64_t TimeSince(int64_t earlier) {
-  return TimeMillis() - earlier;
+inline int64_t TimeSince(int64_t earlier)
+{
+    return TimeMillis() - earlier;
 }
 
 // The number of milliseconds that will elapse between now and 'later'.
-inline int64_t TimeUntil(int64_t later) {
-  return later - TimeMillis();
+inline int64_t TimeUntil(int64_t later)
+{
+    return later - TimeMillis();
 }
 
-class TimestampWrapAroundHandler {
- public:
-  TimestampWrapAroundHandler();
+class TimestampWrapAroundHandler
+{
+public:
+    TimestampWrapAroundHandler();
 
-  int64_t Unwrap(uint32_t ts);
+    int64_t Unwrap(uint32_t ts);
 
- private:
-  uint32_t last_ts_;
-  int64_t num_wrap_;
+private:
+    uint32_t last_ts_;
+    int64_t num_wrap_;
 };
 
 // Convert from tm, which is relative to 1900-01-01 00:00 to number of
@@ -130,33 +133,43 @@ int64_t TimeUTCMicros();
 int64_t TimeUTCMillis();
 
 // Interval of time from the range [min, max] inclusive.
-class IntervalRange {
- public:
-  IntervalRange() : min_(0), max_(0) {}
-  IntervalRange(int min, int max) : min_(min), max_(max) {
-    RTC_DCHECK_LE(min, max);
-  }
+class IntervalRange
+{
+public:
+    IntervalRange()
+        : min_(0)
+        , max_(0)
+    {
+    }
+    IntervalRange(int min, int max)
+        : min_(min)
+        , max_(max)
+    {
+        RTC_DCHECK_LE(min, max);
+    }
 
-  int min() const { return min_; }
-  int max() const { return max_; }
+    int min() const { return min_; }
+    int max() const { return max_; }
 
-  std::string ToString() const {
-    rtc::StringBuilder ss;
-    ss << "[" << min_ << "," << max_ << "]";
-    return ss.Release();
-  }
+    std::string ToString() const
+    {
+        rtc::StringBuilder ss;
+        ss << "[" << min_ << "," << max_ << "]";
+        return ss.Release();
+    }
 
-  bool operator==(const IntervalRange& o) const {
-    return min_ == o.min_ && max_ == o.max_;
-  }
+    bool operator==(const IntervalRange& o) const
+    {
+        return min_ == o.min_ && max_ == o.max_;
+    }
 
-  bool operator!=(const IntervalRange& o) const { return !operator==(o); }
+    bool operator!=(const IntervalRange& o) const { return !operator==(o); }
 
- private:
-  int min_;
-  int max_;
+private:
+    int min_;
+    int max_;
 };
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_TIMEUTILS_H_
+#endif // RTC_BASE_TIMEUTILS_H_

@@ -11,30 +11,32 @@
 #ifndef COMMON_AUDIO_FIR_FILTER_SSE_H_
 #define COMMON_AUDIO_FIR_FILTER_SSE_H_
 
-#include <stddef.h>
 #include <memory>
+#include <stddef.h>
 
 #include "common_audio/fir_filter.h"
 #include "rtc_base/memory/aligned_malloc.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class FIRFilterSSE2 : public FIRFilter {
- public:
-  FIRFilterSSE2(const float* coefficients,
-                size_t coefficients_length,
-                size_t max_input_length);
-  ~FIRFilterSSE2() override;
+class FIRFilterSSE2 : public FIRFilter
+{
+public:
+    FIRFilterSSE2(const float* coefficients,
+        size_t coefficients_length,
+        size_t max_input_length);
+    ~FIRFilterSSE2() override;
 
-  void Filter(const float* in, size_t length, float* out) override;
+    void Filter(const float* in, size_t length, float* out) override;
 
- private:
-  size_t coefficients_length_;
-  size_t state_length_;
-  std::unique_ptr<float[], AlignedFreeDeleter> coefficients_;
-  std::unique_ptr<float[], AlignedFreeDeleter> state_;
+private:
+    size_t coefficients_length_;
+    size_t state_length_;
+    std::unique_ptr<float[], AlignedFreeDeleter> coefficients_;
+    std::unique_ptr<float[], AlignedFreeDeleter> state_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // COMMON_AUDIO_FIR_FILTER_SSE_H_
+#endif // COMMON_AUDIO_FIR_FILTER_SSE_H_

@@ -17,26 +17,28 @@
 
 using namespace Microsoft::WRL;
 
-namespace tgvoip {
+namespace tgvoip
+{
 
 #ifndef TGVOIP_WP_SILVERLIGHT
-	class ActivationHandler :
-		public RuntimeClass< RuntimeClassFlags< ClassicCom >, FtmBase, IActivateAudioInterfaceCompletionHandler >
-	{
-	public:
-		STDMETHOD(ActivateCompleted)(IActivateAudioInterfaceAsyncOperation *operation);
+class ActivationHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase, IActivateAudioInterfaceCompletionHandler>
+{
+public:
+    STDMETHOD(ActivateCompleted)
+    (IActivateAudioInterfaceAsyncOperation* operation);
 
-		ActivationHandler(HANDLE _event);
-		HANDLE event;
-		IAudioClient2* client;
-		HRESULT actResult;
-	};
+    ActivationHandler(HANDLE _event);
+    HANDLE event;
+    IAudioClient2* client;
+    HRESULT actResult;
+};
 #endif
 
-	class WindowsSandboxUtils {
-	public:
-		static IAudioClient2* ActivateAudioDevice(const wchar_t* devID, HRESULT* callResult, HRESULT* actResult);
-	};
+class WindowsSandboxUtils
+{
+public:
+    static IAudioClient2* ActivateAudioDevice(const wchar_t* devID, HRESULT* callResult, HRESULT* actResult);
+};
 }
 
 #endif // LIBTGVOIP_WINDOWS_SANDBOX_UTILS

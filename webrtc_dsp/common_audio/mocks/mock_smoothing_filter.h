@@ -14,15 +14,17 @@
 #include "common_audio/smoothing_filter.h"
 #include "test/gmock.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class MockSmoothingFilter : public SmoothingFilter {
- public:
-  MOCK_METHOD1(AddSample, void(float));
-  MOCK_METHOD0(GetAverage, absl::optional<float>());
-  MOCK_METHOD1(SetTimeConstantMs, bool(int));
+class MockSmoothingFilter : public SmoothingFilter
+{
+public:
+    MOCK_METHOD1(AddSample, void(float));
+    MOCK_METHOD0(GetAverage, absl::optional<float>());
+    MOCK_METHOD1(SetTimeConstantMs, bool(int));
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // COMMON_AUDIO_MOCKS_MOCK_SMOOTHING_FILTER_H_
+#endif // COMMON_AUDIO_MOCKS_MOCK_SMOOTHING_FILTER_H_

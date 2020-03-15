@@ -4,7 +4,6 @@
 // you should have received with this source code distribution.
 //
 
-
 #include "AudioIO.h"
 #include "../logging.h"
 
@@ -18,8 +17,8 @@
 #include "../os/android/AudioInputAndroid.h"
 #include "../os/android/AudioOutputAndroid.h"
 #elif defined(__APPLE__)
-#include <TargetConditionals.h>
 #include "../os/darwin/AudioUnitIO.h"
+#include <TargetConditionals.h>
 #if TARGET_OS_OSX
 #include "../os/darwin/AudioInputAudioUnitOSX.h"
 #include "../os/darwin/AudioOutputAudioUnitOSX.h"
@@ -47,46 +46,50 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 using namespace std;
 
-AudioIO* AudioIO::Create(std::string inputDevice, std::string outputDevice){
+AudioIO* AudioIO::Create(std::string inputDevice, std::string outputDevice)
+{
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
-	return new AudioIOCallback();
+    return new AudioIOCallback();
 #elif defined(__ANDROID__)
-	return new ContextlessAudioIO<AudioInputAndroid, AudioOutputAndroid>();
+    return new ContextlessAudioIO<AudioInputAndroid, AudioOutputAndroid>();
 #elif defined(__APPLE__)
 #if TARGET_OS_OSX
-	if(kCFCoreFoundationVersionNumber<kCFCoreFoundationVersionNumber10_7)
-		return new ContextlessAudioIO<AudioInputAudioUnitLegacy, AudioOutputAudioUnitLegacy>(inputDevice, outputDevice);
+    if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber10_7)
+        return new ContextlessAudioIO<AudioInputAudioUnitLegacy, AudioOutputAudioUnitLegacy>(inputDevice, outputDevice);
 
 #endif
-	return new AudioUnitIO(inputDevice, outputDevice);
+    return new AudioUnitIO(inputDevice, outputDevice);
 #elif defined(_WIN32)
 #ifdef TGVOIP_WINXP_COMPAT
-	if(LOBYTE(LOWORD(GetVersion()))<6)
-		return new ContextlessAudioIO<AudioInputWave, AudioOutputWave>(inputDevice, outputDevice);
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+        return new ContextlessAudioIO<AudioInputWave, AudioOutputWave>(inputDevice, outputDevice);
 #endif
-	return new ContextlessAudioIO<AudioInputWASAPI, AudioOutputWASAPI>(inputDevice, outputDevice);
+    return new ContextlessAudioIO<AudioInputWASAPI, AudioOutputWASAPI>(inputDevice, outputDevice);
 #elif defined(__linux__)
 #ifndef WITHOUT_ALSA
 #ifndef WITHOUT_PULSE
-	if(AudioPulse::Load()){
-		AudioIO* io=new AudioPulse(inputDevice, outputDevice);
-		if(!io->Failed() && io->GetInput()->IsInitialized() && io->GetOutput()->IsInitialized())
-			return io;
-		LOGW("PulseAudio available but not working; trying ALSA");
-		delete io;
-	}
+    if (AudioPulse::Load())
+    {
+        AudioIO* io = new AudioPulse(inputDevice, outputDevice);
+        if (!io->Failed() && io->GetInput()->IsInitialized() && io->GetOutput()->IsInitialized())
+            return io;
+        LOGW("PulseAudio available but not working; trying ALSA");
+        delete io;
+    }
 #endif
-	return new ContextlessAudioIO<AudioInputALSA, AudioOutputALSA>(inputDevice, outputDevice);
+    return new ContextlessAudioIO<AudioInputALSA, AudioOutputALSA>(inputDevice, outputDevice);
 #else
-	return new AudioPulse(inputDevice, outputDevice);
+    return new AudioPulse(inputDevice, outputDevice);
 #endif
 #endif
 }
 
-bool AudioIO::Failed(){
-	return failed;
+bool AudioIO::Failed()
+{
+    return failed;
 }
 
-std::string AudioIO::GetErrorDescription(){
-	return error;
+std::string AudioIO::GetErrorDescription()
+{
+    return error;
 }

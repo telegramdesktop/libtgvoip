@@ -14,27 +14,30 @@
 #include "api/array_view.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 
-class NoiseSpectrumEstimator {
- public:
-  explicit NoiseSpectrumEstimator(ApmDataDumper* data_dumper);
-  void Initialize();
-  void Update(rtc::ArrayView<const float> spectrum, bool first_update);
+class NoiseSpectrumEstimator
+{
+public:
+    explicit NoiseSpectrumEstimator(ApmDataDumper* data_dumper);
+    void Initialize();
+    void Update(rtc::ArrayView<const float> spectrum, bool first_update);
 
-  rtc::ArrayView<const float> GetNoiseSpectrum() const {
-    return rtc::ArrayView<const float>(noise_spectrum_);
-  }
+    rtc::ArrayView<const float> GetNoiseSpectrum() const
+    {
+        return rtc::ArrayView<const float>(noise_spectrum_);
+    }
 
- private:
-  ApmDataDumper* data_dumper_;
-  float noise_spectrum_[65];
+private:
+    ApmDataDumper* data_dumper_;
+    float noise_spectrum_[65];
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(NoiseSpectrumEstimator);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(NoiseSpectrumEstimator);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_NOISE_SPECTRUM_ESTIMATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_NOISE_SPECTRUM_ESTIMATOR_H_

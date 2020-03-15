@@ -9,23 +9,26 @@
 
 #include <string>
 
-namespace tgvoip {
+namespace tgvoip
+{
 
-	struct CellularCarrierInfo;
+struct CellularCarrierInfo;
 
-class DarwinSpecific{
+class DarwinSpecific
+{
 public:
-	enum{
-		THREAD_PRIO_USER_INTERACTIVE,
-		THREAD_PRIO_USER_INITIATED,
-		THREAD_PRIO_UTILITY,
-		THREAD_PRIO_BACKGROUND,
-		THREAD_PRIO_DEFAULT
-	};
-	static void GetSystemName(char* buf, size_t len);
-	static void SetCurrentThreadPriority(int priority);
-	static CellularCarrierInfo GetCarrierInfo();
-	static void ConfigureAudioSession();
+    enum
+    {
+        THREAD_PRIO_USER_INTERACTIVE,
+        THREAD_PRIO_USER_INITIATED,
+        THREAD_PRIO_UTILITY,
+        THREAD_PRIO_BACKGROUND,
+        THREAD_PRIO_DEFAULT
+    };
+    static void GetSystemName(char* buf, size_t len);
+    static void SetCurrentThreadPriority(int priority);
+    static CellularCarrierInfo GetCarrierInfo();
+    static void ConfigureAudioSession();
 };
 }
 

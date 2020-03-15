@@ -32,8 +32,8 @@
 //   (probability for |input|) =
 //    1 / |std| * exp(-(|input| - |mean|)^2 / (2 * |std|^2));
 int32_t WebRtcVad_GaussianProbability(int16_t input,
-                                      int16_t mean,
-                                      int16_t std,
-                                      int16_t* delta);
+    int16_t mean,
+    int16_t std,
+    int16_t* delta);
 
-#endif  // COMMON_AUDIO_VAD_VAD_GMM_H_
+#endif // COMMON_AUDIO_VAD_VAD_GMM_H_

@@ -19,37 +19,39 @@
 #include "modules/audio_processing/aec3/matched_filter.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 
 // Aggregates lag estimates produced by the MatchedFilter class into a single
 // reliable combined lag estimate.
-class MatchedFilterLagAggregator {
- public:
-  MatchedFilterLagAggregator(
-      ApmDataDumper* data_dumper,
-      size_t max_filter_lag,
-      const EchoCanceller3Config::Delay::DelaySelectionThresholds& thresholds);
-  ~MatchedFilterLagAggregator();
+class MatchedFilterLagAggregator
+{
+public:
+    MatchedFilterLagAggregator(
+        ApmDataDumper* data_dumper,
+        size_t max_filter_lag,
+        const EchoCanceller3Config::Delay::DelaySelectionThresholds& thresholds);
+    ~MatchedFilterLagAggregator();
 
-  // Resets the aggregator.
-  void Reset(bool hard_reset);
+    // Resets the aggregator.
+    void Reset(bool hard_reset);
 
-  // Aggregates the provided lag estimates.
-  absl::optional<DelayEstimate> Aggregate(
-      rtc::ArrayView<const MatchedFilter::LagEstimate> lag_estimates);
+    // Aggregates the provided lag estimates.
+    absl::optional<DelayEstimate> Aggregate(
+        rtc::ArrayView<const MatchedFilter::LagEstimate> lag_estimates);
 
- private:
-  ApmDataDumper* const data_dumper_;
-  std::vector<int> histogram_;
-  std::array<int, 250> histogram_data_;
-  int histogram_data_index_ = 0;
-  bool significant_candidate_found_ = false;
-  const EchoCanceller3Config::Delay::DelaySelectionThresholds thresholds_;
+private:
+    ApmDataDumper* const data_dumper_;
+    std::vector<int> histogram_;
+    std::array<int, 250> histogram_data_;
+    int histogram_data_index_ = 0;
+    bool significant_candidate_found_ = false;
+    const EchoCanceller3Config::Delay::DelaySelectionThresholds thresholds_;
 
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(MatchedFilterLagAggregator);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(MatchedFilterLagAggregator);
 };
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_MATCHED_FILTER_LAG_AGGREGATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_MATCHED_FILTER_LAG_AGGREGATOR_H_

@@ -20,7 +20,8 @@
 #include <windows.h>
 #endif
 
-namespace rtc {
+namespace rtc
+{
 
 #if defined(WEBRTC_WIN)
 typedef HANDLE PlatformFile;
@@ -62,6 +63,6 @@ PlatformFile OpenPlatformFileReadOnly(const std::string& path);
 // will be overwritten. You might want to use base/file.h instead.
 PlatformFile CreatePlatformFile(const std::string& path);
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_PLATFORM_FILE_H_
+#endif // RTC_BASE_PLATFORM_FILE_H_

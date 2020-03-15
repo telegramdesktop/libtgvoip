@@ -120,9 +120,9 @@ CM256::~CM256()
 
 void CM256::cm256_encode_block(
     cm256_encoder_params params, // Encoder parameters
-    cm256_block* originals,      // Array of pointers to original blocks
-    int recoveryBlockIndex,      // Return value from cm256_get_recovery_block_index()
-    void* recoveryBlock)         // Output recovery block
+    cm256_block* originals, // Array of pointers to original blocks
+    int recoveryBlockIndex, // Return value from cm256_get_recovery_block_index()
+    void* recoveryBlock) // Output recovery block
 {
     // If only one block of input data,
     if (params.OriginalCount == 1)
@@ -177,13 +177,11 @@ void CM256::cm256_encode_block(
 
 int CM256::cm256_encode(
     cm256_encoder_params params, // Encoder params
-    cm256_block* originals,      // Array of pointers to original blocks
-    void* recoveryBlocks)        // Output recovery blocks end-to-end
+    cm256_block* originals, // Array of pointers to original blocks
+    void* recoveryBlocks) // Output recovery blocks end-to-end
 {
     // Validate input:
-    if (params.OriginalCount <= 0 ||
-        params.RecoveryCount <= 0 ||
-        params.BlockBytes <= 0)
+    if (params.OriginalCount <= 0 || params.RecoveryCount <= 0 || params.BlockBytes <= 0)
     {
         return -1;
     }
@@ -206,14 +204,13 @@ int CM256::cm256_encode(
     return 0;
 }
 
-
 //-----------------------------------------------------------------------------
 // Decoding
 
-CM256::CM256Decoder::CM256Decoder(gf256_ctx& gf256Ctx) :
-            RecoveryCount(0),
-            OriginalCount(0),
-            m_gf256Ctx(gf256Ctx)
+CM256::CM256Decoder::CM256Decoder(gf256_ctx& gf256Ctx)
+    : RecoveryCount(0)
+    , OriginalCount(0)
+    , m_gf256Ctx(gf256Ctx)
 {
 }
 
@@ -264,7 +261,7 @@ bool CM256::CM256Decoder::Initialize(cm256_encoder_params& params, cm256_block* 
     {
         if (!ErasuresIndices[ii])
         {
-            ErasuresIndices[indexCount] = static_cast<uint8_t>( ii );
+            ErasuresIndices[indexCount] = static_cast<uint8_t>(ii);
 
             if (++indexCount >= RecoveryCount)
             {
@@ -521,11 +518,9 @@ void CM256::CM256Decoder::Decode()
 
 int CM256::cm256_decode(
     cm256_encoder_params params, // Encoder params
-    cm256_block* blocks)         // Array of 'originalCount' blocks as described above
+    cm256_block* blocks) // Array of 'originalCount' blocks as described above
 {
-    if (params.OriginalCount <= 0 ||
-        params.RecoveryCount <= 0 ||
-        params.BlockBytes <= 0)
+    if (params.OriginalCount <= 0 || params.RecoveryCount <= 0 || params.BlockBytes <= 0)
     {
         return -1;
     }

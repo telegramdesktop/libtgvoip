@@ -13,13 +13,13 @@
  *
  */
 
-#include "rtc_base/checks.h"
 #include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "rtc_base/checks.h"
 
 // Maximum number of samples in a low/high-band frame.
 enum
 {
-    kMaxBandFrameLength = 320  // 10 ms at 64 kHz.
+    kMaxBandFrameLength = 320 // 10 ms at 64 kHz.
 };
 
 // QMF filter coefficients in Q16.
@@ -45,8 +45,8 @@ static const uint16_t WebRtcSpl_kAllPassFilter2[3] = {21333, 49062, 63010};
 //
 
 void WebRtcSpl_AllPassQMF(int32_t* in_data, size_t data_length,
-                          int32_t* out_data, const uint16_t* filter_coefficients,
-                          int32_t* filter_state)
+    int32_t* out_data, const uint16_t* filter_coefficients,
+    int32_t* filter_state)
 {
     // The procedure is to filter the input with three first order all pass filters
     // (cascade operations).
@@ -101,7 +101,7 @@ void WebRtcSpl_AllPassQMF(int32_t* in_data, size_t data_length,
         // diff = (y_1[n] - y_2[n-1])
         diff = WebRtcSpl_SubSatW32(out_data[k], in_data[k - 1]);
         // y_2[0] =  y_1[-1] + a_2 * (y_1[0] - y_2[-1])
-        in_data[k] = WEBRTC_SPL_SCALEDIFF32(filter_coefficients[1], diff, out_data[k-1]);
+        in_data[k] = WEBRTC_SPL_SCALEDIFF32(filter_coefficients[1], diff, out_data[k - 1]);
     }
 
     filter_state[2] = out_data[data_length - 1]; // y_1[N-1], becomes y_1[-1] next time
@@ -117,15 +117,15 @@ void WebRtcSpl_AllPassQMF(int32_t* in_data, size_t data_length,
         // diff = (y_2[n] - y[n-1])
         diff = WebRtcSpl_SubSatW32(in_data[k], out_data[k - 1]);
         // y[n] =  y_2[n-1] + a_3 * (y_2[n] - y[n-1])
-        out_data[k] = WEBRTC_SPL_SCALEDIFF32(filter_coefficients[2], diff, in_data[k-1]);
+        out_data[k] = WEBRTC_SPL_SCALEDIFF32(filter_coefficients[2], diff, in_data[k - 1]);
     }
     filter_state[4] = in_data[data_length - 1]; // y_2[N-1], becomes y_2[-1] next time
     filter_state[5] = out_data[data_length - 1]; // y[N-1], becomes y[-1] next time
 }
 
 void WebRtcSpl_AnalysisQMF(const int16_t* in_data, size_t in_data_length,
-                           int16_t* low_band, int16_t* high_band,
-                           int32_t* filter_state1, int32_t* filter_state2)
+    int16_t* low_band, int16_t* high_band,
+    int32_t* filter_state1, int32_t* filter_state2)
 {
     size_t i;
     int16_t k;
@@ -147,9 +147,9 @@ void WebRtcSpl_AnalysisQMF(const int16_t* in_data, size_t in_data_length,
 
     // All pass filter even and odd samples, independently.
     WebRtcSpl_AllPassQMF(half_in1, band_length, filter1,
-                         WebRtcSpl_kAllPassFilter1, filter_state1);
+        WebRtcSpl_kAllPassFilter1, filter_state1);
     WebRtcSpl_AllPassQMF(half_in2, band_length, filter2,
-                         WebRtcSpl_kAllPassFilter2, filter_state2);
+        WebRtcSpl_kAllPassFilter2, filter_state2);
 
     // Take the sum and difference of filtered version of odd and even
     // branches to get upper & lower band.
@@ -164,8 +164,8 @@ void WebRtcSpl_AnalysisQMF(const int16_t* in_data, size_t in_data_length,
 }
 
 void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
-                            size_t band_length, int16_t* out_data,
-                            int32_t* filter_state1, int32_t* filter_state2)
+    size_t band_length, int16_t* out_data,
+    int32_t* filter_state1, int32_t* filter_state2)
 {
     int32_t tmp;
     int32_t half_in1[kMaxBandFrameLength];
@@ -188,9 +188,9 @@ void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
 
     // all-pass filter the sum and difference channels
     WebRtcSpl_AllPassQMF(half_in1, band_length, filter1,
-                         WebRtcSpl_kAllPassFilter2, filter_state1);
+        WebRtcSpl_kAllPassFilter2, filter_state1);
     WebRtcSpl_AllPassQMF(half_in2, band_length, filter2,
-                         WebRtcSpl_kAllPassFilter1, filter_state2);
+        WebRtcSpl_kAllPassFilter1, filter_state2);
 
     // The filtered signals are even and odd samples of the output. Combine
     // them. The signals are Q10 should shift them back to Q0 and take care of
@@ -203,5 +203,4 @@ void WebRtcSpl_SynthesisQMF(const int16_t* low_band, const int16_t* high_band,
         tmp = (filter1[i] + 512) >> 10;
         out_data[k++] = WebRtcSpl_SatW32ToW16(tmp);
     }
-
 }

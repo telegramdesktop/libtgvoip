@@ -118,4 +118,4 @@
 #error "Abseil assumes that int is at least 4 bytes. "
 #endif
 
-#endif  // ABSL_BASE_POLICY_CHECKS_H_
+#endif // ABSL_BASE_POLICY_CHECKS_H_

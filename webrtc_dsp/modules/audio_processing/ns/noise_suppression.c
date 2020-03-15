@@ -17,55 +17,67 @@
 #include "modules/audio_processing/ns/defines.h"
 #include "modules/audio_processing/ns/ns_core.h"
 
-NsHandle* WebRtcNs_Create() {
-  NoiseSuppressionC* self = malloc(sizeof(NoiseSuppressionC));
-  self->initFlag = 0;
-  return (NsHandle*)self;
+NsHandle* WebRtcNs_Create()
+{
+    NoiseSuppressionC* self = malloc(sizeof(NoiseSuppressionC));
+    self->initFlag = 0;
+    return (NsHandle*)self;
 }
 
-void WebRtcNs_Free(NsHandle* NS_inst) {
-  free(NS_inst);
+void WebRtcNs_Free(NsHandle* NS_inst)
+{
+    free(NS_inst);
 }
 
-int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs) {
-  return WebRtcNs_InitCore((NoiseSuppressionC*)NS_inst, fs);
+int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs)
+{
+    return WebRtcNs_InitCore((NoiseSuppressionC*)NS_inst, fs);
 }
 
-int WebRtcNs_set_policy(NsHandle* NS_inst, int mode) {
-  return WebRtcNs_set_policy_core((NoiseSuppressionC*)NS_inst, mode);
+int WebRtcNs_set_policy(NsHandle* NS_inst, int mode)
+{
+    return WebRtcNs_set_policy_core((NoiseSuppressionC*)NS_inst, mode);
 }
 
-void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe) {
-  WebRtcNs_AnalyzeCore((NoiseSuppressionC*)NS_inst, spframe);
+void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe)
+{
+    WebRtcNs_AnalyzeCore((NoiseSuppressionC*)NS_inst, spframe);
 }
 
 void WebRtcNs_Process(NsHandle* NS_inst,
-                      const float* const* spframe,
-                      size_t num_bands,
-                      float* const* outframe) {
-  WebRtcNs_ProcessCore((NoiseSuppressionC*)NS_inst, spframe, num_bands,
-                       outframe);
+    const float* const* spframe,
+    size_t num_bands,
+    float* const* outframe)
+{
+    WebRtcNs_ProcessCore((NoiseSuppressionC*)NS_inst, spframe, num_bands,
+        outframe);
 }
 
-float WebRtcNs_prior_speech_probability(NsHandle* handle) {
-  NoiseSuppressionC* self = (NoiseSuppressionC*)handle;
-  if (handle == NULL) {
-    return -1;
-  }
-  if (self->initFlag == 0) {
-    return -1;
-  }
-  return self->priorSpeechProb;
+float WebRtcNs_prior_speech_probability(NsHandle* handle)
+{
+    NoiseSuppressionC* self = (NoiseSuppressionC*)handle;
+    if (handle == NULL)
+    {
+        return -1;
+    }
+    if (self->initFlag == 0)
+    {
+        return -1;
+    }
+    return self->priorSpeechProb;
 }
 
-const float* WebRtcNs_noise_estimate(const NsHandle* handle) {
-  const NoiseSuppressionC* self = (const NoiseSuppressionC*)handle;
-  if (handle == NULL || self->initFlag == 0) {
-    return NULL;
-  }
-  return self->noise;
+const float* WebRtcNs_noise_estimate(const NsHandle* handle)
+{
+    const NoiseSuppressionC* self = (const NoiseSuppressionC*)handle;
+    if (handle == NULL || self->initFlag == 0)
+    {
+        return NULL;
+    }
+    return self->noise;
 }
 
-size_t WebRtcNs_num_freq() {
-  return HALF_ANAL_BLOCKL;
+size_t WebRtcNs_num_freq()
+{
+    return HALF_ANAL_BLOCKL;
 }

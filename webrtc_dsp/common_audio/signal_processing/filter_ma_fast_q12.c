@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*
  * This file contains the function WebRtcSpl_FilterMAFastQ12().
  * The description header can be found in signal_processing_library.h
@@ -20,16 +19,16 @@
 #include "rtc_base/sanitizer.h"
 
 void WebRtcSpl_FilterMAFastQ12(const int16_t* in_ptr,
-                               int16_t* out_ptr,
-                               const int16_t* B,
-                               size_t B_length,
-                               size_t length)
+    int16_t* out_ptr,
+    const int16_t* B,
+    size_t B_length,
+    size_t length)
 {
     size_t i, j;
 
     rtc_MsanCheckInitialized(B, sizeof(B[0]), B_length);
     rtc_MsanCheckInitialized(in_ptr - B_length + 1, sizeof(in_ptr[0]),
-                             B_length + length - 1);
+        B_length + length - 1);
 
     for (i = 0; i < length; i++)
     {
@@ -37,10 +36,10 @@ void WebRtcSpl_FilterMAFastQ12(const int16_t* in_ptr,
 
         for (j = 0; j < B_length; j++)
         {
-          // Negative overflow is permitted here, because this is
-          // auto-regressive filters, and the state for each batch run is
-          // stored in the "negative" positions of the output vector.
-          o += B[j] * in_ptr[(ptrdiff_t) i - (ptrdiff_t) j];
+            // Negative overflow is permitted here, because this is
+            // auto-regressive filters, and the state for each batch run is
+            // stored in the "negative" positions of the output vector.
+            o += B[j] * in_ptr[(ptrdiff_t)i - (ptrdiff_t)j];
         }
 
         // If output is higher than 32768, saturate it. Same with negative side

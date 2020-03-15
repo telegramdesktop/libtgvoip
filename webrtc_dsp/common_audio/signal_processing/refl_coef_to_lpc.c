@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*
  * This file contains the function WebRtcSpl_ReflCoefToLpc().
  * The description header can be found in signal_processing_library.h
@@ -17,11 +16,11 @@
 
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 
-void WebRtcSpl_ReflCoefToLpc(const int16_t *k, int use_order, int16_t *a)
+void WebRtcSpl_ReflCoefToLpc(const int16_t* k, int use_order, int16_t* a)
 {
     int16_t any[WEBRTC_SPL_MAX_LPC_ORDER + 1];
     int16_t *aptr, *aptr2, *anyptr;
-    const int16_t *kptr;
+    const int16_t* kptr;
     int m, i;
 
     kptr = k;

@@ -17,23 +17,25 @@
 #include "api/audio/echo_control.h"
 #include "rtc_base/system/rtc_export.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class RTC_EXPORT EchoCanceller3Factory : public EchoControlFactory {
- public:
-  // Factory producing EchoCanceller3 instances with the default configuration.
-  EchoCanceller3Factory();
+class RTC_EXPORT EchoCanceller3Factory : public EchoControlFactory
+{
+public:
+    // Factory producing EchoCanceller3 instances with the default configuration.
+    EchoCanceller3Factory();
 
-  // Factory producing EchoCanceller3 instances with the specified
-  // configuration.
-  explicit EchoCanceller3Factory(const EchoCanceller3Config& config);
+    // Factory producing EchoCanceller3 instances with the specified
+    // configuration.
+    explicit EchoCanceller3Factory(const EchoCanceller3Config& config);
 
-  // Creates an EchoCanceller3 running at the specified sampling rate.
-  std::unique_ptr<EchoControl> Create(int sample_rate_hz) override;
+    // Creates an EchoCanceller3 running at the specified sampling rate.
+    std::unique_ptr<EchoControl> Create(int sample_rate_hz) override;
 
- private:
-  const EchoCanceller3Config config_;
+private:
+    const EchoCanceller3Config config_;
 };
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // API_AUDIO_ECHO_CANCELLER3_FACTORY_H_
+#endif // API_AUDIO_ECHO_CANCELLER3_FACTORY_H_

@@ -17,35 +17,37 @@
 #include "absl/types/optional.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // Estimator of API call skew between render and capture.
-class SkewEstimator {
- public:
-  explicit SkewEstimator(size_t skew_history_size_log2);
-  ~SkewEstimator();
+class SkewEstimator
+{
+public:
+    explicit SkewEstimator(size_t skew_history_size_log2);
+    ~SkewEstimator();
 
-  // Resets the estimation.
-  void Reset();
+    // Resets the estimation.
+    void Reset();
 
-  // Updates the skew data for a render call.
-  void LogRenderCall() { ++skew_; }
+    // Updates the skew data for a render call.
+    void LogRenderCall() { ++skew_; }
 
-  // Updates and computes the skew at a capture call. Returns an optional which
-  // is non-null if a reliable skew has been found.
-  absl::optional<int> GetSkewFromCapture();
+    // Updates and computes the skew at a capture call. Returns an optional which
+    // is non-null if a reliable skew has been found.
+    absl::optional<int> GetSkewFromCapture();
 
- private:
-  const int skew_history_size_log2_;
-  std::vector<float> skew_history_;
-  int skew_ = 0;
-  int skew_sum_ = 0;
-  size_t next_index_ = 0;
-  bool sufficient_skew_stored_ = false;
+private:
+    const int skew_history_size_log2_;
+    std::vector<float> skew_history_;
+    int skew_ = 0;
+    int skew_sum_ = 0;
+    size_t next_index_ = 0;
+    bool sufficient_skew_stored_ = false;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(SkewEstimator);
+    RTC_DISALLOW_COPY_AND_ASSIGN(SkewEstimator);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_SKEW_ESTIMATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_SKEW_ESTIMATOR_H_

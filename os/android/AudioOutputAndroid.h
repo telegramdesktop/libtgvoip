@@ -7,31 +7,34 @@
 #ifndef LIBTGVOIP_AUDIOOUTPUTANDROID_H
 #define LIBTGVOIP_AUDIOOUTPUTANDROID_H
 
-#include <jni.h>
 #include "../../audio/AudioOutput.h"
+#include <jni.h>
 
-namespace tgvoip{ namespace audio{
-class AudioOutputAndroid : public AudioOutput{
+namespace tgvoip
+{
+namespace audio
+{
+    class AudioOutputAndroid : public AudioOutput
+    {
 
-public:
+    public:
+        AudioOutputAndroid();
+        virtual ~AudioOutputAndroid();
+        virtual void Start();
+        virtual void Stop();
+        virtual bool IsPlaying() override;
+        void HandleCallback(JNIEnv* env, jbyteArray buffer);
+        static jmethodID initMethod;
+        static jmethodID releaseMethod;
+        static jmethodID startMethod;
+        static jmethodID stopMethod;
+        static jclass jniClass;
 
-	AudioOutputAndroid();
-	virtual ~AudioOutputAndroid();
-	virtual void Start();
-	virtual void Stop();
-	virtual bool IsPlaying() override;
-	void HandleCallback(JNIEnv* env, jbyteArray buffer);
-	static jmethodID initMethod;
-	static jmethodID releaseMethod;
-	static jmethodID startMethod;
-	static jmethodID stopMethod;
-	static jclass jniClass;
-
-private:
-	jobject javaObject;
-	bool running;
-
-};
-}}
+    private:
+        jobject javaObject;
+        bool running;
+    };
+}
+}
 
 #endif //LIBTGVOIP_AUDIOOUTPUTANDROID_H

@@ -54,37 +54,41 @@
 //
 // TODO(andresp): find out how to get bots to run tests with trials enabled.
 
-namespace webrtc {
-namespace field_trial {
+namespace webrtc
+{
+namespace field_trial
+{
 
-// Returns the group name chosen for the named trial, or the empty string
-// if the trial does not exists.
-//
-// Note: To keep things tidy append all the trial names with WebRTC.
-std::string FindFullName(const std::string& name);
+    // Returns the group name chosen for the named trial, or the empty string
+    // if the trial does not exists.
+    //
+    // Note: To keep things tidy append all the trial names with WebRTC.
+    std::string FindFullName(const std::string& name);
 
-// Convenience method, returns true iff FindFullName(name) return a string that
-// starts with "Enabled".
-// TODO(tommi): Make sure all implementations support this.
-inline bool IsEnabled(const char* name) {
-  return FindFullName(name).find("Enabled") == 0;
-}
+    // Convenience method, returns true iff FindFullName(name) return a string that
+    // starts with "Enabled".
+    // TODO(tommi): Make sure all implementations support this.
+    inline bool IsEnabled(const char* name)
+    {
+        return FindFullName(name).find("Enabled") == 0;
+    }
 
-// Convenience method, returns true iff FindFullName(name) return a string that
-// starts with "Disabled".
-inline bool IsDisabled(const char* name) {
-  return FindFullName(name).find("Disabled") == 0;
-}
+    // Convenience method, returns true iff FindFullName(name) return a string that
+    // starts with "Disabled".
+    inline bool IsDisabled(const char* name)
+    {
+        return FindFullName(name).find("Disabled") == 0;
+    }
 
-// Optionally initialize field trial from a string.
-// This method can be called at most once before any other call into webrtc.
-// E.g. before the peer connection factory is constructed.
-// Note: trials_string must never be destroyed.
-void InitFieldTrialsFromString(const char* trials_string);
+    // Optionally initialize field trial from a string.
+    // This method can be called at most once before any other call into webrtc.
+    // E.g. before the peer connection factory is constructed.
+    // Note: trials_string must never be destroyed.
+    void InitFieldTrialsFromString(const char* trials_string);
 
-const char* GetFieldTrialString();
+    const char* GetFieldTrialString();
 
-}  // namespace field_trial
-}  // namespace webrtc
+} // namespace field_trial
+} // namespace webrtc
 
-#endif  // SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
+#endif // SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_

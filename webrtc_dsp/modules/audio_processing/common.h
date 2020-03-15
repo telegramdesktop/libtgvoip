@@ -14,21 +14,24 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/checks.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-static inline size_t ChannelsFromLayout(AudioProcessing::ChannelLayout layout) {
-  switch (layout) {
+static inline size_t ChannelsFromLayout(AudioProcessing::ChannelLayout layout)
+{
+    switch (layout)
+    {
     case AudioProcessing::kMono:
     case AudioProcessing::kMonoAndKeyboard:
-      return 1;
+        return 1;
     case AudioProcessing::kStereo:
     case AudioProcessing::kStereoAndKeyboard:
-      return 2;
-  }
-  RTC_NOTREACHED();
-  return 0;
+        return 2;
+    }
+    RTC_NOTREACHED();
+    return 0;
 }
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_COMMON_H_
+#endif // MODULES_AUDIO_PROCESSING_COMMON_H_

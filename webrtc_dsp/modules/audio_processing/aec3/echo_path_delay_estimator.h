@@ -21,49 +21,52 @@
 #include "modules/audio_processing/aec3/matched_filter_lag_aggregator.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 struct DownsampledRenderBuffer;
 struct EchoCanceller3Config;
 
 // Estimates the delay of the echo path.
-class EchoPathDelayEstimator {
- public:
-  EchoPathDelayEstimator(ApmDataDumper* data_dumper,
-                         const EchoCanceller3Config& config);
-  ~EchoPathDelayEstimator();
+class EchoPathDelayEstimator
+{
+public:
+    EchoPathDelayEstimator(ApmDataDumper* data_dumper,
+        const EchoCanceller3Config& config);
+    ~EchoPathDelayEstimator();
 
-  // Resets the estimation. If the delay confidence is reset, the reset behavior
-  // is as if the call is restarted.
-  void Reset(bool reset_delay_confidence);
+    // Resets the estimation. If the delay confidence is reset, the reset behavior
+    // is as if the call is restarted.
+    void Reset(bool reset_delay_confidence);
 
-  // Produce a delay estimate if such is avaliable.
-  absl::optional<DelayEstimate> EstimateDelay(
-      const DownsampledRenderBuffer& render_buffer,
-      rtc::ArrayView<const float> capture);
+    // Produce a delay estimate if such is avaliable.
+    absl::optional<DelayEstimate> EstimateDelay(
+        const DownsampledRenderBuffer& render_buffer,
+        rtc::ArrayView<const float> capture);
 
-  // Log delay estimator properties.
-  void LogDelayEstimationProperties(int sample_rate_hz, size_t shift) const {
-    matched_filter_.LogFilterProperties(sample_rate_hz, shift,
-                                        down_sampling_factor_);
-  }
+    // Log delay estimator properties.
+    void LogDelayEstimationProperties(int sample_rate_hz, size_t shift) const
+    {
+        matched_filter_.LogFilterProperties(sample_rate_hz, shift,
+            down_sampling_factor_);
+    }
 
- private:
-  ApmDataDumper* const data_dumper_;
-  const size_t down_sampling_factor_;
-  const size_t sub_block_size_;
-  Decimator capture_decimator_;
-  MatchedFilter matched_filter_;
-  MatchedFilterLagAggregator matched_filter_lag_aggregator_;
-  absl::optional<DelayEstimate> old_aggregated_lag_;
-  size_t consistent_estimate_counter_ = 0;
+private:
+    ApmDataDumper* const data_dumper_;
+    const size_t down_sampling_factor_;
+    const size_t sub_block_size_;
+    Decimator capture_decimator_;
+    MatchedFilter matched_filter_;
+    MatchedFilterLagAggregator matched_filter_lag_aggregator_;
+    absl::optional<DelayEstimate> old_aggregated_lag_;
+    size_t consistent_estimate_counter_ = 0;
 
-  // Internal reset method with more granularity.
-  void Reset(bool reset_lag_aggregator, bool reset_delay_confidence);
+    // Internal reset method with more granularity.
+    void Reset(bool reset_lag_aggregator, bool reset_delay_confidence);
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(EchoPathDelayEstimator);
+    RTC_DISALLOW_COPY_AND_ASSIGN(EchoPathDelayEstimator);
 };
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_DELAY_ESTIMATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_DELAY_ESTIMATOR_H_

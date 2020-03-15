@@ -16,21 +16,23 @@
 
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class AudioBuffer;
 
-class LowCutFilter {
- public:
-  LowCutFilter(size_t channels, int sample_rate_hz);
-  ~LowCutFilter();
-  void Process(AudioBuffer* audio);
+class LowCutFilter
+{
+public:
+    LowCutFilter(size_t channels, int sample_rate_hz);
+    ~LowCutFilter();
+    void Process(AudioBuffer* audio);
 
- private:
-  class BiquadFilter;
-  std::vector<std::unique_ptr<BiquadFilter>> filters_;
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(LowCutFilter);
+private:
+    class BiquadFilter;
+    std::vector<std::unique_ptr<BiquadFilter>> filters_;
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(LowCutFilter);
 };
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_LOW_CUT_FILTER_H_
+#endif // MODULES_AUDIO_PROCESSING_LOW_CUT_FILTER_H_

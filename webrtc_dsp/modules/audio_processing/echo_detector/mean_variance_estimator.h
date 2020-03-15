@@ -11,23 +11,25 @@
 #ifndef MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MEAN_VARIANCE_ESTIMATOR_H_
 #define MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MEAN_VARIANCE_ESTIMATOR_H_
 
-namespace webrtc {
+namespace webrtc
+{
 
 // This class iteratively estimates the mean and variance of a signal.
-class MeanVarianceEstimator {
- public:
-  void Update(float value);
-  float std_deviation() const;
-  float mean() const;
-  void Clear();
+class MeanVarianceEstimator
+{
+public:
+    void Update(float value);
+    float std_deviation() const;
+    float mean() const;
+    void Clear();
 
- private:
-  // Estimate of the expected value of the input values.
-  float mean_ = 0.f;
-  // Estimate of the variance of the input values.
-  float variance_ = 0.f;
+private:
+    // Estimate of the expected value of the input values.
+    float mean_ = 0.f;
+    // Estimate of the variance of the input values.
+    float variance_ = 0.f;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MEAN_VARIANCE_ESTIMATOR_H_
+#endif // MODULES_AUDIO_PROCESSING_ECHO_DETECTOR_MEAN_VARIANCE_ESTIMATOR_H_

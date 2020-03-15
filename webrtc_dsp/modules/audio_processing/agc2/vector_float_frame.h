@@ -15,28 +15,31 @@
 
 #include "modules/audio_processing/include/audio_frame_view.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 // A construct consisting of a multi-channel audio frame, and a FloatFrame view
 // of it.
-class VectorFloatFrame {
- public:
-  VectorFloatFrame(int num_channels,
-                   int samples_per_channel,
-                   float start_value);
-  const AudioFrameView<float>& float_frame_view() { return float_frame_view_; }
-  AudioFrameView<const float> float_frame_view() const {
-    return float_frame_view_;
-  }
+class VectorFloatFrame
+{
+public:
+    VectorFloatFrame(int num_channels,
+        int samples_per_channel,
+        float start_value);
+    const AudioFrameView<float>& float_frame_view() { return float_frame_view_; }
+    AudioFrameView<const float> float_frame_view() const
+    {
+        return float_frame_view_;
+    }
 
-  ~VectorFloatFrame();
+    ~VectorFloatFrame();
 
- private:
-  std::vector<std::vector<float>> channels_;
-  std::vector<float*> channel_ptrs_;
-  AudioFrameView<float> float_frame_view_;
+private:
+    std::vector<std::vector<float>> channels_;
+    std::vector<float*> channel_ptrs_;
+    AudioFrameView<float> float_frame_view_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_VECTOR_FLOAT_FRAME_H_
+#endif // MODULES_AUDIO_PROCESSING_AGC2_VECTOR_FLOAT_FRAME_H_

@@ -11,29 +11,33 @@
 #ifndef MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_VARIABILITY_H_
 #define MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_VARIABILITY_H_
 
-namespace webrtc {
+namespace webrtc
+{
 
-struct EchoPathVariability {
-  enum class DelayAdjustment {
-    kNone,
-    kBufferReadjustment,
-    kBufferFlush,
-    kDelayReset,
-    kNewDetectedDelay
-  };
+struct EchoPathVariability
+{
+    enum class DelayAdjustment
+    {
+        kNone,
+        kBufferReadjustment,
+        kBufferFlush,
+        kDelayReset,
+        kNewDetectedDelay
+    };
 
-  EchoPathVariability(bool gain_change,
-                      DelayAdjustment delay_change,
-                      bool clock_drift);
+    EchoPathVariability(bool gain_change,
+        DelayAdjustment delay_change,
+        bool clock_drift);
 
-  bool AudioPathChanged() const {
-    return gain_change || delay_change != DelayAdjustment::kNone;
-  }
-  bool gain_change;
-  DelayAdjustment delay_change;
-  bool clock_drift;
+    bool AudioPathChanged() const
+    {
+        return gain_change || delay_change != DelayAdjustment::kNone;
+    }
+    bool gain_change;
+    DelayAdjustment delay_change;
+    bool clock_drift;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_VARIABILITY_H_
+#endif // MODULES_AUDIO_PROCESSING_AEC3_ECHO_PATH_VARIABILITY_H_

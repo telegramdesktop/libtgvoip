@@ -20,40 +20,42 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/constructormagic.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
 class ApmDataDumper;
 class AudioBuffer;
 
 // Gain Controller 2 aims to automatically adjust levels by acting on the
 // microphone gain and/or applying digital gain.
-class GainController2 {
- public:
-  GainController2();
-  ~GainController2();
+class GainController2
+{
+public:
+    GainController2();
+    ~GainController2();
 
-  void Initialize(int sample_rate_hz);
-  void Process(AudioBuffer* audio);
-  void NotifyAnalogLevel(int level);
+    void Initialize(int sample_rate_hz);
+    void Process(AudioBuffer* audio);
+    void NotifyAnalogLevel(int level);
 
-  void ApplyConfig(const AudioProcessing::Config::GainController2& config);
-  static bool Validate(const AudioProcessing::Config::GainController2& config);
-  static std::string ToString(
-      const AudioProcessing::Config::GainController2& config);
+    void ApplyConfig(const AudioProcessing::Config::GainController2& config);
+    static bool Validate(const AudioProcessing::Config::GainController2& config);
+    static std::string ToString(
+        const AudioProcessing::Config::GainController2& config);
 
- private:
-  static int instance_count_;
-  std::unique_ptr<ApmDataDumper> data_dumper_;
-  AudioProcessing::Config::GainController2 config_;
-  GainApplier gain_applier_;
-  std::unique_ptr<AdaptiveAgc> adaptive_agc_;
-  Limiter limiter_;
-  int analog_level_ = -1;
-  bool adaptive_digital_mode_ = true;
+private:
+    static int instance_count_;
+    std::unique_ptr<ApmDataDumper> data_dumper_;
+    AudioProcessing::Config::GainController2 config_;
+    GainApplier gain_applier_;
+    std::unique_ptr<AdaptiveAgc> adaptive_agc_;
+    Limiter limiter_;
+    int analog_level_ = -1;
+    bool adaptive_digital_mode_ = true;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(GainController2);
+    RTC_DISALLOW_COPY_AND_ASSIGN(GainController2);
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_GAIN_CONTROLLER2_H_
+#endif // MODULES_AUDIO_PROCESSING_GAIN_CONTROLLER2_H_

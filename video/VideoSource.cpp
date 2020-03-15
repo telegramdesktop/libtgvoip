@@ -13,27 +13,31 @@
 using namespace tgvoip;
 using namespace tgvoip::video;
 
-std::shared_ptr<VideoSource> VideoSource::Create(){
+std::shared_ptr<VideoSource> VideoSource::Create()
+{
 #ifdef __ANDROID__
-	//return std::make_shared<VideoSourceAndroid>();
-	return nullptr;
+    //return std::make_shared<VideoSourceAndroid>();
+    return nullptr;
 #endif
-	return nullptr;
+    return nullptr;
 }
 
-bool VideoSource::Failed(){
-	return failed;
+bool VideoSource::Failed()
+{
+    return failed;
 }
 
-std::string VideoSource::GetErrorDescription(){
-	return error;
+std::string VideoSource::GetErrorDescription()
+{
+    return error;
 }
 
-std::vector<uint32_t> VideoSource::GetAvailableEncoders(){
+std::vector<uint32_t> VideoSource::GetAvailableEncoders()
+{
 #ifdef __ANDROID__
-	return VideoSourceAndroid::availableEncoders;
+    return VideoSourceAndroid::availableEncoders;
 #elif defined(__APPLE__) && !defined(TARGET_OSX)
-	return VideoToolboxEncoderSource::GetAvailableEncoders();
+    return VideoToolboxEncoderSource::GetAvailableEncoders();
 #endif
-	return std::vector<uint32_t>();
+    return std::vector<uint32_t>();
 }

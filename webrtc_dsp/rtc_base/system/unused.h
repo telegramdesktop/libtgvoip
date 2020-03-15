@@ -34,6 +34,6 @@
 // suppressing the compiler warning.
 #ifndef RTC_UNUSED
 #define RTC_UNUSED(x) static_cast<void>(x)
-#endif  // RTC_UNUSED
+#endif // RTC_UNUSED
 
-#endif  // RTC_BASE_SYSTEM_UNUSED_H_
+#endif // RTC_BASE_SYSTEM_UNUSED_H_

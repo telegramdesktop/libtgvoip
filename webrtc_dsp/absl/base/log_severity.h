@@ -20,48 +20,54 @@
 
 #include "absl/base/attributes.h"
 
-namespace absl {
+namespace absl
+{
 
 // Four severity levels are defined.  Logging APIs should terminate the program
 // when a message is logged at severity `kFatal`; the other levels have no
 // special semantics.
-enum class LogSeverity : int {
-  kInfo = 0,
-  kWarning = 1,
-  kError = 2,
-  kFatal = 3,
+enum class LogSeverity : int
+{
+    kInfo = 0,
+    kWarning = 1,
+    kError = 2,
+    kFatal = 3,
 };
 
 // Returns an iterable of all standard `absl::LogSeverity` values, ordered from
 // least to most severe.
-constexpr std::array<absl::LogSeverity, 4> LogSeverities() {
-  return {{absl::LogSeverity::kInfo, absl::LogSeverity::kWarning,
-           absl::LogSeverity::kError, absl::LogSeverity::kFatal}};
+constexpr std::array<absl::LogSeverity, 4> LogSeverities()
+{
+    return {{absl::LogSeverity::kInfo, absl::LogSeverity::kWarning,
+        absl::LogSeverity::kError, absl::LogSeverity::kFatal}};
 }
 
 // Returns the all-caps string representation (e.g. "INFO") of the specified
 // severity level if it is one of the normal levels and "UNKNOWN" otherwise.
-constexpr const char* LogSeverityName(absl::LogSeverity s) {
-  return s == absl::LogSeverity::kInfo
-             ? "INFO"
-             : s == absl::LogSeverity::kWarning
-                   ? "WARNING"
-                   : s == absl::LogSeverity::kError
-                         ? "ERROR"
-                         : s == absl::LogSeverity::kFatal ? "FATAL" : "UNKNOWN";
+constexpr const char* LogSeverityName(absl::LogSeverity s)
+{
+    return s == absl::LogSeverity::kInfo
+        ? "INFO"
+        : s == absl::LogSeverity::kWarning
+            ? "WARNING"
+            : s == absl::LogSeverity::kError
+                ? "ERROR"
+                : s == absl::LogSeverity::kFatal ? "FATAL" : "UNKNOWN";
 }
 
 // Values less than `kInfo` normalize to `kInfo`; values greater than `kFatal`
 // normalize to `kError` (**NOT** `kFatal`).
-constexpr absl::LogSeverity NormalizeLogSeverity(absl::LogSeverity s) {
-  return s < absl::LogSeverity::kInfo
-             ? absl::LogSeverity::kInfo
-             : s > absl::LogSeverity::kFatal ? absl::LogSeverity::kError : s;
+constexpr absl::LogSeverity NormalizeLogSeverity(absl::LogSeverity s)
+{
+    return s < absl::LogSeverity::kInfo
+        ? absl::LogSeverity::kInfo
+        : s > absl::LogSeverity::kFatal ? absl::LogSeverity::kError : s;
 }
-constexpr absl::LogSeverity NormalizeLogSeverity(int s) {
-  return NormalizeLogSeverity(static_cast<absl::LogSeverity>(s));
+constexpr absl::LogSeverity NormalizeLogSeverity(int s)
+{
+    return NormalizeLogSeverity(static_cast<absl::LogSeverity>(s));
 }
 
-}  // namespace absl
+} // namespace absl
 
-#endif  // ABSL_BASE_INTERNAL_LOG_SEVERITY_H_
+#endif // ABSL_BASE_INTERNAL_LOG_SEVERITY_H_

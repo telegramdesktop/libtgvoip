@@ -11,27 +11,29 @@
 #ifndef COMMON_AUDIO_FIR_FILTER_C_H_
 #define COMMON_AUDIO_FIR_FILTER_C_H_
 
-#include <string.h>
 #include <memory>
+#include <string.h>
 
 #include "common_audio/fir_filter.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-class FIRFilterC : public FIRFilter {
- public:
-  FIRFilterC(const float* coefficients, size_t coefficients_length);
-  ~FIRFilterC() override;
+class FIRFilterC : public FIRFilter
+{
+public:
+    FIRFilterC(const float* coefficients, size_t coefficients_length);
+    ~FIRFilterC() override;
 
-  void Filter(const float* in, size_t length, float* out) override;
+    void Filter(const float* in, size_t length, float* out) override;
 
- private:
-  size_t coefficients_length_;
-  size_t state_length_;
-  std::unique_ptr<float[]> coefficients_;
-  std::unique_ptr<float[]> state_;
+private:
+    size_t coefficients_length_;
+    size_t state_length_;
+    std::unique_ptr<float[]> coefficients_;
+    std::unique_ptr<float[]> state_;
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // COMMON_AUDIO_FIR_FILTER_C_H_
+#endif // COMMON_AUDIO_FIR_FILTER_C_H_

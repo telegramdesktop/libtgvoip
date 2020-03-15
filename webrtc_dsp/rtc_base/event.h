@@ -20,33 +20,35 @@
 #error "Must define either WEBRTC_WIN or WEBRTC_POSIX."
 #endif
 
-namespace rtc {
+namespace rtc
+{
 
-class Event {
- public:
-  static const int kForever = -1;
+class Event
+{
+public:
+    static const int kForever = -1;
 
-  Event();
-  Event(bool manual_reset, bool initially_signaled);
-  Event(const Event&) = delete;
-  Event& operator=(const Event&) = delete;
-  ~Event();
+    Event();
+    Event(bool manual_reset, bool initially_signaled);
+    Event(const Event&) = delete;
+    Event& operator=(const Event&) = delete;
+    ~Event();
 
-  void Set();
-  void Reset();
+    void Set();
+    void Reset();
 
-  // Wait for the event to become signaled, for the specified number of
-  // |milliseconds|.  To wait indefinetly, pass kForever.
-  bool Wait(int milliseconds);
+    // Wait for the event to become signaled, for the specified number of
+    // |milliseconds|.  To wait indefinetly, pass kForever.
+    bool Wait(int milliseconds);
 
- private:
+private:
 #if defined(WEBRTC_WIN)
-  HANDLE event_handle_;
+    HANDLE event_handle_;
 #elif defined(WEBRTC_POSIX)
-  pthread_mutex_t event_mutex_;
-  pthread_cond_t event_cond_;
-  const bool is_manual_reset_;
-  bool event_status_;
+    pthread_mutex_t event_mutex_;
+    pthread_cond_t event_cond_;
+    const bool is_manual_reset_;
+    bool event_status_;
 #endif
 };
 
@@ -58,12 +60,13 @@ class Event {
 // When building with standalone WebRTC, this class is a noop.
 // For further information, please see the ScopedAllowBaseSyncPrimitives class
 // in Chromium.
-class ScopedAllowBaseSyncPrimitives {
- public:
-  ScopedAllowBaseSyncPrimitives() {}
-  ~ScopedAllowBaseSyncPrimitives() {}
+class ScopedAllowBaseSyncPrimitives
+{
+public:
+    ScopedAllowBaseSyncPrimitives() {}
+    ~ScopedAllowBaseSyncPrimitives() {}
 };
 
-}  // namespace rtc
+} // namespace rtc
 
-#endif  // RTC_BASE_EVENT_H_
+#endif // RTC_BASE_EVENT_H_
