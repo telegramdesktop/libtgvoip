@@ -42,8 +42,8 @@ NetworkSocketWinsock::NetworkSocketWinsock(NetworkProtocol protocol)
     LOGD("Initialized winsock, version %d.%d", wsaData.wHighVersion, wsaData.wVersion);
 
     if (protocol == NetworkProtocol::TCP)
-        timeout = 10.0;
-    lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+        m_timeout = 10.0;
+    m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
 }
 
 NetworkSocketWinsock::~NetworkSocketWinsock()
@@ -56,13 +56,13 @@ void NetworkSocketWinsock::SetMaxPriority()
 
 void NetworkSocketWinsock::Send(NetworkPacket packet)
 {
-    if (packet.IsEmpty() || (protocol == NetworkProtocol::UDP && packet.address.IsEmpty()))
+    if (packet.IsEmpty() || (m_protocol == NetworkProtocol::UDP && packet.address.IsEmpty()))
     {
         LOGW("tried to send null packet");
         return;
     }
     int res;
-    if (protocol == NetworkProtocol::UDP)
+    if (m_protocol == NetworkProtocol::UDP)
     {
         if (isAtLeastVista)
         {
@@ -105,7 +105,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                         if (addr170 && addr171 && memcmp(addr170, addr171, 12) == 0)
                         {
                             nat64Present = true;
-                            std::memcpy(nat64Prefix, addr170, 12);
+                            std::memcpy(m_nat64Prefix, addr170, 12);
                             char buf[INET6_ADDRSTRLEN];
                             //LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
                         }
@@ -121,7 +121,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                 addr.sin6_family = AF_INET6;
                 *((std::uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
                 if (nat64Present)
-                    std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
+                    std::memcpy(addr.sin6_addr.s6_addr, m_nat64Prefix, 12);
                 else
                     addr.sin6_addr.s6_addr[11] = addr.sin6_addr.s6_addr[10] = 0xFF;
             }
@@ -153,13 +153,13 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
             if (!pendingOutgoingPacket.IsEmpty())
             {
                 LOGE("Got EAGAIN but there's already a pending packet");
-                failed = true;
+                m_failed = true;
             }
             else
             {
                 LOGV("Socket %d not ready to send", fd);
                 pendingOutgoingPacket = std::move(packet);
-                readyToSend = false;
+                m_readyToSend = false;
             }
         }
         else
@@ -172,12 +172,12 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
             }
         }
     }
-    else if (res < packet.data.Length() && protocol == NetworkProtocol::TCP)
+    else if (res < packet.data.Length() && m_protocol == NetworkProtocol::TCP)
     {
         if (!pendingOutgoingPacket.IsEmpty())
         {
             LOGE("send returned less than packet length but there's already a pending packet");
-            failed = true;
+            m_failed = true;
         }
         else
         {
@@ -185,7 +185,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
             pendingOutgoingPacket = std::move(packet);
             Buffer pdata = std::move(pendingOutgoingPacket.data);
             pendingOutgoingPacket.data = Buffer::CopyOf(pdata, res, pdata.Length() - res);
-            readyToSend = false;
+            m_readyToSend = false;
         }
     }
 }
@@ -198,7 +198,7 @@ bool NetworkSocketWinsock::OnReadyToSend()
         pendingOutgoingPacket = std::move(NetworkPacket::Empty());
         return false;
     }
-    readyToSend = true;
+    m_readyToSend = true;
     return true;
 }
 
@@ -206,7 +206,7 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
         maxLen = UINT32_MAX;
-    if (protocol == NetworkProtocol::UDP)
+    if (m_protocol == NetworkProtocol::UDP)
     {
         if (isAtLeastVista)
         {
@@ -226,7 +226,7 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
                 LOGI("Detected IPv4 connectivity, will not try IPv6");
             }
             NetworkAddress addr = NetworkAddress::Empty();
-            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
+            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(m_nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
             {
                 in_addr v4addr = *((in_addr*)&srcAddr.sin6_addr.s6_addr[12]);
                 addr = NetworkAddress::IPv4(v4addr.s_addr);
@@ -258,14 +258,14 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
                 NetworkProtocol::UDP};
         }
     }
-    else if (protocol == NetworkProtocol::TCP)
+    else if (m_protocol == NetworkProtocol::TCP)
     {
         int res = recv(fd, (char*)*recvBuf, std::min(recvBuf.Length(), maxLen), 0);
         if (res == SOCKET_ERROR)
         {
             int error = WSAGetLastError();
             LOGE("Error receiving from TCP socket: %d / %s", error, WindowsSpecific::GetErrorMessage(error).c_str());
-            failed = true;
+            m_failed = true;
             return NetworkPacket::Empty();
         }
         else
@@ -281,14 +281,14 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
 
 void NetworkSocketWinsock::Open()
 {
-    if (protocol == NetworkProtocol::UDP)
+    if (m_protocol == NetworkProtocol::UDP)
     {
         fd = socket(isAtLeastVista ? AF_INET6 : AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (fd == INVALID_SOCKET)
         {
             int error = WSAGetLastError();
             LOGE("error creating socket: %d", error);
-            failed = true;
+            m_failed = true;
             return;
         }
 
@@ -300,7 +300,7 @@ void NetworkSocketWinsock::Open()
             if (res == SOCKET_ERROR)
             {
                 LOGE("error enabling dual stack socket: %d", WSAGetLastError());
-                failed = true;
+                m_failed = true;
                 return;
             }
         }
@@ -374,14 +374,14 @@ void NetworkSocketWinsock::Open()
 
         needUpdateNat64Prefix = true;
         isV4Available = false;
-        switchToV6at = VoIPController::GetCurrentTime() + ipv6Timeout;
+        switchToV6at = VoIPController::GetCurrentTime() + m_ipv6Timeout;
     }
 }
 
 void NetworkSocketWinsock::Close()
 {
     closing = true;
-    failed = true;
+    m_failed = true;
     if (fd != INVALID_SOCKET)
         closesocket(fd);
 }
@@ -390,7 +390,7 @@ void NetworkSocketWinsock::OnActiveInterfaceChanged()
 {
     needUpdateNat64Prefix = true;
     isV4Available = false;
-    switchToV6at = VoIPController::GetCurrentTime() + ipv6Timeout;
+    switchToV6at = VoIPController::GetCurrentTime() + m_ipv6Timeout;
 }
 
 std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr)
@@ -622,7 +622,7 @@ void NetworkSocketWinsock::Connect(const NetworkAddress address, std::uint16_t p
     if (fd == INVALID_SOCKET)
     {
         LOGE("Error creating TCP socket: %d", WSAGetLastError());
-        failed = true;
+        m_failed = true;
         return;
     }
     u_long one = 1;
@@ -641,7 +641,7 @@ void NetworkSocketWinsock::Connect(const NetworkAddress address, std::uint16_t p
         {
             LOGW("error connecting TCP socket to %s:%u: %d / %s", address.ToString().c_str(), port, error, WindowsSpecific::GetErrorMessage(error).c_str());
             closesocket(fd);
-            failed = true;
+            m_failed = true;
             return;
         }
     }
@@ -740,10 +740,10 @@ bool NetworkSocketWinsock::Select(std::vector<NetworkSocket*>& readFds, std::vec
                 LOGW("can't select on one of sockets because it's not a NetworkSocketWinsock instance");
                 continue;
             }
-            if ((*itr)->timeout > 0 && VoIPController::GetCurrentTime() - (*itr)->lastSuccessfulOperationTime > (*itr)->timeout)
+            if ((*itr)->m_timeout > 0 && VoIPController::GetCurrentTime() - (*itr)->m_lastSuccessfulOperationTime > (*itr)->m_timeout)
             {
                 LOGW("Socket %d timed out", sfd);
-                (*itr)->failed = true;
+                (*itr)->m_failed = true;
             }
             anyFailed |= (*itr)->IsFailed();
             FD_SET(sfd, &errorSet);
@@ -772,7 +772,7 @@ bool NetworkSocketWinsock::Select(std::vector<NetworkSocket*>& readFds, std::vec
     {
         int sfd = GetDescriptorFromSocket(*itr);
         if (FD_ISSET(sfd, &readSet))
-            (*itr)->lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
         if (sfd == 0 || !FD_ISSET(sfd, &readSet) || !(*itr)->OnReadyToReceive())
         {
             itr = readFds.erase(itr);
@@ -789,7 +789,7 @@ bool NetworkSocketWinsock::Select(std::vector<NetworkSocket*>& readFds, std::vec
         int sfd = GetDescriptorFromSocket(*itr);
         if (FD_ISSET(sfd, &writeSet))
         {
-            (*itr)->lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
             LOGI("Socket %d is ready to send", sfd);
         }
         if (sfd == 0 || !FD_ISSET(sfd, &writeSet) || !(*itr)->OnReadyToSend())

@@ -92,4 +92,4 @@ private:
 
 } // namespace tgvoip
 
-#endif //LIBTGVOIP_ECHOCANCELLER_H
+#endif // LIBTGVOIP_ECHOCANCELLER_H

@@ -13,12 +13,13 @@
 
 namespace tgvoip
 {
+
 class MessageThread : public Thread
 {
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(MessageThread);
     MessageThread();
-    virtual ~MessageThread();
+    ~MessageThread() override;
     std::uint32_t Post(std::function<void()> func, double delay = 0, double interval = 0);
     void Cancel(std::uint32_t id);
     void CancelSelf();
@@ -38,22 +39,23 @@ private:
         std::function<void()> func;
     };
 
-    void Run();
-    void InsertMessageInternal(Message& m);
-
-    std::atomic<bool> running;
-    std::vector<Message> queue;
-    Mutex queueMutex;
-    Mutex queueAccessMutex;
-    std::uint32_t lastMessageID = 1;
-    bool cancelCurrent = false;
+    std::atomic<bool> m_running;
+    std::vector<Message> m_queue;
+    mutable Mutex m_queueMutex;
+    mutable Mutex m_queueAccessMutex;
+    std::uint32_t m_lastMessageID = 1;
+    bool m_cancelCurrent = false;
 
 #ifdef _WIN32
     HANDLE event;
 #else
     pthread_cond_t cond;
 #endif
-};
-}
 
-#endif //LIBTGVOIP_MESSAGETHREAD_H
+    void Run();
+    void InsertMessageInternal(Message& m);
+};
+
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_MESSAGETHREAD_H

@@ -95,6 +95,7 @@ private:
     std::int8_t m_currentLevel;
     std::int16_t m_currentLevelFullRange;
 };
-};
 
-#endif //LIBTGVOIP_MEDIASTREAMINPUT_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_MEDIASTREAMINPUT_H

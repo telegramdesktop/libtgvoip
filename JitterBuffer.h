@@ -104,4 +104,4 @@ private:
 
 } // namespace tgvoip
 
-#endif //LIBTGVOIP_JITTERBUFFER_H
+#endif // LIBTGVOIP_JITTERBUFFER_H

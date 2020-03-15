@@ -26,7 +26,7 @@ class Mutex
 public:
     Mutex()
     {
-        pthread_mutex_init(&mtx, NULL);
+        pthread_mutex_init(&mtx, nullptr);
     }
 
     ~Mutex()
@@ -60,7 +60,7 @@ public:
     Thread(std::function<void()> entry)
         : entry(entry)
     {
-        name = NULL;
+        name = nullptr;
         thread = 0;
     }
 
@@ -70,7 +70,7 @@ public:
 
     void Start()
     {
-        if (pthread_create(&thread, NULL, Thread::ActualEntryPoint, this) == 0)
+        if (pthread_create(&thread, nullptr, Thread::ActualEntryPoint, this) == 0)
         {
             valid = true;
         }
@@ -79,7 +79,7 @@ public:
     void Join()
     {
         if (valid)
-            pthread_join(thread, NULL);
+            pthread_join(thread, nullptr);
     }
 
     void SetName(const char* name)
@@ -96,7 +96,7 @@ public:
 
     static void Sleep(double seconds)
     {
-        usleep((useconds_t)(seconds * 1000000.0));
+        usleep((useconds_t)(seconds * 1000 * 1000.0));
     }
 
     bool IsCurrent()
@@ -121,7 +121,7 @@ private:
 #endif
         }
         self->entry();
-        return NULL;
+        return nullptr;
     }
     std::function<void()> entry;
     pthread_t thread;

@@ -44,8 +44,8 @@ NetworkSocketPosix::NetworkSocketPosix(NetworkProtocol protocol)
     tcpConnectedPort = 0;
 
     if (protocol == NetworkProtocol::TCP)
-        timeout = 10.0;
-    lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+        m_timeout = 10.0;
+    m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
 }
 
 NetworkSocketPosix::~NetworkSocketPosix()
@@ -85,13 +85,13 @@ void NetworkSocketPosix::SetMaxPriority()
 
 void NetworkSocketPosix::Send(NetworkPacket packet)
 {
-    if (packet.data.IsEmpty() || (protocol == NetworkProtocol::UDP && packet.port == 0))
+    if (packet.data.IsEmpty() || (m_protocol == NetworkProtocol::UDP && packet.port == 0))
     {
         LOGW("tried to send null packet");
         return;
     }
     int res;
-    if (protocol == NetworkProtocol::UDP)
+    if (m_protocol == NetworkProtocol::UDP)
     {
         sockaddr_in6 addr;
         if (!packet.address.isIPv6)
@@ -132,7 +132,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                     if (addr170 && addr171 && memcmp(addr170, addr171, 12) == 0)
                     {
                         nat64Present = true;
-                        std::memcpy(nat64Prefix, addr170, 12);
+                        std::memcpy(m_nat64Prefix, addr170, 12);
                         char buf[INET6_ADDRSTRLEN];
                         LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
                     }
@@ -148,7 +148,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             addr.sin6_family = AF_INET6;
             *((std::uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
             if (nat64Present)
-                std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
+                std::memcpy(addr.sin6_addr.s6_addr, m_nat64Prefix, 12);
             else
                 addr.sin6_addr.s6_addr[11] = addr.sin6_addr.s6_addr[10] = 0xFF;
         }
@@ -174,13 +174,13 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             if (!pendingOutgoingPacket.IsEmpty())
             {
                 LOGE("Got EAGAIN but there's already a pending packet");
-                failed = true;
+                m_failed = true;
             }
             else
             {
                 LOGV("Socket %d not ready to send", int(fd));
                 pendingOutgoingPacket = std::move(packet);
-                readyToSend = false;
+                m_readyToSend = false;
             }
         }
         else
@@ -198,13 +198,13 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         if (!pendingOutgoingPacket.IsEmpty())
         {
             LOGE("send returned less than packet length but there's already a pending packet");
-            failed = true;
+            m_failed = true;
         }
         else
         {
             LOGV("Socket %d not ready to send", int(fd));
             pendingOutgoingPacket = std::move(packet);
-            readyToSend = false;
+            m_readyToSend = false;
         }
     }
 }
@@ -217,7 +217,7 @@ bool NetworkSocketPosix::OnReadyToSend()
         pendingOutgoingPacket = NetworkPacket::Empty();
         return false;
     }
-    readyToSend = true;
+    m_readyToSend = true;
     return true;
 }
 
@@ -225,11 +225,11 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
         maxLen = INT32_MAX;
-    if (failed)
+    if (m_failed)
     {
         return NetworkPacket::Empty();
     }
-    if (protocol == NetworkProtocol::UDP)
+    if (m_protocol == NetworkProtocol::UDP)
     {
         int addrLen = sizeof(sockaddr_in6);
         sockaddr_in6 srcAddr;
@@ -242,7 +242,7 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
                 LOGI("Detected IPv4 connectivity, will not try IPv6");
             }
             NetworkAddress addr = NetworkAddress::Empty();
-            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
+            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(m_nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
             {
                 in_addr v4addr = *(reinterpret_cast<in_addr*>(&srcAddr.sin6_addr.s6_addr[12]));
                 addr = NetworkAddress::IPv4(v4addr.s_addr);
@@ -264,13 +264,13 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
         }
         //LOGV("Received %d bytes from %s:%d at %.5lf", len, inet_ntoa(srcAddr.sin_addr), ntohs(srcAddr.sin_port), GetCurrentTime());
     }
-    else if (protocol == NetworkProtocol::TCP)
+    else if (m_protocol == NetworkProtocol::TCP)
     {
         ssize_t res = (int)recv(fd, *recvBuffer, std::min(recvBuffer.Length(), maxLen), 0);
         if (res <= 0)
         {
             LOGE("Error receiving from TCP socket: %d / %s", errno, strerror(errno));
-            failed = true;
+            m_failed = true;
             return NetworkPacket::Empty();
         }
         else
@@ -287,13 +287,13 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
 
 void NetworkSocketPosix::Open()
 {
-    if (protocol != NetworkProtocol::UDP)
+    if (m_protocol != NetworkProtocol::UDP)
         return;
     fd = socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0)
     {
         LOGE("error creating socket: %d / %s", errno, strerror(errno));
-        failed = true;
+        m_failed = true;
         return;
     }
     int flag = 0;
@@ -301,7 +301,7 @@ void NetworkSocketPosix::Open()
     if (res < 0)
     {
         LOGE("error enabling dual stack socket: %d / %s", errno, strerror(errno));
-        failed = true;
+        m_failed = true;
         return;
     }
 
@@ -309,7 +309,7 @@ void NetworkSocketPosix::Open()
     if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
     {
         LOGE("error setting nonblock flag on socket: %d / %s", errno, strerror(errno));
-        failed = true;
+        m_failed = true;
         return;
     }
 
@@ -346,7 +346,7 @@ void NetworkSocketPosix::Open()
         {
             LOGE("error binding to port %u: %d / %s", ntohs(addr.sin6_port), errno, strerror(errno));
             //SetState(STATE_FAILED);
-            failed = true;
+            m_failed = true;
             return;
         }
     }
@@ -356,7 +356,7 @@ void NetworkSocketPosix::Open()
 
     needUpdateNat64Prefix = true;
     isV4Available = false;
-    switchToV6at = VoIPController::GetCurrentTime() + ipv6Timeout;
+    switchToV6at = VoIPController::GetCurrentTime() + m_ipv6Timeout;
 }
 
 void NetworkSocketPosix::Close()
@@ -366,7 +366,7 @@ void NetworkSocketPosix::Close()
         return;
     }
     closing = true;
-    failed = true;
+    m_failed = true;
 
     if (fd >= 0)
     {
@@ -404,7 +404,7 @@ void NetworkSocketPosix::Connect(const NetworkAddress address, std::uint16_t por
     if (fd < 0)
     {
         LOGE("Error creating TCP socket: %d / %s", errno, strerror(errno));
-        failed = true;
+        m_failed = true;
         return;
     }
     int opt = 1;
@@ -421,7 +421,7 @@ void NetworkSocketPosix::Connect(const NetworkAddress address, std::uint16_t por
     {
         LOGW("error connecting TCP socket to %s:%u: %d / %s; %d / %s", address.ToString().c_str(), port, res, strerror(res), errno, strerror(errno));
         close(fd);
-        failed = true;
+        m_failed = true;
         return;
     }
     tcpConnectedAddress = address;
@@ -433,7 +433,7 @@ void NetworkSocketPosix::OnActiveInterfaceChanged()
 {
     needUpdateNat64Prefix = true;
     isV4Available = false;
-    switchToV6at = VoIPController::GetCurrentTime() + ipv6Timeout;
+    switchToV6at = VoIPController::GetCurrentTime() + m_ipv6Timeout;
 }
 
 std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr)
@@ -659,10 +659,10 @@ bool NetworkSocketPosix::Select(std::vector<NetworkSocket*>& readFds, std::vecto
             LOGW("can't select on one of sockets because it's not a NetworkSocketPosix instance");
             continue;
         }
-        if (s->timeout > 0 && VoIPController::GetCurrentTime() - s->lastSuccessfulOperationTime > s->timeout)
+        if (s->m_timeout > 0 && VoIPController::GetCurrentTime() - s->m_lastSuccessfulOperationTime > s->m_timeout)
         {
             LOGW("Socket %d timed out", sfd);
-            s->failed = true;
+            s->m_failed = true;
         }
         anyFailed |= s->IsFailed();
         FD_SET(sfd, &errorSet);
@@ -689,7 +689,7 @@ bool NetworkSocketPosix::Select(std::vector<NetworkSocket*>& readFds, std::vecto
     {
         int sfd = GetDescriptorFromSocket(*itr);
         if (FD_ISSET(sfd, &readSet))
-            (*itr)->lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
         if (sfd == 0 || !FD_ISSET(sfd, &readSet) || !(*itr)->OnReadyToReceive())
         {
             itr = readFds.erase(itr);
@@ -711,7 +711,7 @@ bool NetworkSocketPosix::Select(std::vector<NetworkSocket*>& readFds, std::vecto
         else
         {
             LOGV("Socket %d is ready to send", sfd);
-            (*itr)->lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
             if ((*itr)->OnReadyToSend())
                 ++itr;
             else

@@ -20,8 +20,8 @@ using namespace tgvoip;
 
 MessageThread::MessageThread()
     : Thread(std::bind(&MessageThread::Run, this))
+    , m_running(true)
 {
-    running = true;
     SetName("MessageThread");
 
 #ifdef _WIN32
@@ -47,9 +47,9 @@ MessageThread::~MessageThread()
 
 void MessageThread::Stop()
 {
-    if (running)
+    if (m_running)
     {
-        running = false;
+        m_running = false;
 #ifdef _WIN32
         SetEvent(event);
 #else
@@ -61,14 +61,14 @@ void MessageThread::Stop()
 
 void MessageThread::Run()
 {
-    queueMutex.Lock();
-    while (running)
+    m_queueMutex.Lock();
+    while (m_running)
     {
         double currentTime = VoIPController::GetCurrentTime();
         double waitTimeout;
         {
-            MutexGuard _m(queueAccessMutex);
-            waitTimeout = queue.empty() ? DBL_MAX : (queue[0].deliverAt - currentTime);
+            MutexGuard _m(m_queueAccessMutex);
+            waitTimeout = m_queue.empty() ? DBL_MAX : (m_queue[0].deliverAt - currentTime);
         }
         //LOGW("MessageThread wait timeout %f", waitTimeout);
         if (waitTimeout > 0.0)
@@ -85,38 +85,38 @@ void MessageThread::Run()
             // since any new no-delay messages will get delivered on this iteration anyway
             queueMutex.Lock();
 #else
-            if (waitTimeout != DBL_MAX)
+            if (waitTimeout != std::numeric_limits<double>::max())
             {
                 struct timeval now;
                 struct timespec timeout;
-                gettimeofday(&now, NULL);
+                gettimeofday(&now, nullptr);
                 waitTimeout += now.tv_sec;
                 waitTimeout += (now.tv_usec / 1000000.0);
-                timeout.tv_sec = (time_t)(floor(waitTimeout));
-                timeout.tv_nsec = (long)((waitTimeout - floor(waitTimeout)) * 1000000000.0);
-                pthread_cond_timedwait(&cond, queueMutex.NativeHandle(), &timeout);
+                timeout.tv_sec = static_cast<std::time_t>(std::floor(waitTimeout));
+                timeout.tv_nsec = static_cast<long>((waitTimeout - std::floor(waitTimeout)) * 1000 * 1000 * 1000.0);
+                pthread_cond_timedwait(&cond, m_queueMutex.NativeHandle(), &timeout);
             }
             else
             {
-                pthread_cond_wait(&cond, queueMutex.NativeHandle());
+                pthread_cond_wait(&cond, m_queueMutex.NativeHandle());
             }
 #endif
         }
-        if (!running)
+        if (!m_running)
         {
-            queueMutex.Unlock();
+            m_queueMutex.Unlock();
             return;
         }
         currentTime = VoIPController::GetCurrentTime();
         std::vector<Message> msgsToDeliverNow;
         {
-            MutexGuard _m(queueAccessMutex);
-            for (std::vector<Message>::iterator m = queue.begin(); m != queue.end();)
+            MutexGuard _m(m_queueAccessMutex);
+            for (std::vector<Message>::iterator m = m_queue.begin(); m != m_queue.end();)
             {
                 if (m->deliverAt == 0.0 || currentTime >= m->deliverAt)
                 {
                     msgsToDeliverNow.push_back(*m);
-                    m = queue.erase(m);
+                    m = m_queue.erase(m);
                     continue;
                 }
                 ++m;
@@ -126,21 +126,21 @@ void MessageThread::Run()
         for (Message& m : msgsToDeliverNow)
         {
             //LOGI("MessageThread delivering %u", m.msg);
-            cancelCurrent = false;
+            m_cancelCurrent = false;
             if (m.deliverAt == 0.0)
                 m.deliverAt = VoIPController::GetCurrentTime();
             if (m.func != nullptr)
             {
                 m.func();
             }
-            if (!cancelCurrent && m.interval > 0.0)
+            if (!m_cancelCurrent && m.interval > 0.0)
             {
                 m.deliverAt += m.interval;
                 InsertMessageInternal(m);
             }
         }
     }
-    queueMutex.Unlock();
+    m_queueMutex.Unlock();
 }
 
 std::uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
@@ -148,7 +148,7 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
     assert(delay >= 0);
     //LOGI("MessageThread post [function] delay %f", delay);
     double currentTime = VoIPController::GetCurrentTime();
-    Message m {lastMessageID++, delay == 0.0 ? 0.0 : (currentTime + delay), interval, func};
+    Message m {m_lastMessageID++, delay == 0.0 ? 0.0 : (currentTime + delay), interval, func};
     InsertMessageInternal(m);
     if (!IsCurrent())
     {
@@ -163,26 +163,26 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
 
 void MessageThread::InsertMessageInternal(MessageThread::Message& m)
 {
-    MutexGuard _m(queueAccessMutex);
-    if (queue.empty())
+    MutexGuard _m(m_queueAccessMutex);
+    if (m_queue.empty())
     {
-        queue.push_back(m);
+        m_queue.push_back(m);
     }
     else
     {
-        if (queue[0].deliverAt > m.deliverAt)
+        if (m_queue[0].deliverAt > m.deliverAt)
         {
-            queue.insert(queue.begin(), m);
+            m_queue.insert(m_queue.begin(), m);
         }
         else
         {
-            std::vector<Message>::iterator insertAfter = queue.begin();
-            for (; insertAfter != queue.end(); ++insertAfter)
+            std::vector<Message>::iterator insertAfter = m_queue.begin();
+            for (; insertAfter != m_queue.end(); ++insertAfter)
             {
                 std::vector<Message>::iterator next = std::next(insertAfter);
-                if (next == queue.end() || (next->deliverAt > m.deliverAt && insertAfter->deliverAt <= m.deliverAt))
+                if (next == m_queue.end() || (next->deliverAt > m.deliverAt && insertAfter->deliverAt <= m.deliverAt))
                 {
-                    queue.insert(next, m);
+                    m_queue.insert(next, m);
                     break;
                 }
             }
@@ -192,13 +192,13 @@ void MessageThread::InsertMessageInternal(MessageThread::Message& m)
 
 void MessageThread::Cancel(std::uint32_t id)
 {
-    MutexGuard _m(queueAccessMutex);
+    MutexGuard _m(m_queueAccessMutex);
 
-    for (std::vector<Message>::iterator m = queue.begin(); m != queue.end();)
+    for (std::vector<Message>::iterator m = m_queue.begin(); m != m_queue.end();)
     {
         if (m->id == id)
         {
-            m = queue.erase(m);
+            m = m_queue.erase(m);
         }
         else
         {
@@ -210,5 +210,5 @@ void MessageThread::Cancel(std::uint32_t id)
 void MessageThread::CancelSelf()
 {
     assert(IsCurrent());
-    cancelCurrent = true;
+    m_cancelCurrent = true;
 }

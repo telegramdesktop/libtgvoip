@@ -46,33 +46,29 @@ public:
     static NetworkAddress IPv6(std::string str);
     static NetworkAddress IPv6(const std::uint8_t addr[16]);
 
-    bool isIPv6 = false;
-    union {
+    union
+    {
         std::uint32_t ipv4;
         std::uint8_t ipv6[16];
     } addr;
+    bool isIPv6 = false;
 
 private:
-    NetworkAddress() {};
+    NetworkAddress();
 };
 
 struct NetworkPacket
 {
+    NetworkPacket(Buffer data, NetworkAddress address, std::uint16_t port, NetworkProtocol protocol);
     TGVOIP_MOVE_ONLY(NetworkPacket);
+
     Buffer data;
     NetworkAddress address;
     std::uint16_t port;
     NetworkProtocol protocol;
 
-    static NetworkPacket Empty()
-    {
-        return NetworkPacket {Buffer(), NetworkAddress::Empty(), 0, NetworkProtocol::UDP};
-    }
-
-    bool IsEmpty()
-    {
-        return data.IsEmpty() || (protocol == NetworkProtocol::UDP && (port == 0 || address.IsEmpty()));
-    }
+    static NetworkPacket Empty();
+    bool IsEmpty() const;
 };
 
 class SocketSelectCanceller
@@ -90,40 +86,31 @@ public:
     friend class NetworkSocketWinsock;
 
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(NetworkSocket);
-    NetworkSocket(NetworkProtocol protocol);
+    NetworkSocket(NetworkProtocol m_protocol);
     virtual ~NetworkSocket();
     virtual void Send(NetworkPacket packet) = 0;
     virtual NetworkPacket Receive(std::size_t maxLen = 0) = 0;
     std::size_t Receive(unsigned char* buffer, std::size_t len);
     virtual void Open() = 0;
     virtual void Close() = 0;
-    virtual std::uint16_t GetLocalPort() { return 0; };
+    virtual std::uint16_t GetLocalPort();
     virtual void Connect(const NetworkAddress address, std::uint16_t port) = 0;
     virtual std::string GetLocalInterfaceInfo(NetworkAddress* inet4addr, NetworkAddress* inet6addr);
-    virtual void OnActiveInterfaceChanged() {};
-    virtual NetworkAddress GetConnectedAddress() { return NetworkAddress::Empty(); };
-    virtual std::uint16_t GetConnectedPort() { return 0; };
-    virtual void SetTimeouts(int sendTimeout, int recvTimeout) {};
+    virtual void OnActiveInterfaceChanged();
+    virtual NetworkAddress GetConnectedAddress();
+    virtual std::uint16_t GetConnectedPort();
+    virtual void SetTimeouts(int sendTimeout, int recvTimeout);
 
-    virtual bool IsFailed();
-    virtual bool IsReadyToSend()
-    {
-        return readyToSend;
-    }
-    virtual bool OnReadyToSend()
-    {
-        readyToSend = true;
-        return true;
-    };
-    virtual bool OnReadyToReceive() { return true; };
-    void SetTimeout(double timeout)
-    {
-        this->timeout = timeout;
-    };
+    virtual bool IsFailed() const;
+    virtual bool IsReadyToSend() const;
+    virtual bool OnReadyToSend();
+    virtual bool OnReadyToReceive();
+    void SetTimeout(double timeout);
 
-    static NetworkSocket* Create(NetworkProtocol protocol);
+    static NetworkSocket* Create(NetworkProtocol m_protocol);
     static NetworkAddress ResolveDomainName(std::string name);
-    static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
+    static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds,
+                       std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
 protected:
     virtual std::uint16_t GenerateLocalPort();
@@ -131,70 +118,67 @@ protected:
 
     static void GenerateTCPO2States(unsigned char* buffer, TCPO2State* recvState, TCPO2State* sendState);
     static void EncryptForTCPO2(unsigned char* buffer, std::size_t len, TCPO2State* state);
-    double ipv6Timeout;
-    unsigned char nat64Prefix[12];
-    std::atomic<bool> failed;
-    bool readyToSend = false;
-    double lastSuccessfulOperationTime = 0.0;
-    double timeout = 0.0;
-    NetworkProtocol protocol;
+
+    double m_ipv6Timeout;
+    double m_lastSuccessfulOperationTime = 0.0;
+    double m_timeout = 0.0;
+    NetworkProtocol m_protocol;
+    std::atomic<bool> m_failed;
+    unsigned char m_nat64Prefix[12];
+    bool m_readyToSend = false;
 };
 
 class NetworkSocketWrapper : public NetworkSocket
 {
 public:
-    NetworkSocketWrapper(NetworkProtocol protocol)
-        : NetworkSocket(protocol) {};
-    virtual ~NetworkSocketWrapper() {};
+    NetworkSocketWrapper(NetworkProtocol protocol);
+    ~NetworkSocketWrapper() override;
     virtual NetworkSocket* GetWrapped() = 0;
     virtual void InitConnection() = 0;
-    virtual void SetNonBlocking(bool) {};
+    virtual void SetNonBlocking(bool);
 };
 
 class NetworkSocketTCPObfuscated : public NetworkSocketWrapper
 {
 public:
-    NetworkSocketTCPObfuscated(NetworkSocket* wrapped);
-    virtual ~NetworkSocketTCPObfuscated();
-    virtual NetworkSocket* GetWrapped();
-    virtual void InitConnection();
-    virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(std::size_t maxLen) override;
-    virtual void Open();
-    virtual void Close();
-    virtual void Connect(const NetworkAddress address, std::uint16_t port);
-    virtual bool OnReadyToSend();
+    NetworkSocketTCPObfuscated(NetworkSocket* m_wrapped);
+    ~NetworkSocketTCPObfuscated() override;
+    NetworkSocket* GetWrapped() override;
+    void InitConnection() override;
+    void Send(NetworkPacket packet) override;
+    NetworkPacket Receive(std::size_t maxLen) override;
+    void Open() override;
+    void Close() override;
+    void Connect(const NetworkAddress address, std::uint16_t port) override;
+    bool OnReadyToSend() override;
 
-    virtual bool IsFailed();
-    virtual bool IsReadyToSend()
-    {
-        return readyToSend && wrapped->IsReadyToSend();
-    };
+    bool IsFailed() const override;
+    bool IsReadyToSend() const override;
 
 private:
-    NetworkSocket* wrapped;
-    TCPO2State recvState;
-    TCPO2State sendState;
-    bool initialized = false;
+    NetworkSocket* m_wrapped;
+    TCPO2State m_recvState;
+    TCPO2State m_sendState;
+    bool m_initialized = false;
 };
 
 class NetworkSocketSOCKS5Proxy : public NetworkSocketWrapper
 {
 public:
-    NetworkSocketSOCKS5Proxy(NetworkSocket* tcp, NetworkSocket* udp, std::string username, std::string password);
-    virtual ~NetworkSocketSOCKS5Proxy();
-    virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(std::size_t maxLen) override;
-    virtual void Open() override;
-    virtual void Close();
-    virtual void Connect(const NetworkAddress address, std::uint16_t port);
-    virtual NetworkSocket* GetWrapped();
-    virtual void InitConnection();
-    virtual bool IsFailed();
-    virtual NetworkAddress GetConnectedAddress();
-    virtual std::uint16_t GetConnectedPort();
-    virtual bool OnReadyToSend();
-    virtual bool OnReadyToReceive();
+    NetworkSocketSOCKS5Proxy(NetworkSocket* m_tcp, NetworkSocket* m_udp, std::string m_username, std::string m_password);
+    ~NetworkSocketSOCKS5Proxy() override;
+    void Send(NetworkPacket packet) override;
+    NetworkPacket Receive(std::size_t maxLen) override;
+    void Open() override;
+    void Close() override;
+    void Connect(const NetworkAddress address, std::uint16_t port) override;
+    NetworkSocket* GetWrapped() override;
+    void InitConnection() override;
+    bool IsFailed() const override;
+    NetworkAddress GetConnectedAddress() override;
+    std::uint16_t GetConnectedPort() override;
+    bool OnReadyToSend() override;
+    bool OnReadyToReceive() override;
 
     bool NeedSelectForSending();
 
@@ -208,13 +192,13 @@ private:
         WaitingForCommandResult,
         Connected
     };
-    NetworkSocket* tcp;
-    NetworkSocket* udp;
-    std::string username;
-    std::string password;
-    NetworkAddress connectedAddress = NetworkAddress::Empty();
-    std::uint16_t connectedPort;
-    ConnectionState state = ConnectionState::Initial;
+    NetworkSocket* m_tcp;
+    NetworkSocket* m_udp;
+    std::string m_username;
+    std::string m_password;
+    NetworkAddress m_connectedAddress = NetworkAddress::Empty();
+    std::uint16_t m_connectedPort;
+    ConnectionState m_state = ConnectionState::Initial;
 };
 
 }

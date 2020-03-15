@@ -116,7 +116,7 @@ void AudioMixer::SetInputVolume(std::shared_ptr<MediaStreamItf> input, float vol
     {
         if (i->source == input)
         {
-            if (volumeDB == -std::numeric_limits<float>::lowest())
+            if (volumeDB == -std::numeric_limits<float>::infinity())
                 i->multiplier = 0;
             else
                 i->multiplier = expf(volumeDB / 20.0f * logf(10.0f));

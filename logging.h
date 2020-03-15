@@ -160,4 +160,4 @@ void tgvoip_log_file_write_header(FILE* file);
 #endif
 #endif
 
-#endif //__LOGGING_H
+#endif // __LOGGING_H

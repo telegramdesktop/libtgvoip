@@ -31,7 +31,7 @@ private:
 class NetworkSocketWinsock : public NetworkSocket
 {
 public:
-    NetworkSocketWinsock(NetworkProtocol protocol);
+    NetworkSocketWinsock(NetworkProtocol m_protocol);
     virtual ~NetworkSocketWinsock();
     virtual void Send(NetworkPacket packet) override;
     virtual NetworkPacket Receive(std::size_t maxLen) override;

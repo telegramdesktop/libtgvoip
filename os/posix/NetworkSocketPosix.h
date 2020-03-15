@@ -34,7 +34,7 @@ private:
 class NetworkSocketPosix : public NetworkSocket
 {
 public:
-    NetworkSocketPosix(NetworkProtocol protocol);
+    NetworkSocketPosix(NetworkProtocol m_protocol);
     virtual ~NetworkSocketPosix() override;
     virtual void Send(NetworkPacket packet) override;
     virtual NetworkPacket Receive(std::size_t maxLen) override;
