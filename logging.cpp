@@ -21,7 +21,7 @@
 #include <TargetConditionals.h>
 #endif
 
-static FILE* tgvoipLogFile = nullptr;
+FILE* tgvoipLogFile = nullptr;
 
 void tgvoip_log_file_printf(char level, const char* msg, ...)
 {
