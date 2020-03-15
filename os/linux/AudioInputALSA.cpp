@@ -171,7 +171,7 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
         char* name = _snd_device_name_get_hint(*n, "NAME");
         if (strncmp(name, "surround", 8) == 0 || strcmp(name, "null") == 0)
         {
-            free(name);
+            std::free(name);
             n++;
             continue;
         }
@@ -203,9 +203,9 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
             }
             devs.push_back(dev);
         }
-        free(name);
-        free(desc);
-        free(ioid);
+        std::free(name);
+        std::free(desc);
+        std::free(ioid);
         n++;
     }
 

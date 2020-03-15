@@ -47,21 +47,21 @@ void VoIPGroupController::SetGroupCallInfo(unsigned char* encryptionKey, unsigne
     e.address = reflectorAddress;
     e.v6address = reflectorAddressV6;
     e.port = reflectorPort;
-    memcpy(e.peerTag, reflectorGroupTag, 16);
+    std::memcpy(e.peerTag, reflectorGroupTag, 16);
     e.type = Endpoint::Type::UDP_RELAY;
     e.id = FOURCC('G', 'R', 'P', 'R');
     endpoints[e.id] = e;
     groupReflector = e;
     currentEndpoint = e.id;
 
-    memcpy(this->encryptionKey, encryptionKey, 256);
-    memcpy(this->reflectorSelfTag, reflectorSelfTag, 16);
-    memcpy(this->reflectorSelfSecret, reflectorSelfSecret, 16);
-    memcpy(this->reflectorSelfTagHash, reflectorSelfTagHash, 16);
+    std::memcpy(this->encryptionKey, encryptionKey, 256);
+    std::memcpy(this->reflectorSelfTag, reflectorSelfTag, 16);
+    std::memcpy(this->reflectorSelfSecret, reflectorSelfSecret, 16);
+    std::memcpy(this->reflectorSelfTagHash, reflectorSelfTagHash, 16);
     uint8_t sha256[SHA256_LENGTH];
     crypto.sha256((uint8_t*)encryptionKey, 256, sha256);
-    memcpy(callID, sha256 + (SHA256_LENGTH - 16), 16);
-    memcpy(keyFingerprint, sha256 + (SHA256_LENGTH - 16), 8);
+    std::memcpy(callID, sha256 + (SHA256_LENGTH - 16), 16);
+    std::memcpy(keyFingerprint, sha256 + (SHA256_LENGTH - 16), 8);
     this->userSelfID = selfUserID;
 
     //LOGD("reflectorSelfTag = %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", reflectorSelfTag[0], reflectorSelfTag[1], reflectorSelfTag[2], reflectorSelfTag[3], reflectorSelfTag[4], reflectorSelfTag[5], reflectorSelfTag[6], reflectorSelfTag[7], reflectorSelfTag[8], reflectorSelfTag[9], reflectorSelfTag[10], reflectorSelfTag[11], reflectorSelfTag[12], reflectorSelfTag[13], reflectorSelfTag[14], reflectorSelfTag[15]);
@@ -92,7 +92,7 @@ void VoIPGroupController::AddGroupCallParticipant(int32_t userID, unsigned char*
 
     GroupCallParticipant p;
     p.userID = userID;
-    memcpy(p.memberTagHash, memberTagHash, sizeof(p.memberTagHash));
+    std::memcpy(p.memberTagHash, memberTagHash, sizeof(p.memberTagHash));
     p.levelMeter = new AudioLevelMeter();
 
     BufferInputStream ss(serializedStreams, streamsLength);
@@ -270,7 +270,7 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 		//LOGI("possible reflector special response");
 		unsigned char firstBlock[16];
 		unsigned char iv[16];
-		memcpy(iv, packet.data+16, 16);
+		std::memcpy(iv, packet.data+16, 16);
 		unsigned char key[32];
 		crypto.sha256(reflectorSelfSecret, 16, key);
 		crypto.aes_cbc_decrypt(packet.data+32, firstBlock, 16, key, iv);
@@ -281,7 +281,7 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 		//LOGD("special response: len=%d, tlid=0x%08X", len, tlid);
 		if(len%4==0 && len+60<=packet.length && packet.length<=1500){
 			lastRecvPacketTime=GetCurrentTime();
-			memcpy(iv, packet.data+16, 16);
+			std::memcpy(iv, packet.data+16, 16);
 			unsigned char buf[1500];
 			crypto.aes_cbc_decrypt(packet.data+32, buf, len+16, key, iv);
 			try{
@@ -548,7 +548,7 @@ void VoIPGroupController::SendSpecialReflectorRequest(unsigned char* data, size_
 	unsigned char key[32];
 	crypto.sha256(reflectorSelfSecret, 16, key);
 	unsigned char _iv[16];
-	memcpy(_iv, iv, 16);
+	std::memcpy(_iv, iv, 16);
 	size_t encryptedLen=out.GetLength();
 	crypto.aes_cbc_encrypt(out.GetBuffer(), buf, encryptedLen, key, _iv);
 	out.Reset();
@@ -666,7 +666,7 @@ void VoIPGroupController::SendPacket(unsigned char* data, size_t len, Endpoint& 
         buf.WriteBytes(inner.GetBuffer() + 4, inner.GetLength() - 4);
         unsigned char msgKeyLarge[32];
         crypto.sha256(buf.GetBuffer(), buf.GetLength(), msgKeyLarge);
-        memcpy(msgKey, msgKeyLarge + 8, 16);
+        std::memcpy(msgKey, msgKeyLarge + 8, 16);
         KDF2(msgKey, 0, key, iv);
         out.WriteBytes(msgKey, 16);
         //LOGV("<- MSG KEY: %08x %08x %08x %08x, hashed %u", *reinterpret_cast<int32_t*>(msgKey), *reinterpret_cast<int32_t*>(msgKey+4), *reinterpret_cast<int32_t*>(msgKey+8), *reinterpret_cast<int32_t*>(msgKey+12), inner.GetLength()-4);

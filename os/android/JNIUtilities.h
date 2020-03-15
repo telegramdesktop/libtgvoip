@@ -63,7 +63,7 @@ namespace jni
     {
         jbyteArray arr = env->NewByteArray((jsize)buf.Length());
         jbyte* elements = env->GetByteArrayElements(arr, NULL);
-        memcpy(elements, *buf, buf.Length());
+        std::memcpy(elements, *buf, buf.Length());
         env->ReleaseByteArrayElements(arr, elements, 0);
         return arr;
     }

@@ -85,7 +85,7 @@ void VoIPControllerWrapper::SetPublicEndpoints(const Platform::Array<libtgvoip::
         ep.port = _ep->port;
         if (_ep->peerTag->Length != 16)
             throw ref new Platform::InvalidArgumentException("Peer tag must be exactly 16 bytes long");
-        memcpy(ep.peerTag, _ep->peerTag->Data, 16);
+        std::memcpy(ep.peerTag, _ep->peerTag->Data, 16);
         eps.push_back(ep);
     }
     controller->SetRemoteEndpoints(eps, allowP2P, connectionMaxLayer);
@@ -146,10 +146,10 @@ Platform::String ^ VoIPControllerWrapper::GetDebugString()
 {
     std::string log = controller->GetDebugString();
     size_t len = sizeof(wchar_t) * (log.length() + 1);
-    wchar_t* wlog = (wchar_t*)malloc(len);
+    wchar_t* wlog = (wchar_t*)std::malloc(len);
     MultiByteToWideChar(CP_UTF8, 0, log.c_str(), -1, wlog, len / sizeof(wchar_t));
     Platform::String ^ res = ref new Platform::String(wlog);
-    free(wlog);
+    std::free(wlog);
     return res;
 }
 
@@ -157,10 +157,10 @@ Platform::String ^ VoIPControllerWrapper::GetDebugLog()
 {
     std::string log = controller->GetDebugLog();
     size_t len = sizeof(wchar_t) * (log.length() + 1);
-    wchar_t* wlog = (wchar_t*)malloc(len);
+    wchar_t* wlog = (wchar_t*)std::malloc(len);
     MultiByteToWideChar(CP_UTF8, 0, log.c_str(), -1, wlog, len / sizeof(wchar_t));
     Platform::String ^ res = ref new Platform::String(wlog);
-    free(wlog);
+    std::free(wlog);
     return res;
 }
 
@@ -311,9 +311,9 @@ void MicrosoftCryptoImpl::AesIgeEncrypt(uint8_t* in, uint8_t* out, size_t len, u
         IBuffer ^ outbuf = CryptographicEngine::Encrypt(_key, inbuf, nullptr);
         IBufferToPtr(outbuf, 16, tmpOut);
         XorInt128(tmpOut, xPrev, y);
-        memcpy(xPrev, x, 16);
-        memcpy(yPrev, y, 16);
-        memcpy(out + offset, y, 16);
+        std::memcpy(xPrev, x, 16);
+        std::memcpy(yPrev, y, 16);
+        std::memcpy(out + offset, y, 16);
     }
 }
 
@@ -344,9 +344,9 @@ void MicrosoftCryptoImpl::AesIgeDecrypt(uint8_t* in, uint8_t* out, size_t len, u
         IBuffer ^ outbuf = CryptographicEngine::Decrypt(_key, inbuf, nullptr);
         IBufferToPtr(outbuf, 16, tmpOut);
         XorInt128(tmpOut, xPrev, y);
-        memcpy(xPrev, x, 16);
-        memcpy(yPrev, y, 16);
-        memcpy(out + offset, y, 16);
+        std::memcpy(xPrev, x, 16);
+        std::memcpy(yPrev, y, 16);
+        std::memcpy(out + offset, y, 16);
     }
 }
 

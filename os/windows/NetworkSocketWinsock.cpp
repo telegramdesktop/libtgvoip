@@ -105,7 +105,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                         if (addr170 && addr171 && memcmp(addr170, addr171, 12) == 0)
                         {
                             nat64Present = true;
-                            memcpy(nat64Prefix, addr170, 12);
+                            std::memcpy(nat64Prefix, addr170, 12);
                             char buf[INET6_ADDRSTRLEN];
                             //LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
                         }
@@ -121,13 +121,13 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                 addr.sin6_family = AF_INET6;
                 *((uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
                 if (nat64Present)
-                    memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
+                    std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
                 else
                     addr.sin6_addr.s6_addr[11] = addr.sin6_addr.s6_addr[10] = 0xFF;
             }
             else
             {
-                memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
+                std::memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
             }
             addr.sin6_port = htons(packet.port);
             res = sendto(fd, (const char*)*packet.data, packet.data.Length(), 0, (const sockaddr*)&addr, sizeof(addr));
@@ -427,14 +427,14 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
     }
     return "";
 #else
-    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(15 * 1024);
+    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)std::malloc(15 * 1024);
     ULONG size = 15 * 1024;
     ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
 
     ULONG res = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &size);
     if (res == ERROR_BUFFER_OVERFLOW)
     {
-        addrs = (IP_ADAPTER_ADDRESSES*)realloc(addrs, size);
+        addrs = (IP_ADAPTER_ADDRESSES*)std::realloc(addrs, size);
         res = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &size);
     }
 
@@ -504,7 +504,7 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
         }
     }
 
-    free(addrs);
+    std::free(addrs);
     return bestName;
 #endif
 }
@@ -549,7 +549,7 @@ std::string NetworkSocketWinsock::V6AddressToString(const unsigned char* address
     sockaddr_in6 addr;
     ZeroMemory(&addr, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    memcpy(addr.sin6_addr.s6_addr, address, 16);
+    std::memcpy(addr.sin6_addr.s6_addr, address, 16);
     DWORD len = sizeof(buf);
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t wbuf[INET6_ADDRSTRLEN];
@@ -591,7 +591,7 @@ void NetworkSocketWinsock::StringToV6Address(std::string address, unsigned char*
 #else
     WSAStringToAddressA((char*)address.c_str(), AF_INET, NULL, (sockaddr*)&addr, &size);
 #endif
-    memcpy(out, addr.sin6_addr.s6_addr, 16);
+    std::memcpy(out, addr.sin6_addr.s6_addr, 16);
 }
 
 void NetworkSocketWinsock::Connect(const NetworkAddress address, uint16_t port)
@@ -611,7 +611,7 @@ void NetworkSocketWinsock::Connect(const NetworkAddress address, uint16_t port)
     else
     {
         v6.sin6_family = AF_INET6;
-        memcpy(v6.sin6_addr.s6_addr, address.addr.ipv6, 16);
+        std::memcpy(v6.sin6_addr.s6_addr, address.addr.ipv6, 16);
         v6.sin6_flowinfo = 0;
         v6.sin6_scope_id = 0;
         v6.sin6_port = htons(port);

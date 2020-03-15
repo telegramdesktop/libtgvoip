@@ -453,7 +453,7 @@ void AudioInputWASAPI::RunThread()
             //LOGV("audio capture: %u, time %f, flags %u", framesAvailable, t-prevCallback, flags);
             //prevCallback=t;
 
-            memcpy(remainingData + remainingDataLen, data, dataLen);
+            std::memcpy(remainingData + remainingDataLen, data, dataLen);
             remainingDataLen += dataLen;
             while (remainingDataLen > 960 * 2)
             {

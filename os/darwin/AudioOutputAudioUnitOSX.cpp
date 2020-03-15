@@ -147,7 +147,7 @@ void AudioOutputAudioUnitLegacy::HandleBufferCallback(AudioBufferList* ioData)
             InvokeCallback(remainingData + remainingDataSize, BUFFER_SIZE * 2);
             remainingDataSize += BUFFER_SIZE * 2;
         }
-        memcpy(buf.mData, remainingData, buf.mDataByteSize);
+        std::memcpy(buf.mData, remainingData, buf.mDataByteSize);
         remainingDataSize -= buf.mDataByteSize;
         memmove(remainingData, remainingData + buf.mDataByteSize, remainingDataSize);
     }
@@ -170,13 +170,13 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
 
     UInt32 deviceCount = (UInt32)(dataSize / sizeof(AudioDeviceID));
 
-    AudioDeviceID* audioDevices = (AudioDeviceID*)(malloc(dataSize));
+    AudioDeviceID* audioDevices = (AudioDeviceID*)(std::malloc(dataSize));
 
     status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, audioDevices);
     if (kAudioHardwareNoError != status)
     {
         LOGE("AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %i", status);
-        free(audioDevices);
+        std::free(audioDevices);
         audioDevices = NULL;
         return;
     }
@@ -217,19 +217,19 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
             continue;
         }
 
-        AudioBufferList* bufferList = (AudioBufferList*)(malloc(dataSize));
+        AudioBufferList* bufferList = (AudioBufferList*)(std::malloc(dataSize));
 
         status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, bufferList);
         if (kAudioHardwareNoError != status || 0 == bufferList->mNumberBuffers)
         {
             if (kAudioHardwareNoError != status)
                 LOGE("AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration) failed: %i", status);
-            free(bufferList);
+            std::free(bufferList);
             bufferList = NULL;
             continue;
         }
 
-        free(bufferList);
+        std::free(bufferList);
         bufferList = NULL;
 
         AudioOutputDevice dev;
@@ -243,7 +243,7 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
         devs.push_back(dev);
     }
 
-    free(audioDevices);
+    std::free(audioDevices);
     audioDevices = NULL;
 }
 

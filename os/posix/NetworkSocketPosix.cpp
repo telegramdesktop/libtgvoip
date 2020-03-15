@@ -132,7 +132,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                     if (addr170 && addr171 && memcmp(addr170, addr171, 12) == 0)
                     {
                         nat64Present = true;
-                        memcpy(nat64Prefix, addr170, 12);
+                        std::memcpy(nat64Prefix, addr170, 12);
                         char buf[INET6_ADDRSTRLEN];
                         LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
                     }
@@ -148,13 +148,13 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             addr.sin6_family = AF_INET6;
             *((uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
             if (nat64Present)
-                memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
+                std::memcpy(addr.sin6_addr.s6_addr, nat64Prefix, 12);
             else
                 addr.sin6_addr.s6_addr[11] = addr.sin6_addr.s6_addr[10] = 0xFF;
         }
         else
         {
-            memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
+            std::memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
             addr.sin6_family = AF_INET6;
         }
         addr.sin6_port = htons(packet.port);
@@ -393,7 +393,7 @@ void NetworkSocketPosix::Connect(const NetworkAddress address, uint16_t port)
     else
     {
         v6.sin6_family = AF_INET6;
-        memcpy(v6.sin6_addr.s6_addr, address.addr.ipv6, 16);
+        std::memcpy(v6.sin6_addr.s6_addr, address.addr.ipv6, 16);
         v6.sin6_flowinfo = 0;
         v6.sin6_scope_id = 0;
         v6.sin6_port = htons(port);
@@ -544,7 +544,7 @@ std::string NetworkSocketPosix::V6AddressToString(const unsigned char* address)
 {
     char buf[INET6_ADDRSTRLEN];
     in6_addr addr;
-    memcpy(addr.s6_addr, address, 16);
+    std::memcpy(addr.s6_addr, address, 16);
     inet_ntop(AF_INET6, &addr, buf, sizeof(buf));
     return std::string(buf);
 }
@@ -560,7 +560,7 @@ void NetworkSocketPosix::StringToV6Address(std::string address, unsigned char* o
 {
     in6_addr addr;
     inet_pton(AF_INET6, address.c_str(), &addr);
-    memcpy(out, addr.s6_addr, 16);
+    std::memcpy(out, addr.s6_addr, 16);
 }
 
 NetworkAddress NetworkSocketPosix::ResolveDomainName(std::string name)

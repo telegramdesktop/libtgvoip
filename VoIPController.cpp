@@ -379,13 +379,13 @@ void VoIPController::Connect()
 
 void VoIPController::SetEncryptionKey(char* key, bool isOutgoing)
 {
-    memcpy(encryptionKey, key, 256);
+    std::memcpy(encryptionKey, key, 256);
     uint8_t sha1[SHA1_LENGTH];
     crypto.sha1((uint8_t*)encryptionKey, 256, sha1);
-    memcpy(keyFingerprint, sha1 + (SHA1_LENGTH - 8), 8);
+    std::memcpy(keyFingerprint, sha1 + (SHA1_LENGTH - 8), 8);
     uint8_t sha256[SHA256_LENGTH];
     crypto.sha256((uint8_t*)encryptionKey, 256, sha256);
-    memcpy(callID, sha256 + (SHA256_LENGTH - 16), 16);
+    std::memcpy(callID, sha256 + (SHA256_LENGTH - 16), 16);
     this->isOutgoing = isOutgoing;
 }
 
@@ -674,7 +674,7 @@ int VoIPController::GetLastError()
 
 void VoIPController::GetStats(TrafficStats* stats)
 {
-    memcpy(stats, &this->stats, sizeof(TrafficStats));
+    std::memcpy(stats, &this->stats, sizeof(TrafficStats));
 }
 
 std::string VoIPController::GetDebugLog()
@@ -2234,7 +2234,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         }
         else
         {
-            memcpy(buffer + in.GetOffset(), aesOut, in.Remaining());
+            std::memcpy(buffer + in.GetOffset(), aesOut, in.Remaining());
             in.ReadInt32();
         }
     }
@@ -2298,7 +2298,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
             LOGW("Received packet has too little padding (%u)", (unsigned int)(decryptedLen - innerLen));
             return;
         }
-        memcpy(buffer, decrypted + (shortFormat ? 2 : 4), innerLen);
+        std::memcpy(buffer, decrypted + (shortFormat ? 2 : 4), innerLen);
         in = BufferInputStream(buffer, (size_t)innerLen);
         if (retryWith2)
         {
@@ -3404,7 +3404,7 @@ void VoIPController::SendPacket(unsigned char* data, size_t len, Endpoint& ep, P
             buf.WriteBytes(inner.GetBuffer() + sizeSize, inner.GetLength() - sizeSize);
             unsigned char msgKeyLarge[32];
             crypto.sha256(buf.GetBuffer(), buf.GetLength(), msgKeyLarge);
-            memcpy(msgKey, msgKeyLarge + 8, 16);
+            std::memcpy(msgKey, msgKeyLarge + 8, 16);
             KDF2(msgKey, isOutgoing ? 0 : 8, key, iv);
             out.WriteBytes(msgKey, 16);
             //LOGV("<- MSG KEY: %08x %08x %08x %08x, hashed %u", *reinterpret_cast<int32_t*>(msgKey), *reinterpret_cast<int32_t*>(msgKey+4), *reinterpret_cast<int32_t*>(msgKey+8), *reinterpret_cast<int32_t*>(msgKey+12), inner.GetLength()-4);
@@ -3676,14 +3676,14 @@ void VoIPController::KDF(unsigned char* msgKey, size_t x, unsigned char* aesKey,
     buf.WriteBytes(sB + 8, 12);
     buf.WriteBytes(sC + 4, 12);
     assert(buf.GetLength() == 32);
-    memcpy(aesKey, buf.GetBuffer(), 32);
+    std::memcpy(aesKey, buf.GetBuffer(), 32);
     buf.Reset();
     buf.WriteBytes(sA + 8, 12);
     buf.WriteBytes(sB, 8);
     buf.WriteBytes(sC + 16, 4);
     buf.WriteBytes(sD, 8);
     assert(buf.GetLength() == 32);
-    memcpy(aesIv, buf.GetBuffer(), 32);
+    std::memcpy(aesIv, buf.GetBuffer(), 32);
 }
 
 void VoIPController::KDF2(unsigned char* msgKey, size_t x, unsigned char* aesKey, unsigned char* aesIv)
@@ -3701,12 +3701,12 @@ void VoIPController::KDF2(unsigned char* msgKey, size_t x, unsigned char* aesKey
     buf.WriteBytes(sA, 8);
     buf.WriteBytes(sB + 8, 16);
     buf.WriteBytes(sA + 24, 8);
-    memcpy(aesKey, buf.GetBuffer(), 32);
+    std::memcpy(aesKey, buf.GetBuffer(), 32);
     buf.Reset();
     buf.WriteBytes(sB, 8);
     buf.WriteBytes(sA + 8, 16);
     buf.WriteBytes(sB + 24, 8);
-    memcpy(aesIv, buf.GetBuffer(), 32);
+    std::memcpy(aesIv, buf.GetBuffer(), 32);
 }
 
 void VoIPController::SendPublicEndpointsRequest(const Endpoint& relay)
@@ -3717,7 +3717,7 @@ void VoIPController::SendPublicEndpointsRequest(const Endpoint& relay)
     publicEndpointsReqTime = GetCurrentTime();
     waitingForRelayPeerInfo = true;
     Buffer buf(32);
-    memcpy(*buf, relay.peerTag, 16);
+    std::memcpy(*buf, relay.peerTag, 16);
     memset(*buf + 16, 0xFF, 16);
     udpSocket->Send(NetworkPacket {
         std::move(buf),
@@ -4551,7 +4551,7 @@ Endpoint::Endpoint(int64_t id, uint16_t port, const IPv4Address& _address, const
     this->id = id;
     this->port = port;
     this->type = type;
-    memcpy(this->peerTag, peerTag, 16);
+    std::memcpy(this->peerTag, peerTag, 16);
     if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))
         this->type = Type::TCP_RELAY;
 
@@ -4569,7 +4569,7 @@ Endpoint::Endpoint(int64_t id, uint16_t port, const NetworkAddress _address, con
     this->id = id;
     this->port = port;
     this->type = type;
-    memcpy(this->peerTag, peerTag, 16);
+    std::memcpy(this->peerTag, peerTag, 16);
     if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))
         this->type = Type::TCP_RELAY;
 

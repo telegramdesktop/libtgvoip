@@ -457,7 +457,7 @@ void AudioOutputWASAPI::RunThread()
                 }
                 remainingDataLen += 960 * 2;
             }
-            memcpy(data, remainingData, bytesAvailable);
+            std::memcpy(data, remainingData, bytesAvailable);
             if (remainingDataLen > bytesAvailable)
             {
                 memmove(remainingData, remainingData + bytesAvailable, remainingDataLen - bytesAvailable);

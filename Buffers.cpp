@@ -300,7 +300,7 @@ void BufferInputStream::EnsureEnoughRemaining(size_t need)
 #pragma mark - BufferOutputStream
 
 BufferOutputStream::BufferOutputStream(size_t size)
-    : m_buffer(reinterpret_cast<unsigned char*>(malloc(size)))
+    : m_buffer(reinterpret_cast<unsigned char*>(std::malloc(size)))
     , m_size(size)
     , m_offset(0)
     , m_bufferProvided(false)

@@ -88,21 +88,21 @@ void NetworkSocket::GenerateTCPO2States(unsigned char* buffer, TCPO2State* recvS
     } while (*first == first1 || *first == first2 || *first == first3 || *first == first4 || *first == first5 || *second == second1 || *reinterpret_cast<unsigned char*>(nonce) == 0xef);
 
     // prepare encryption key/iv
-    memcpy(sendState->key, nonce + 8, 32);
-    memcpy(sendState->iv, nonce + 8 + 32, 16);
+    std::memcpy(sendState->key, nonce + 8, 32);
+    std::memcpy(sendState->iv, nonce + 8 + 32, 16);
 
     // prepare decryption key/iv
     char reversed[48];
-    memcpy(reversed, nonce + 8, sizeof(reversed));
+    std::memcpy(reversed, nonce + 8, sizeof(reversed));
     std::reverse(reversed, reversed + sizeof(reversed));
-    memcpy(recvState->key, reversed, 32);
-    memcpy(recvState->iv, reversed + 32, 16);
+    std::memcpy(recvState->key, reversed, 32);
+    std::memcpy(recvState->iv, reversed + 32, 16);
 
     // write protocol identifier
     *reinterpret_cast<uint32_t*>(nonce + 56) = 0xefefefefU;
-    memcpy(buffer, nonce, 56);
+    std::memcpy(buffer, nonce, 56);
     EncryptForTCPO2(nonce, sizeof(nonce), sendState);
-    memcpy(buffer + 56, nonce + 56, 8);
+    std::memcpy(buffer + 56, nonce + 56, 8);
 }
 
 void NetworkSocket::EncryptForTCPO2(unsigned char* buffer, size_t len, TCPO2State* state)
@@ -116,7 +116,7 @@ size_t NetworkSocket::Receive(unsigned char* buffer, size_t len)
     if (pkt.IsEmpty())
         return 0;
     size_t actualLen = std::min(len, pkt.data.Length());
-    memcpy(buffer, *pkt.data, actualLen);
+    std::memcpy(buffer, *pkt.data, actualLen);
     return actualLen;
 }
 
@@ -222,7 +222,7 @@ NetworkAddress NetworkAddress::IPv6(const uint8_t addr[16])
 {
     NetworkAddress a;
     a.isIPv6 = true;
-    memcpy(a.addr.ipv6, addr, 16);
+    std::memcpy(a.addr.ipv6, addr, 16);
     return a;
 }
 

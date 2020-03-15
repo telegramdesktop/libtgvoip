@@ -58,9 +58,9 @@ AudioInputOpenSLES::~AudioInputOpenSLES()
     slBufferQueue = NULL;
     slEngine = NULL;
     OpenSLEngineWrapper::DestroyEngine();
-    free(buffer);
+    std::free(buffer);
     buffer = NULL;
-    free(nativeBuffer);
+    std::free(nativeBuffer);
     nativeBuffer = NULL;
 }
 
@@ -140,7 +140,7 @@ void AudioInputOpenSLES::HandleSLCallback()
             InvokeCallback((unsigned char*)buffer, BUFFER_SIZE * sizeof(int16_t));
             positionInBuffer = 0;
         }
-        memcpy(((unsigned char*)buffer) + positionInBuffer * 2, nativeBuffer, (size_t)nativeBufferSize * 2);
+        std::memcpy(((unsigned char*)buffer) + positionInBuffer * 2, nativeBuffer, (size_t)nativeBufferSize * 2);
         positionInBuffer += nativeBufferSize;
     }
     else if (nativeBufferSize > BUFFER_SIZE)

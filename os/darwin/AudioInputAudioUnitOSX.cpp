@@ -32,7 +32,7 @@ AudioInputAudioUnitLegacy::AudioInputAudioUnitLegacy(std::string deviceID)
     remainingDataSize = 0;
     isRecording = false;
 
-    inBufferList.mBuffers[0].mData = malloc(10240);
+    inBufferList.mBuffers[0].mData = std::malloc(10240);
     inBufferList.mBuffers[0].mDataByteSize = 10240;
     inBufferList.mNumberBuffers = 1;
 
@@ -82,7 +82,7 @@ AudioInputAudioUnitLegacy::~AudioInputAudioUnitLegacy()
 
     AudioUnitUninitialize(unit);
     AudioComponentInstanceDispose(unit);
-    free(inBufferList.mBuffers[0].mData);
+    std::free(inBufferList.mBuffers[0].mData);
 }
 
 void AudioInputAudioUnitLegacy::Start()
@@ -122,7 +122,7 @@ void AudioInputAudioUnitLegacy::HandleBufferCallback(AudioBufferList* ioData)
         else
         {
             assert(remainingDataSize + buf.mDataByteSize < 10240);
-            memcpy(remainingData + remainingDataSize, buf.mData, buf.mDataByteSize);
+            std::memcpy(remainingData + remainingDataSize, buf.mData, buf.mDataByteSize);
         }
         remainingDataSize += len;
         while (remainingDataSize >= BUFFER_SIZE * 2)
@@ -154,13 +154,13 @@ void AudioInputAudioUnitLegacy::EnumerateDevices(std::vector<AudioInputDevice>& 
 
     UInt32 deviceCount = (UInt32)(dataSize / sizeof(AudioDeviceID));
 
-    AudioDeviceID* audioDevices = (AudioDeviceID*)(malloc(dataSize));
+    AudioDeviceID* audioDevices = (AudioDeviceID*)(std::malloc(dataSize));
 
     status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, audioDevices);
     if (kAudioHardwareNoError != status)
     {
         LOGE("AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %i", status);
-        free(audioDevices);
+        std::free(audioDevices);
         audioDevices = NULL;
         return;
     }
@@ -201,19 +201,19 @@ void AudioInputAudioUnitLegacy::EnumerateDevices(std::vector<AudioInputDevice>& 
             continue;
         }
 
-        AudioBufferList* bufferList = (AudioBufferList*)(malloc(dataSize));
+        AudioBufferList* bufferList = (AudioBufferList*)(std::malloc(dataSize));
 
         status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, bufferList);
         if (kAudioHardwareNoError != status || 0 == bufferList->mNumberBuffers)
         {
             if (kAudioHardwareNoError != status)
                 LOGE("AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration) failed: %i", status);
-            free(bufferList);
+            std::free(bufferList);
             bufferList = NULL;
             continue;
         }
 
-        free(bufferList);
+        std::free(bufferList);
         bufferList = NULL;
 
         AudioInputDevice dev;
@@ -227,7 +227,7 @@ void AudioInputAudioUnitLegacy::EnumerateDevices(std::vector<AudioInputDevice>& 
         devs.push_back(dev);
     }
 
-    free(audioDevices);
+    std::free(audioDevices);
     audioDevices = NULL;
 }
 

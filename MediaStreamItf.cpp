@@ -77,7 +77,7 @@ void AudioMixer::DoCallback(unsigned char* data, size_t length)
     else
         semaphore.Release();
     Buffer buf = processedQueue.GetBlocking();
-    memcpy(data, *buf, 960 * 2);
+    std::memcpy(data, *buf, 960 * 2);
 }
 
 size_t AudioMixer::OutputCallback(unsigned char* data, size_t length, void* arg)

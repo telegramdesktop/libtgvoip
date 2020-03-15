@@ -59,7 +59,7 @@ void AudioInputAudioUnit::HandleBufferCallback(AudioBufferList* ioData)
         remainingDataSize += buf.mDataByteSize / 2;
 #else
         assert(remainingDataSize + buf.mDataByteSize < 10240);
-        memcpy(remainingData + remainingDataSize, buf.mData, buf.mDataByteSize);
+        std::memcpy(remainingData + remainingDataSize, buf.mData, buf.mDataByteSize);
         remainingDataSize += buf.mDataByteSize;
 #endif
         while (remainingDataSize >= BUFFER_SIZE * 2)

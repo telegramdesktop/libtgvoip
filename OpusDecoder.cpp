@@ -80,7 +80,7 @@ tgvoip::OpusDecoder::~OpusDecoder()
     opus_decoder_destroy(dec);
     if (ecDec)
         opus_decoder_destroy(ecDec);
-    free(buffer);
+    std::free(buffer);
     if (decodedQueue)
         delete decodedQueue;
     if (semaphore)
@@ -123,7 +123,7 @@ size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
             Buffer lastDecoded = decodedQueue->GetBlocking();
             if (lastDecoded.IsEmpty())
                 return 0;
-            memcpy(data, *lastDecoded, PACKET_SIZE);
+            std::memcpy(data, *lastDecoded, PACKET_SIZE);
             semaphore->Release();
             if (silentPacketCount > 0)
             {
@@ -159,7 +159,7 @@ size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, size_t len)
                 levelMeter->Update(reinterpret_cast<int16_t*>(data), 0);
             return 0;
         }
-        memcpy(data, processedBuffer, 960 * 2);
+        std::memcpy(data, processedBuffer, 960 * 2);
         remainingDataLen -= 960 * 2;
         if (remainingDataLen > 0)
         {

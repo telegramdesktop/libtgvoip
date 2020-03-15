@@ -98,7 +98,7 @@ void MockReflector::RunThread()
             std::array<uint8_t, 16> peerTag;
             int32_t specialID[4];
             std::copy(buf.begin(), buf.begin() + 16, peerTag.begin());
-            memcpy(specialID, buf.data() + 16, 16);
+            std::memcpy(specialID, buf.data() + 16, 16);
             uint64_t tagID = *reinterpret_cast<uint64_t*>(peerTag.data());
             ClientPair c = clients[tagID];
             sockaddr_in* dest;
@@ -123,7 +123,7 @@ void MockReflector::RunThread()
                 else if (specialID[3] == -2)
                 {
                     UdpReflectorSelfInfo response;
-                    memcpy(response.peerTag, peerTag.data(), 16);
+                    std::memcpy(response.peerTag, peerTag.data(), 16);
                     response.date = (int32_t)time(NULL);
                     response.query_id = *reinterpret_cast<uint64_t*>(buf.data() + 32);
                     response.my_ip_padding1 = 0;

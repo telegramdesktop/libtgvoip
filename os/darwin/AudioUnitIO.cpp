@@ -50,7 +50,7 @@ AudioUnitIO::AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID)
     outputEnabled = false;
     failed = false;
     started = false;
-    inBufferList.mBuffers[0].mData = malloc(INPUT_BUFFER_SIZE);
+    inBufferList.mBuffers[0].mData = std::malloc(INPUT_BUFFER_SIZE);
     inBufferList.mBuffers[0].mDataByteSize = INPUT_BUFFER_SIZE;
     inBufferList.mNumberBuffers = 1;
 
@@ -150,7 +150,7 @@ AudioUnitIO::~AudioUnitIO()
     AudioOutputUnitStop(unit);
     AudioUnitUninitialize(unit);
     AudioComponentInstanceDispose(unit);
-    free(inBufferList.mBuffers[0].mData);
+    std::free(inBufferList.mBuffers[0].mData);
     delete input;
     delete output;
 }

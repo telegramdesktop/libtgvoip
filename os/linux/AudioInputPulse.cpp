@@ -216,7 +216,7 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, size_t requestedByte
             {
                 LOGE("Capture buffer is too big (%d)", (int)bytesToFill);
             }
-            memcpy(remainingData + remainingDataSize, buffer, bytesToFill);
+            std::memcpy(remainingData + remainingDataSize, buffer, bytesToFill);
             remainingDataSize += bytesToFill;
             while (remainingDataSize >= 960 * 2)
             {

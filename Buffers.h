@@ -234,7 +234,7 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferPool);
     BufferPool()
     {
-        m_bufferStart = reinterpret_cast<unsigned char*>(malloc(bufSize * bufCount));
+        m_bufferStart = reinterpret_cast<unsigned char*>(std::malloc(bufSize * bufCount));
         if (m_bufferStart == nullptr)
             throw std::bad_alloc();
     }

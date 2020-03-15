@@ -85,7 +85,7 @@ void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams,
         {
             jbyteArray jstreams = env->NewByteArray(static_cast<jsize>(len));
             jbyte* el = env->GetByteArrayElements(jstreams, NULL);
-            memcpy(el, streams, len);
+            std::memcpy(el, streams, len);
             env->ReleaseByteArrayElements(jstreams, el, 0);
             env->CallVoidMethod(impl->javaObject, setSelfStreamsMethod, jstreams);
         }
@@ -102,7 +102,7 @@ void groupCallKeyReceived(VoIPController* cntrlr, const unsigned char* key)
         {
             jbyteArray jkey = env->NewByteArray(256);
             jbyte* el = env->GetByteArrayElements(jkey, NULL);
-            memcpy(el, key, 256);
+            std::memcpy(el, key, 256);
             env->ReleaseByteArrayElements(jkey, el, 0);
             env->CallVoidMethod(impl->javaObject, groupCallKeyReceivedMethod, jkey);
         }
@@ -169,10 +169,10 @@ jlong VoIPController_nativeInit(JNIEnv* env, jobject thiz, jstring persistentSta
             fseek(f, 0, SEEK_SET);
             if (len < 1024 * 512 && len > 0)
             {
-                char* fbuf = static_cast<char*>(malloc(len));
+                char* fbuf = static_cast<char*>(std::malloc(len));
                 fread(fbuf, 1, len, f);
                 std::vector<uint8_t> state(fbuf, fbuf + len);
-                free(fbuf);
+                std::free(fbuf);
                 cntrlr->SetPersistentState(state);
             }
             fclose(f);
@@ -262,7 +262,7 @@ void VoIPController_nativeSetRemoteEndpoints(JNIEnv* env, jobject thiz, jlong in
         if (peerTag && env->GetArrayLength(peerTag))
         {
             jbyte* peerTagBytes = env->GetByteArrayElements(peerTag, NULL);
-            memcpy(pTag, peerTagBytes, 16);
+            std::memcpy(pTag, peerTagBytes, 16);
             env->ReleaseByteArrayElements(peerTag, peerTagBytes, JNI_ABORT);
         }
         eps.push_back(Endpoint((int64_t)id, (uint16_t)port, v4addr, v6addr, tcp ? Endpoint::Type::TCP_RELAY : Endpoint::Type::UDP_RELAY, pTag));
@@ -468,7 +468,7 @@ jint Resampler_convert48to44(JNIEnv* env, jclass cls, jobject from, jobject to)
 #ifndef TGVOIP_NO_GROUP_CALLS
 jlong VoIPGroupController_nativeInit(JNIEnv* env, jobject thiz, jint timeDifference)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)malloc(sizeof(ImplDataAndroid));
+    ImplDataAndroid* impl = (ImplDataAndroid*)std::malloc(sizeof(ImplDataAndroid));
     impl->javaObject = env->NewGlobalRef(thiz);
     VoIPGroupController* cntrlr = new VoIPGroupController(timeDifference);
     cntrlr->implData = impl;
@@ -547,7 +547,7 @@ jbyteArray VoIPGroupController_getInitialStreams(JNIEnv* env, jclass cls)
     size_t len = VoIPGroupController::GetInitialStreams(buf, sizeof(buf));
     jbyteArray arr = env->NewByteArray(len);
     jbyte* arrElems = env->GetByteArrayElements(arr, NULL);
-    memcpy(arrElems, buf, len);
+    std::memcpy(arrElems, buf, len);
     env->ReleaseByteArrayElements(arr, arrElems, 0);
     return arr;
 }

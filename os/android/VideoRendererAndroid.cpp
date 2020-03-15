@@ -82,7 +82,7 @@ void VideoRendererAndroid::RunThread()
     sharedJVM->AttachCurrentThread(&env, NULL);
 
     constexpr size_t bufferSize = 200 * 1024;
-    unsigned char* buf = reinterpret_cast<unsigned char*>(malloc(bufferSize));
+    unsigned char* buf = reinterpret_cast<unsigned char*>(std::malloc(bufferSize));
     jobject jbuf = env->NewDirectByteBuffer(buf, bufferSize);
     uint16_t lastSetRotation = 0;
 
@@ -109,7 +109,7 @@ void VideoRendererAndroid::RunThread()
                     lastSetRotation = rotation;
                     env->CallVoidMethod(jobj, setRotationMethod, (jint)rotation);
                 }
-                memcpy(buf, *request.buffer, request.buffer.Length());
+                std::memcpy(buf, *request.buffer, request.buffer.Length());
                 env->CallVoidMethod(jobj, decodeAndDisplayMethod, jbuf, (jint)request.buffer.Length(), 0);
             }
         }
@@ -149,7 +149,7 @@ void VideoRendererAndroid::RunThread()
             env->CallVoidMethod(jobj, setStreamEnabledMethod, streamEnabled, streamPaused);
         }
     }
-    free(buf);
+    std::free(buf);
     sharedJVM->DetachCurrentThread();
     LOGI("==== decoder thread exiting ====");
 }

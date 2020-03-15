@@ -66,8 +66,8 @@ AudioOutputOpenSLES::~AudioOutputOpenSLES()
     LOGV("destroy slOutputMixObj");
     (*slOutputMixObj)->Destroy(slOutputMixObj);
     OpenSLEngineWrapper::DestroyEngine();
-    free(buffer);
-    free(nativeBuffer);
+    std::free(buffer);
+    std::free(nativeBuffer);
 }
 
 void AudioOutputOpenSLES::SetNativeBufferSize(unsigned int size)
@@ -155,7 +155,7 @@ void AudioOutputOpenSLES::HandleSLCallback()
             InvokeCallback(remainingData + remainingDataSize, BUFFER_SIZE * 2);
             remainingDataSize += BUFFER_SIZE * 2;
         }
-        memcpy(nativeBuffer, remainingData, nativeBufferSize * 2);
+        std::memcpy(nativeBuffer, remainingData, nativeBufferSize * 2);
         remainingDataSize -= nativeBufferSize * 2;
         if (remainingDataSize > 0)
             memmove(remainingData, remainingData + nativeBufferSize * 2, remainingDataSize);

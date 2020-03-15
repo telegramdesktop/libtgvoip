@@ -185,7 +185,7 @@ void tgvoip::OpusEncoder::RunThread()
     LOGV("starting encoder, packets per frame=%d", packetsPerFrame);
     int16_t* frame;
     if (packetsPerFrame > 1)
-        frame = (int16_t*)malloc(960 * 2 * packetsPerFrame);
+        frame = (int16_t*)std::malloc(960 * 2 * packetsPerFrame);
     else
         frame = NULL;
     bool frameHasVoice = false;
@@ -212,7 +212,7 @@ void tgvoip::OpusEncoder::RunThread()
             }
             else
             {
-                memcpy(frame + (960 * bufferedCount), packet, 960 * 2);
+                std::memcpy(frame + (960 * bufferedCount), packet, 960 * 2);
                 frameHasVoice = frameHasVoice || hasVoice;
                 bufferedCount++;
                 if (bufferedCount == packetsPerFrame)
@@ -258,7 +258,7 @@ void tgvoip::OpusEncoder::RunThread()
         }
     }
     if (frame)
-        free(frame);
+        std::free(frame);
 }
 
 void tgvoip::OpusEncoder::SetOutputFrameDuration(uint32_t duration)

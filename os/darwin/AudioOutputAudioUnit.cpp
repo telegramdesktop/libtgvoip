@@ -81,7 +81,7 @@ void AudioOutputAudioUnit::HandleBufferCallback(AudioBufferList* ioData)
             InvokeCallback(remainingData + remainingDataSize, BUFFER_SIZE * 2);
             remainingDataSize += BUFFER_SIZE * 2;
         }
-        memcpy(buf.mData, remainingData, buf.mDataByteSize);
+        std::memcpy(buf.mData, remainingData, buf.mDataByteSize);
         remainingDataSize -= buf.mDataByteSize;
         memmove(remainingData, remainingData + buf.mDataByteSize, remainingDataSize);
 #endif
