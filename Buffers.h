@@ -10,28 +10,29 @@
 #include "threading.h"
 #include "utils.h"
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <bitset>
 #include <limits>
-#include <stddef.h>
+#include <cstddef>
 #include <stdexcept>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 namespace tgvoip
 {
+
 class Buffer;
 
 class BufferInputStream
 {
-
 public:
-    BufferInputStream(const unsigned char* data, size_t length);
-    BufferInputStream(const Buffer& buffer);
-    ~BufferInputStream();
-    void Seek(size_t offset);
+    BufferInputStream(const unsigned char* data, size_t m_length);
+    BufferInputStream(const Buffer& m_buffer);
+    ~BufferInputStream() = default;
+
+    void Seek(size_t m_offset);
     size_t GetLength();
     size_t GetOffset();
     size_t Remaining();
@@ -42,211 +43,80 @@ public:
     int32_t ReadTlLength();
     void ReadBytes(unsigned char* to, size_t count);
     void ReadBytes(Buffer& to);
-    BufferInputStream GetPartBuffer(size_t length, bool advance);
+    BufferInputStream GetPartBuffer(size_t m_length, bool advance);
 
 private:
     void EnsureEnoughRemaining(size_t need);
-    const unsigned char* buffer;
-    size_t length;
-    size_t offset;
+    const unsigned char* m_buffer;
+    size_t m_length;
+    size_t m_offset;
 };
 
 class BufferOutputStream
 {
-    friend class Buffer;
-
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferOutputStream);
-    BufferOutputStream(size_t size);
-    BufferOutputStream(unsigned char* buffer, size_t size);
+    BufferOutputStream(size_t m_size);
+    BufferOutputStream(unsigned char* m_buffer, size_t m_size);
+    BufferOutputStream& operator=(BufferOutputStream&& other);
     ~BufferOutputStream();
+
     void WriteByte(unsigned char byte);
     void WriteInt64(int64_t i);
     void WriteInt32(int32_t i);
     void WriteInt16(int16_t i);
     void WriteBytes(const unsigned char* bytes, size_t count);
-    void WriteBytes(const Buffer& buffer);
-    void WriteBytes(const Buffer& buffer, size_t offset, size_t count);
+    void WriteBytes(const Buffer& m_buffer);
+    void WriteBytes(const Buffer& m_buffer, size_t m_offset, size_t count);
     unsigned char* GetBuffer();
     size_t GetLength();
     void Reset();
     void Rewind(size_t numBytes);
 
-    BufferOutputStream& operator=(BufferOutputStream&& other)
-    {
-        if (this != &other)
-        {
-            if (!bufferProvided && buffer)
-                free(buffer);
-            buffer = other.buffer;
-            offset = other.offset;
-            size = other.size;
-            bufferProvided = other.bufferProvided;
-            other.buffer = NULL;
-        }
-        return *this;
-    }
-
 private:
+    unsigned char* m_buffer = nullptr;
+    size_t m_size;
+    size_t m_offset;
+    bool m_bufferProvided;
+
+    friend class Buffer;
     void ExpandBufferIfNeeded(size_t need);
-    unsigned char* buffer = NULL;
-    size_t size;
-    size_t offset;
-    bool bufferProvided;
 };
 
 class Buffer
 {
 public:
-    Buffer(size_t capacity)
-    {
-        if (capacity > 0)
-        {
-            data = (unsigned char*)malloc(capacity);
-            if (!data)
-                throw std::bad_alloc();
-        }
-        else
-        {
-            data = NULL;
-        }
-        length = capacity;
-    };
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(Buffer); // use Buffer::CopyOf to copy contents explicitly
-    Buffer(Buffer&& other) noexcept
-    {
-        data = other.data;
-        length = other.length;
-        freeFn = other.freeFn;
-        reallocFn = other.reallocFn;
-        other.data = NULL;
-    };
-    Buffer(BufferOutputStream&& stream)
-    {
-        data = stream.buffer;
-        length = stream.offset;
-        stream.buffer = NULL;
-    }
-    Buffer()
-    {
-        data = NULL;
-        length = 0;
-    }
-    ~Buffer()
-    {
-        if (data)
-        {
-            if (freeFn)
-                freeFn(data);
-            else
-                free(data);
-        }
-        data = NULL;
-        length = 0;
-    };
-    Buffer& operator=(Buffer&& other)
-    {
-        if (this != &other)
-        {
-            if (data)
-            {
-                if (freeFn)
-                    freeFn(data);
-                else
-                    free(data);
-            }
-            data = other.data;
-            length = other.length;
-            freeFn = other.freeFn;
-            reallocFn = other.reallocFn;
-            other.data = NULL;
-            other.length = 0;
-        }
-        return *this;
-    }
-    unsigned char& operator[](size_t i)
-    {
-        if (i >= length)
-            throw std::out_of_range("");
-        return data[i];
-    }
-    const unsigned char& operator[](size_t i) const
-    {
-        if (i >= length)
-            throw std::out_of_range("");
-        return data[i];
-    }
-    unsigned char* operator*()
-    {
-        return data;
-    }
-    const unsigned char* operator*() const
-    {
-        return data;
-    }
-    void CopyFrom(const Buffer& other, size_t count, size_t srcOffset = 0, size_t dstOffset = 0)
-    {
-        if (!other.data)
-            throw std::invalid_argument("CopyFrom can't copy from NULL");
-        if (other.length < srcOffset + count || length < dstOffset + count)
-            throw std::out_of_range("Out of offset+count bounds of either buffer");
-        memcpy(data + dstOffset, other.data + srcOffset, count);
-    }
-    void CopyFrom(const void* ptr, size_t dstOffset, size_t count)
-    {
-        if (length < dstOffset + count)
-            throw std::out_of_range("Offset+count is out of bounds");
-        memcpy(data + dstOffset, ptr, count);
-    }
-    void Resize(size_t newSize)
-    {
-        if (reallocFn)
-            data = (unsigned char*)reallocFn(data, newSize);
-        else
-            data = (unsigned char*)realloc(data, newSize);
-        if (!data)
-            throw std::bad_alloc();
-        length = newSize;
-    }
-    size_t Length() const
-    {
-        return length;
-    }
-    bool IsEmpty() const
-    {
-        return length == 0 || !data;
-    }
-    static Buffer CopyOf(const Buffer& other)
-    {
-        if (other.IsEmpty())
-            return Buffer();
-        Buffer buf(other.length);
-        buf.CopyFrom(other, other.length);
-        return buf;
-    }
-    static Buffer CopyOf(const Buffer& other, size_t offset, size_t length)
-    {
-        if (offset + length > other.Length())
-            throw std::out_of_range("offset+length out of bounds");
-        Buffer buf(length);
-        buf.CopyFrom(other, length, offset);
-        return buf;
-    }
-    static Buffer Wrap(unsigned char* data, size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, size_t)> reallocFn)
-    {
-        Buffer b = Buffer();
-        b.data = data;
-        b.length = size;
-        b.freeFn = freeFn;
-        b.reallocFn = reallocFn;
-        return b;
-    }
+    Buffer();
+    Buffer(Buffer&& other) noexcept;
+    Buffer& operator=(Buffer&& other);
+    Buffer(size_t capacity);
+    Buffer(BufferOutputStream&& stream);
+    ~Buffer();
+
+    unsigned char& operator[](size_t i);
+    const unsigned char& operator[](size_t i) const;
+
+    unsigned char* operator*();
+    const unsigned char* operator*() const;
+
+    void CopyFrom(const Buffer& other, size_t count, size_t srcOffset = 0, size_t dstOffset = 0);
+    void CopyFrom(const void* ptr, size_t dstOffset, size_t count);
+
+    void Resize(size_t newSize);
+
+    size_t Length() const;
+    bool IsEmpty() const;
+
+    static Buffer CopyOf(const Buffer& other);
+    static Buffer CopyOf(const Buffer& other, size_t offset, size_t length);
+    static Buffer Wrap(unsigned char* data, size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, size_t)> reallocFn);
 
 private:
-    unsigned char* data;
-    size_t length;
-    std::function<void(void*)> freeFn;
-    std::function<void*(void*, size_t)> reallocFn;
+    unsigned char* m_data;
+    size_t m_length;
+    std::function<void(void*)> m_freeFn;
+    std::function<void*(void*, size_t)> m_reallocFn;
 };
 
 template <typename T, size_t size, typename AVG_T = T>
@@ -255,32 +125,32 @@ class HistoricBuffer
 public:
     HistoricBuffer()
     {
-        std::fill(data.begin(), data.end(), (T)0);
+        std::fill(data.begin(), data.end(), T{0});
     }
 
     AVG_T Average() const
     {
-        AVG_T avg = (AVG_T)0;
+        AVG_T avg = AVG_T{0};
         for (T i : data)
         {
             avg += i;
         }
-        return avg / (AVG_T)size;
+        return avg / AVG_T{size};
     }
 
     AVG_T Average(size_t firstN) const
     {
-        AVG_T avg = (AVG_T)0;
+        AVG_T avg = AVG_T{0};
         for (size_t i = 0; i < firstN; i++)
         {
             avg += (*this)[i];
         }
-        return avg / (AVG_T)firstN;
+        return avg / static_cast<AVG_T>(firstN);
     }
 
     AVG_T NonZeroAverage() const
     {
-        AVG_T avg = (AVG_T)0;
+        AVG_T avg = AVG_T{0};
         int nonZeroCount = 0;
         for (T i : data)
         {
@@ -291,8 +161,8 @@ public:
             }
         }
         if (nonZeroCount == 0)
-            return (AVG_T)0;
-        return avg / (AVG_T)nonZeroCount;
+            return AVG_T{0};
+        return avg / static_cast<AVG_T>(nonZeroCount);
     }
 
     void Add(T el)
@@ -316,16 +186,14 @@ public:
     {
         T max = std::numeric_limits<T>::min();
         for (T i : data)
-        {
             if (i > max)
                 max = i;
-        }
         return max;
     }
 
     void Reset()
     {
-        std::fill(data.begin(), data.end(), (T)0);
+        std::fill(data.begin(), data.end(), T{0});
         offset = 0;
     }
 
@@ -366,20 +234,23 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferPool);
     BufferPool()
     {
-        bufferStart = (unsigned char*)malloc(bufSize * bufCount);
-        if (!bufferStart)
+        bufferStart = reinterpret_cast<unsigned char*>(malloc(bufSize * bufCount));
+        if (bufferStart == nullptr)
             throw std::bad_alloc();
-    };
+    }
+
     ~BufferPool()
     {
         assert(usedBuffers.none());
-        free(bufferStart);
-    };
+        std::free(bufferStart);
+    }
+
     Buffer Get()
     {
-        auto freeFn = [this](void* _buf) {
-            assert(_buf != NULL);
-            unsigned char* buf = (unsigned char*)_buf;
+        auto freeFn = [this](void* _buf)
+        {
+            assert(_buf != nullptr);
+            unsigned char* buf = reinterpret_cast<unsigned char*>(_buf);
             size_t offset = buf - bufferStart;
             assert(offset % bufSize == 0);
             size_t index = offset / bufSize;
@@ -389,13 +260,14 @@ public:
             assert(usedBuffers.test(index));
             usedBuffers[index] = 0;
         };
-        auto resizeFn = [](void* buf, size_t newSize) -> void* {
+        auto resizeFn = [](void* buf, size_t newSize) -> void*
+        {
             if (newSize > bufSize)
                 throw std::invalid_argument("newSize>bufferSize");
             return buf;
         };
         MutexGuard m(mutex);
-        for (size_t i = 0; i < bufCount; i++)
+        for (size_t i = 0; i < bufCount; ++i)
         {
             if (!usedBuffers[i])
             {

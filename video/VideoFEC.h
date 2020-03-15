@@ -10,19 +10,21 @@
 
 namespace tgvoip
 {
+
 namespace video
 {
-    class ParityFEC
-    {
-    public:
-        static Buffer Encode(std::vector<Buffer>& packets);
-        static Buffer Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket);
-    };
+
+namespace ParityFEC
+{
+    Buffer Encode(const std::vector<Buffer>& packets);
+    Buffer Decode(const std::vector<Buffer>& dataPackets, const Buffer& fecPacket);
+} // namespace ParityFEC
 
     class CM256FEC
     {
     };
-}
-}
+
+} // namespace video
+} // namespace tgvoip
 
 #endif //LIBTGVOIP_VIDEOFEC_H

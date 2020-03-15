@@ -9,18 +9,18 @@
 using namespace tgvoip;
 using namespace tgvoip::video;
 
-Buffer ParityFEC::Encode(std::vector<Buffer>& packets)
+Buffer ParityFEC::Encode(const std::vector<Buffer>& packets)
 {
     size_t maxSize = 0;
 
-    for (Buffer& pkt : packets)
+    for (const Buffer& pkt : packets)
     {
         maxSize = std::max(maxSize, pkt.Length());
     }
     Buffer result(maxSize + 2); // add 2 bytes for length
     uint8_t* _result = *result;
     memset(_result, 0, result.Length());
-    for (Buffer& pkt : packets)
+    for (const Buffer& pkt : packets)
     {
         for (size_t i = 0; i < pkt.Length(); i++)
         {
@@ -31,13 +31,13 @@ Buffer ParityFEC::Encode(std::vector<Buffer>& packets)
         _result[maxSize + 1] ^= (uint8_t)(len >> 8);
     }
 
-    return std::move(result);
+    return result;
 }
 
-Buffer ParityFEC::Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket)
+Buffer ParityFEC::Decode(const std::vector<Buffer>& dataPackets, const Buffer& fecPacket)
 {
     size_t maxSize = 0;
-    for (Buffer& pkt : dataPackets)
+    for (const Buffer& pkt : dataPackets)
     {
         maxSize = std::max(maxSize, pkt.Length());
     }
@@ -50,7 +50,7 @@ Buffer ParityFEC::Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket)
     Buffer result = Buffer::CopyOf(fecPacket);
     uint8_t* _result = *result;
     unsigned int emptyCount = 0;
-    for (Buffer& pkt : dataPackets)
+    for (const Buffer& pkt : dataPackets)
     {
         if (pkt.Length() == 0)
         {
@@ -80,5 +80,5 @@ Buffer ParityFEC::Decode(std::vector<Buffer>& dataPackets, Buffer& fecPacket)
     LOGV("ParityFEC decoded packet size %u", len);
 
     result.Resize(len);
-    return std::move(result);
+    return result;
 }

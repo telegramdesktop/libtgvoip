@@ -6,7 +6,7 @@
 #include "../VoIPController.h"
 #include "../logging.h"
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 using namespace tgvoip;
 using namespace tgvoip::video;
@@ -51,15 +51,15 @@ void ScreamCongestionController::UpdateVariables(float qdelay)
     float avg = qdelayFractionHist.Average();
 
     float r1 = 0.0, r0 = 0.0;
-    for (int i = (int)qdelayFractionHist.Size() - 1; i >= 0; i--)
+    for (size_t i = qdelayFractionHist.Size(); i > 0; --i)
     {
-        float v = qdelayFractionHist[i] - avg;
+        float v = qdelayFractionHist[i - 1] - avg;
         r0 += v * v;
     }
-    for (int i = (int)qdelayFractionHist.Size() - 1; i >= 1; i--)
+    for (size_t i = qdelayFractionHist.Size(); i > 1; --i)
     {
-        float v1 = qdelayFractionHist[i] - avg;
-        float v2 = qdelayFractionHist[i - 1] - avg;
+        float v1 = qdelayFractionHist[i - 1] - avg;
+        float v2 = qdelayFractionHist[i - 2] - avg;
         r1 += v1 * v2;
     }
     float a = r1 / r0;
@@ -82,7 +82,7 @@ void ScreamCongestionController::UpdateCWnd(float qdelay)
         }
         else
         {
-            if ((float)bytesInFlight * 1.5f + bytesNewlyAcked > cwnd)
+            if (bytesInFlight * 1.5f + bytesNewlyAcked > cwnd)
             {
                 //LOGD("HERE");
                 cwnd += bytesNewlyAcked;
@@ -95,12 +95,12 @@ void ScreamCongestionController::UpdateCWnd(float qdelay)
 
     float gain = GAIN;
     float cwndDelta = gain * offTarget * bytesNewlyAcked * MSS / (float)cwnd;
-    if (offTarget > 0 && (float)bytesInFlight * 1.25f + bytesNewlyAcked <= cwnd)
+    if (offTarget > 0 && bytesInFlight * 1.25f + bytesNewlyAcked <= cwnd)
     {
         cwndDelta = 0.0;
     }
-    cwnd += cwndDelta;
-    cwnd = std::min(cwnd, (uint32_t)(maxBytesInFlight * MAX_BYTES_IN_FLIGHT_HEAD_ROOM));
+    cwnd += static_cast<uint32_t>(cwndDelta);
+    cwnd = std::min(cwnd, static_cast<uint32_t>(maxBytesInFlight * MAX_BYTES_IN_FLIGHT_HEAD_ROOM));
     cwnd = std::max(cwnd, MIN_CWND);
 }
 
@@ -139,7 +139,7 @@ void ScreamCongestionController::AdjustQDelayTarget(float qdelay)
             }
             else
             {
-                qdelayTarget *= 0.9;
+                qdelayTarget *= 0.9f;
             }
         }
     }
@@ -153,39 +153,38 @@ void ScreamCongestionController::AdjustBitrate()
     if (lossPending)
     {
         lossPending = false;
-        targetBitrate = std::max((uint32_t)(BETA_R * (float)targetBitrate), TARGET_BITRATE_MIN);
+        targetBitrate = std::max(static_cast<uint32_t>(BETA_R * targetBitrate), TARGET_BITRATE_MIN);
         return;
     }
 
     float rampUpSpeed = std::min(RAMP_UP_SPEED, targetBitrate / 2);
-    float scale = (float)(targetBitrate - targetBitrateLastMax) / (float)targetBitrateLastMax;
+    float scale = static_cast<float>(targetBitrate - targetBitrateLastMax) / targetBitrateLastMax;
     scale = std::max(0.2f, std::min(1.0f, (scale * 4) * (scale * 4)));
     float currentRate = std::max(rateTransmit, rateAck);
 
     if (inFastIncrease)
     {
-        float increment = (rampUpSpeed * RATE_ADJUST_INTERVAL) * scale;
-        targetBitrate += increment;
+        targetBitrate += static_cast<uint32_t>((rampUpSpeed * RATE_ADJUST_INTERVAL) * scale);
     }
     else
     {
-        float deltaRate = currentRate * (1.0f - PRE_CONGESTION_GUARD * qdelayTrend) - TX_QUEUE_SIZE_FACTOR * (float)rtpQueueSize;
+        float deltaRate = currentRate * (1.0f - PRE_CONGESTION_GUARD * qdelayTrend) - TX_QUEUE_SIZE_FACTOR * rtpQueueSize;
         if (deltaRate > 0.0f)
         {
             deltaRate *= scale;
             deltaRate = std::min(deltaRate, rampUpSpeed * RATE_ADJUST_INTERVAL);
         }
-        targetBitrate += deltaRate;
-        float rtpQueueDelay = (float)rtpQueueSize / currentRate;
+        targetBitrate += static_cast<uint32_t>(deltaRate);
+        float rtpQueueDelay = rtpQueueSize / currentRate;
         if (rtpQueueDelay > RTP_QDELAY_TH)
         {
-            targetBitrate = (uint32_t)((float)targetBitrate * TARGET_RATE_SCALE_RTP_QDELAY);
+            targetBitrate = static_cast<uint32_t>(targetBitrate * TARGET_RATE_SCALE_RTP_QDELAY);
         }
     }
 
     float rateMediaLimit = std::max(currentRate, std::max(rateMedia, rateMediaMedian));
-    rateMediaLimit *= (2.0 - qdelayTrendMem);
-    targetBitrate = std::min(targetBitrate, (uint32_t)rateMediaLimit);
+    rateMediaLimit *= (2.0f - qdelayTrendMem);
+    targetBitrate = std::min(targetBitrate, static_cast<uint32_t>(rateMediaLimit));
     targetBitrate = std::min(TARGET_BITRATE_MAX, std::max(TARGET_BITRATE_MIN, targetBitrate));
 }
 
@@ -203,7 +202,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
     {
         double currentTime = VoIPController::GetCurrentTime();
         float qdelay = oneWayDelay - prevOneWayDelay;
-        sRTT = (float)rtt;
+        sRTT = static_cast<float>(rtt);
         bytesInFlight -= bytesNewlyAcked;
         rtpQueueSize -= (bytesNewlyAcked * 8);
         UpdateBytesInFlightHistory();
@@ -214,7 +213,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
             lastVariablesUpdateTime = currentTime;
             UpdateVariables(qdelay);
         }
-        if (currentTime - lastRateAdjustmentTime >= RATE_ADJUST_INTERVAL)
+        if (currentTime - lastRateAdjustmentTime >= static_cast<double>(RATE_ADJUST_INTERVAL))
         {
             lastRateAdjustmentTime = currentTime;
             AdjustBitrate();
@@ -226,7 +225,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
             ignoreLossesUntil = currentTime + rtt;
             LOGD("ignoring losses for %f", rtt);
             inFastIncrease = false;
-            cwnd = std::max(MIN_CWND, (uint32_t)(cwnd * BETA_LOSS));
+            cwnd = std::max(MIN_CWND, static_cast<uint32_t>(cwnd * BETA_LOSS));
             AdjustQDelayTarget(qdelay);
             CalculateSendWindow(qdelay);
             lossPending = true;
@@ -246,7 +245,7 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, uint32_t bytesNe
             CalculateSendWindow(qdelay);
             if (!inFastIncrease)
             {
-                if (currentTime - lastTimeQDelayTrendWasGreaterThanLo >= T_RESUME_FAST_INCREASE)
+                if (currentTime - lastTimeQDelayTrendWasGreaterThanLo >= static_cast<double>(T_RESUME_FAST_INCREASE))
                 {
                     inFastIncrease = true;
                 }
@@ -265,8 +264,8 @@ void ScreamCongestionController::ProcessPacketSent(uint32_t size)
     double currentTime = VoIPController::GetCurrentTime();
     if (currentTime - rateTransmitUpdateTime >= 0.2)
     {
-        rateTransmit = (float)(bytesSent * 8) / (float)(currentTime - rateTransmitUpdateTime);
-        rateAck = (float)(bytesAcked * 8) / (float)(currentTime - rateTransmitUpdateTime);
+        rateTransmit = static_cast<float>((bytesSent * 8) / (currentTime - rateTransmitUpdateTime));
+        rateAck = static_cast<float>((bytesAcked * 8) / (currentTime - rateTransmitUpdateTime));
         rateTransmitUpdateTime = currentTime;
         bytesSent = 0;
         bytesAcked = 0;
@@ -284,9 +283,9 @@ void ScreamCongestionController::ProcessPacketLost(uint32_t size)
 
 double ScreamCongestionController::GetPacingInterval()
 {
-    float paceBitrate = std::max((float)RATE_PACE_MIN, cwnd * 8.0f / sRTT);
+    float paceBitrate = std::max(static_cast<float>(RATE_PACE_MIN), cwnd * 8.0f / sRTT);
     //LOGV("RTT=%f cwnd=%u paceBitrate=%f fastIncrease=%d", sRTT, cwnd, paceBitrate, inFastIncrease);
-    double pacingInterval = rtpSize * 8.0f / paceBitrate;
+    double pacingInterval = static_cast<double>(rtpSize * 8.0f / paceBitrate);
     return std::min(0.010, pacingInterval);
 }
 
@@ -317,10 +316,10 @@ void ScreamCongestionController::UpdateMediaRate(uint32_t frameSize)
     double currentTime = VoIPController::GetCurrentTime();
     if (currentTime - rateMediaUpdateTime >= 0.5)
     {
-        rateMedia = (float)(bytesMedia * 8) / (float)(currentTime - rateMediaUpdateTime);
+        rateMedia = static_cast<float>((bytesMedia * 8) / (currentTime - rateMediaUpdateTime));
         bytesMedia = 0;
         rateMediaUpdateTime = currentTime;
-        LOGV("rateMedia %f", rateMedia);
+        LOGV("rateMedia %f", static_cast<double>(rateMedia));
         rateMediaHistory.Add(rateMedia);
         rateMediaMedian = rateMediaHistory.NonZeroAverage();
     }

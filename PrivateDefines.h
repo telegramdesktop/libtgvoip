@@ -40,7 +40,13 @@
 #define STREAM_TYPE_AUDIO 1
 #define STREAM_TYPE_VIDEO 2
 
-#define FOURCC(a, b, c, d) ((uint32_t)d | ((uint32_t)c << 8) | ((uint32_t)b << 16) | ((uint32_t)a << 24))
+#define FOURCC(a, b, c, d) \
+    (                                      \
+        (static_cast<uint32_t>(d) <<  0) | \
+        (static_cast<uint32_t>(c) <<  8) | \
+        (static_cast<uint32_t>(b) << 16) | \
+        (static_cast<uint32_t>(a) << 24)   \
+    )
 #define PRINT_FOURCC(x) (char)(x >> 24), (char)(x >> 16), (char)(x >> 8), (char)x
 
 #define CODEC_OPUS_OLD 1

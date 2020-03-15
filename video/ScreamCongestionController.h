@@ -6,11 +6,12 @@
 #define LIBTGVOIP_SCREAMCONGESTIONCONTROLLER_H
 
 #include "../Buffers.h"
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 namespace tgvoip
 {
+
 namespace video
 {
     class ScreamCongestionController
@@ -78,7 +79,9 @@ namespace video
         double rateMediaUpdateTime = 0.0;
         HistoricBuffer<float, 25> rateMediaHistory;
     };
-}
-}
+
+} // namespace video
+
+} // namespace tgvoip
 
 #endif //LIBTGVOIP_SCREAMCONGESTIONCONTROLLER_H

@@ -8,9 +8,9 @@
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
 #include "logging.h"
-#include <assert.h>
-#include <math.h>
-#include <time.h>
+#include <cassert>
+#include <cstdint>
+#include <cmath>
 
 using namespace tgvoip;
 using namespace std;

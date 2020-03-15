@@ -58,8 +58,8 @@ void VideoPacketSender::PacketAcknowledged(uint32_t seq, double sendTime, double
     //}
     if (bytesNewlyAcked)
     {
-        float _sendTime = (float)(sendTime - GetConnectionInitTime());
-        float recvTime = (float)ackTime;
+        float _sendTime = static_cast<float>(sendTime - GetConnectionInitTime());
+        float recvTime = static_cast<float>(ackTime);
         float oneWayDelay = recvTime - _sendTime;
         //LOGV("one-way delay: %f", oneWayDelay);
         videoCongestionControl.ProcessAcks(oneWayDelay, bytesNewlyAcked, videoPacketLossCount, RTTHistory().Average(5));
@@ -121,9 +121,11 @@ void VideoPacketSender::SetSource(VideoSource* source)
     source->Reset(stm->codec, stm->resolution = GetVideoResolutionForCurrentBitrate());
     source->Start();
     source->SetCallback(std::bind(&VideoPacketSender::SendFrame, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    source->SetStreamStateCallback([this](bool paused) {
+    source->SetStreamStateCallback([this](bool paused)
+    {
         stm->paused = paused;
-        GetMessageThread().Post([this] {
+        GetMessageThread().Post([this]()
+        {
             SendStreamFlags(*stm);
         });
     });
@@ -194,13 +196,13 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
         if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
         {
             BufferOutputStream os(256);
-            os.WriteInt16((int16_t)stm->width);
-            os.WriteInt16((int16_t)stm->height);
-            unsigned char sizeAndFlag = (unsigned char)stm->codecSpecificData.size();
+            os.WriteInt16(static_cast<int16_t>(stm->width));
+            os.WriteInt16(static_cast<int16_t>(stm->height));
+            uint8_t sizeAndFlag = static_cast<uint8_t>(stm->codecSpecificData.size());
             if (csdInvalidated)
                 sizeAndFlag |= 0x80;
             os.WriteByte(sizeAndFlag);
-            for (Buffer& b : stm->codecSpecificData)
+            for (const Buffer& b : stm->codecSpecificData)
             {
                 assert(b.Length() < 255);
                 os.WriteByte(static_cast<unsigned char>(b.Length()));
@@ -209,18 +211,18 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             csd = std::move(os);
         }
 
-        frameSeq++;
+        ++frameSeq;
         size_t totalLength = csd.Length() + frame.Length();
         size_t segmentCount = totalLength / 1024;
         if (totalLength % 1024 > 0)
-            segmentCount++;
+            ++segmentCount;
         SentVideoFrame sentFrame;
         sentFrame.seq = frameSeq;
         sentFrame.fragmentCount = static_cast<uint32_t>(segmentCount);
         sentFrame.fragmentsInQueue = 0; //static_cast<uint32_t>(segmentCount);
         size_t offset = 0;
         size_t packetSize = totalLength / segmentCount;
-        for (size_t seg = 0; seg < segmentCount; seg++)
+        for (size_t seg = 0; seg < segmentCount; ++seg)
         {
             BufferOutputStream pkt(1500);
             size_t len; //=std::min((size_t)1024, frame.Length()-offset);
@@ -234,7 +236,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             }
             unsigned char pflags = STREAM_DATA_FLAG_LEN16;
             //pflags |= STREAM_DATA_FLAG_HAS_MORE_FLAGS;
-            pkt.WriteByte((unsigned char)(stm->id | pflags)); // streamID + flags
+            pkt.WriteByte(static_cast<unsigned char>(stm->id | pflags)); // streamID + flags
             int16_t lengthAndFlags = static_cast<int16_t>(len & 0x7FF);
             if (segmentCount > 1)
                 lengthAndFlags |= STREAM_DATA_XFLAG_FRAGMENTED;
@@ -242,13 +244,13 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
                 lengthAndFlags |= STREAM_DATA_XFLAG_KEYFRAME;
             pkt.WriteInt16(lengthAndFlags);
             //pkt.WriteInt32(audioTimestampOut);
-            pkt.WriteInt32(pts);
+            pkt.WriteInt32(static_cast<int32_t>(pts));
             if (segmentCount > 1)
             {
-                pkt.WriteByte((unsigned char)seg);
-                pkt.WriteByte((unsigned char)segmentCount);
+                pkt.WriteByte(static_cast<unsigned char>(seg));
+                pkt.WriteByte(static_cast<unsigned char>(segmentCount));
             }
-            pkt.WriteByte((uint8_t)frameSeq);
+            pkt.WriteByte(static_cast<unsigned char>(frameSeq));
             size_t dataOffset = pkt.GetLength();
             if (seg == 0)
             {
@@ -288,10 +290,11 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
 
             Buffer packetData(std::move(pkt));
 
+            size_t packetDataLength = packetData.Length();
             VoIPController::PendingOutgoingPacket p {
                 /*.seq=*/0,
                 /*.type=*/PKT_STREAM_DATA,
-                /*.len=*/packetData.Length(),
+                /*.len=*/packetDataLength,
                 /*.data=*/std::move(packetData),
                 /*.endpoint=*/0,
             };
@@ -311,10 +314,10 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
             LOGV("FEC packet length: %u", (unsigned int)fecPacket.Length());
             BufferOutputStream out(1500);
             out.WriteByte(stm->id);
-            out.WriteByte((uint8_t)frameSeq);
+            out.WriteByte(static_cast<unsigned char>(frameSeq));
             out.WriteByte(FEC_SCHEME_XOR);
             out.WriteByte(3);
-            out.WriteInt16((int16_t)fecPacket.Length());
+            out.WriteInt16(static_cast<int16_t>(fecPacket.Length()));
             out.WriteBytes(fecPacket);
 
             VoIPController::PendingOutgoingPacket p {
@@ -329,11 +332,10 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, uint32_t flags, uint32_t
     });
 }
 
-int VideoPacketSender::GetVideoResolutionForCurrentBitrate()
+uint32_t VideoPacketSender::GetVideoResolutionForCurrentBitrate()
 {
-
-    int peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
-    int resolutionFromBitrate = INIT_VIDEO_RES_1080;
+    uint32_t peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
+    uint32_t resolutionFromBitrate = INIT_VIDEO_RES_1080;
     if (VoIPController::GetCurrentTime() - sourceChangeTime > 10.0)
     {
         // TODO: probably move this to server config

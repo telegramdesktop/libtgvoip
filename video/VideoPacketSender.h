@@ -47,7 +47,7 @@ namespace video
         };
 
         void SendFrame(const Buffer& frame, uint32_t flags, uint32_t rotation);
-        int GetVideoResolutionForCurrentBitrate();
+        uint32_t GetVideoResolutionForCurrentBitrate();
 
         VideoSource* source = NULL;
         std::shared_ptr<VoIPController::Stream> stm;
