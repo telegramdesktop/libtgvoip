@@ -17,23 +17,23 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 using namespace tgvoip;
 
 EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC)
+    : m_enableAEC(enableAEC)
+    , m_enableAGC(enableAGC)
+    , m_enableNS(enableNS)
+    , m_isOn(true)
 {
 #ifndef TGVOIP_NO_DSP
-    this->enableAEC = enableAEC;
-    this->enableAGC = enableAGC;
-    this->enableNS = enableNS;
-    isOn = true;
-
     webrtc::Config extraConfig;
 #ifdef TGVOIP_USE_DESKTOP_DSP
     extraConfig.Set(new webrtc::DelayAgnostic(true));
 #endif
 
-    apm = webrtc::AudioProcessingBuilder().Create(extraConfig);
+    m_apm = webrtc::AudioProcessingBuilder().Create(extraConfig);
 
     webrtc::AudioProcessing::Config config;
     config.echo_canceller.enabled = enableAEC;
@@ -44,7 +44,7 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC)
 #endif
     config.high_pass_filter.enabled = enableAEC;
     config.gain_controller2.enabled = enableAGC;
-    apm->ApplyConfig(config);
+    m_apm->ApplyConfig(config);
 
     webrtc::NoiseSuppression::Level nsLevel;
 #ifdef __APPLE__
@@ -68,27 +68,27 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC)
         nsLevel = webrtc::NoiseSuppression::Level::kHigh;
         break;
     }
-    apm->noise_suppression()->set_level(nsLevel);
-    apm->noise_suppression()->Enable(enableNS);
+    m_apm->noise_suppression()->set_level(nsLevel);
+    m_apm->noise_suppression()->Enable(enableNS);
     if (enableAGC)
     {
-        apm->gain_control()->set_mode(webrtc::GainControl::Mode::kAdaptiveDigital);
-        apm->gain_control()->set_target_level_dbfs(ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_target_level", 9));
-        apm->gain_control()->enable_limiter(ServerConfig::GetSharedInstance()->GetBoolean("webrtc_agc_enable_limiter", true));
-        apm->gain_control()->set_compression_gain_db(ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_compression_gain", 20));
+        m_apm->gain_control()->set_mode(webrtc::GainControl::Mode::kAdaptiveDigital);
+        m_apm->gain_control()->set_target_level_dbfs(ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_target_level", 9));
+        m_apm->gain_control()->enable_limiter(ServerConfig::GetSharedInstance()->GetBoolean("webrtc_agc_enable_limiter", true));
+        m_apm->gain_control()->set_compression_gain_db(ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_compression_gain", 20));
     }
-    apm->voice_detection()->set_likelihood(webrtc::VoiceDetection::Likelihood::kVeryLowLikelihood);
+    m_apm->voice_detection()->set_likelihood(webrtc::VoiceDetection::Likelihood::kVeryLowLikelihood);
 
-    audioFrame = new webrtc::AudioFrame();
-    audioFrame->samples_per_channel_ = 480;
-    audioFrame->sample_rate_hz_ = 48000;
-    audioFrame->num_channels_ = 1;
+    m_audioFrame = new webrtc::AudioFrame();
+    m_audioFrame->samples_per_channel_ = 480;
+    m_audioFrame->sample_rate_hz_ = 48000;
+    m_audioFrame->num_channels_ = 1;
 
-    farendQueue = new BlockingQueue<Buffer>(11);
-    running = true;
-    bufferFarendThread = new Thread(std::bind(&EchoCanceller::RunBufferFarendThread, this));
-    bufferFarendThread->SetName("VoipECBufferFarEnd");
-    bufferFarendThread->Start();
+    m_farendQueue = new BlockingQueue<Buffer>(11);
+    m_running = true;
+    m_bufferFarendThread = new Thread(std::bind(&EchoCanceller::RunBufferFarendThread, this));
+    m_bufferFarendThread->SetName("VoipECBufferFarEnd");
+    m_bufferFarendThread->Start();
 
 #else
     this->enableAEC = this->enableAGC = enableAGC = this->enableNS = enableNS = false;
@@ -99,12 +99,12 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC)
 EchoCanceller::~EchoCanceller()
 {
 #ifndef TGVOIP_NO_DSP
-    farendQueue->Put(Buffer());
-    bufferFarendThread->Join();
-    delete bufferFarendThread;
-    delete farendQueue;
-    delete audioFrame;
-    delete apm;
+    m_farendQueue->Put(Buffer());
+    m_bufferFarendThread->Join();
+    delete m_bufferFarendThread;
+    delete m_farendQueue;
+    delete m_audioFrame;
+    delete m_apm;
 #endif
 }
 
@@ -118,16 +118,16 @@ void EchoCanceller::Stop()
 
 void EchoCanceller::SpeakerOutCallback(unsigned char* data, size_t len)
 {
-    if (len != 960 * 2 || !enableAEC || !isOn)
+    if (len != 960 * 2 || !m_enableAEC || !m_isOn)
         return;
 #ifndef TGVOIP_NO_DSP
     try
     {
-        Buffer buf = farendBufferPool.Get();
+        Buffer buf = m_farendBufferPool.Get();
         buf.CopyFrom(data, 0, 960 * 2);
-        farendQueue->Put(std::move(buf));
+        m_farendQueue->Put(std::move(buf));
     }
-    catch (std::bad_alloc& x)
+    catch (const std::bad_alloc&)
     {
         LOGW("Echo canceller can't keep up with real time");
     }
@@ -141,55 +141,55 @@ void EchoCanceller::RunBufferFarendThread()
     frame.num_channels_ = 1;
     frame.sample_rate_hz_ = 48000;
     frame.samples_per_channel_ = 480;
-    while (running)
+    while (m_running)
     {
-        Buffer buf = farendQueue->GetBlocking();
+        Buffer buf = m_farendQueue->GetBlocking();
         if (buf.IsEmpty())
         {
             LOGI("Echo canceller buffer farend thread exiting");
             return;
         }
-        int16_t* samplesIn = (int16_t*)*buf;
-        memcpy(frame.mutable_data(), samplesIn, 480 * 2);
-        apm->ProcessReverseStream(&frame);
-        memcpy(frame.mutable_data(), samplesIn + 480, 480 * 2);
-        apm->ProcessReverseStream(&frame);
-        didBufferFarend = true;
+        int16_t* samplesIn = reinterpret_cast<int16_t*>(*buf);
+        std::memcpy(frame.mutable_data(), samplesIn, 480 * 2);
+        m_apm->ProcessReverseStream(&frame);
+        std::memcpy(frame.mutable_data(), samplesIn + 480, 480 * 2);
+        m_apm->ProcessReverseStream(&frame);
+        m_didBufferFarend = true;
     }
 }
 #endif
 
 void EchoCanceller::Enable(bool enabled)
 {
-    isOn = enabled;
+    m_isOn = enabled;
 }
 
 void EchoCanceller::ProcessInput(int16_t* inOut, size_t numSamples, bool& hasVoice)
 {
 #ifndef TGVOIP_NO_DSP
-    if (!isOn || (!enableAEC && !enableAGC && !enableNS))
+    if (!m_isOn || (!m_enableAEC && !m_enableAGC && !m_enableNS))
     {
         return;
     }
     int delay = audio::AudioInput::GetEstimatedDelay() + audio::AudioOutput::GetEstimatedDelay();
     assert(numSamples == 960);
 
-    memcpy(audioFrame->mutable_data(), inOut, 480 * 2);
-    if (enableAEC)
-        apm->set_stream_delay_ms(delay);
-    apm->ProcessStream(audioFrame);
-    if (enableVAD)
-        hasVoice = apm->voice_detection()->stream_has_voice();
-    memcpy(inOut, audioFrame->data(), 480 * 2);
-    memcpy(audioFrame->mutable_data(), inOut + 480, 480 * 2);
-    if (enableAEC)
-        apm->set_stream_delay_ms(delay);
-    apm->ProcessStream(audioFrame);
-    if (enableVAD)
+    std::memcpy(m_audioFrame->mutable_data(), inOut, 480 * 2);
+    if (m_enableAEC)
+        m_apm->set_stream_delay_ms(delay);
+    m_apm->ProcessStream(m_audioFrame);
+    if (m_enableVAD)
+        hasVoice = m_apm->voice_detection()->stream_has_voice();
+    std::memcpy(inOut, m_audioFrame->data(), 480 * 2);
+    std::memcpy(m_audioFrame->mutable_data(), inOut + 480, 480 * 2);
+    if (m_enableAEC)
+        m_apm->set_stream_delay_ms(delay);
+    m_apm->ProcessStream(m_audioFrame);
+    if (m_enableVAD)
     {
-        hasVoice = hasVoice || apm->voice_detection()->stream_has_voice();
+        hasVoice = hasVoice || m_apm->voice_detection()->stream_has_voice();
     }
-    memcpy(inOut + 480, audioFrame->data(), 480 * 2);
+    std::memcpy(inOut + 480, m_audioFrame->data(), 480 * 2);
 #endif
 }
 
@@ -209,9 +209,9 @@ void EchoCanceller::SetAECStrength(int strength)
 
 void EchoCanceller::SetVoiceDetectionEnabled(bool enabled)
 {
-    enableVAD = enabled;
+    m_enableVAD = enabled;
 #ifndef TGVOIP_NO_DSP
-    apm->voice_detection()->Enable(enabled);
+    m_apm->voice_detection()->Enable(enabled);
 #endif
 }
 
@@ -223,7 +223,7 @@ AudioEffect::~AudioEffect()
 
 void AudioEffect::SetPassThrough(bool passThrough)
 {
-    this->passThrough = passThrough;
+    m_passThrough = passThrough;
 }
 
 Volume::Volume()
@@ -234,27 +234,27 @@ Volume::~Volume()
 {
 }
 
-void Volume::Process(int16_t* inOut, size_t numSamples)
+void Volume::Process(int16_t* inOut, size_t numSamples) const
 {
-    if (level == 1.0f || passThrough)
+    if (m_level == 1.0f || m_passThrough)
     {
         return;
     }
     for (size_t i = 0; i < numSamples; i++)
     {
-        float sample = (float)inOut[i] * multiplier;
+        float sample = inOut[i] * m_multiplier;
         if (sample > 32767.0f)
-            inOut[i] = INT16_MAX;
+            inOut[i] = std::numeric_limits<std::int16_t>::max();
         else if (sample < -32768.0f)
-            inOut[i] = INT16_MIN;
+            inOut[i] = std::numeric_limits<std::int16_t>::min();
         else
-            inOut[i] = (int16_t)sample;
+            inOut[i] = static_cast<int16_t>(sample);
     }
 }
 
 void Volume::SetLevel(float level)
 {
-    this->level = level;
+    m_level = level;
     float db;
     if (level < 1.0f)
         db = -50.0f * (1.0f - level);
@@ -262,10 +262,10 @@ void Volume::SetLevel(float level)
         db = 10.0f * (level - 1.0f);
     else
         db = 0.0f;
-    multiplier = expf(db / 20.0f * logf(10.0f));
+    m_multiplier = expf(db / 20.0f * logf(10.0f));
 }
 
-float Volume::GetLevel()
+float Volume::GetLevel() const
 {
-    return level;
+    return m_level;
 }

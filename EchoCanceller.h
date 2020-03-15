@@ -15,18 +15,20 @@
 
 namespace webrtc
 {
+
 class AudioProcessing;
 class AudioFrame;
-}
+
+} // namespace webrtc
 
 namespace tgvoip
 {
+
 class EchoCanceller
 {
-
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(EchoCanceller);
-    EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC);
+    EchoCanceller(bool m_enableAEC, bool m_enableNS, bool m_enableAGC);
     virtual ~EchoCanceller();
     virtual void Start();
     virtual void Stop();
@@ -37,55 +39,57 @@ public:
     void SetVoiceDetectionEnabled(bool enabled);
 
 private:
-    bool enableAEC;
-    bool enableAGC;
-    bool enableNS;
-    bool enableVAD = false;
-    bool isOn;
+    bool m_enableAEC;
+    bool m_enableAGC;
+    bool m_enableNS;
+    bool m_enableVAD = false;
+    bool m_isOn;
 #ifndef TGVOIP_NO_DSP
-    webrtc::AudioProcessing* apm = nullptr;
-    webrtc::AudioFrame* audioFrame = nullptr;
+    webrtc::AudioProcessing* m_apm = nullptr;
+    webrtc::AudioFrame* m_audioFrame = nullptr;
+    bool m_didBufferFarend;
+    Thread* m_bufferFarendThread;
+    BlockingQueue<Buffer>* m_farendQueue;
+    BufferPool<960 * 2, 10> m_farendBufferPool;
+    bool m_running;
+
     void RunBufferFarendThread();
-    bool didBufferFarend;
-    Thread* bufferFarendThread;
-    BlockingQueue<Buffer>* farendQueue;
-    BufferPool<960 * 2, 10> farendBufferPool;
-    bool running;
 #endif
 };
 
 namespace effects
 {
 
-    class AudioEffect
-    {
-    public:
-        virtual ~AudioEffect() = 0;
-        virtual void Process(int16_t* inOut, size_t numSamples) = 0;
-        virtual void SetPassThrough(bool passThrough);
+class AudioEffect
+{
+public:
+    virtual ~AudioEffect() = 0;
+    virtual void Process(int16_t* inOut, size_t numSamples) const = 0;
+    virtual void SetPassThrough(bool m_passThrough);
 
-    protected:
-        bool passThrough = false;
-    };
+protected:
+    bool m_passThrough = false;
+};
 
-    class Volume : public AudioEffect
-    {
-    public:
-        Volume();
-        virtual ~Volume();
-        virtual void Process(int16_t* inOut, size_t numSamples);
-        /**
-	* Level is (0.0, 2.0]
-	*/
-        void SetLevel(float level);
-        float GetLevel();
+class Volume : public AudioEffect
+{
+public:
+    Volume();
+    ~Volume() override;
+    void Process(int16_t* inOut, size_t numSamples) const override;
+    /**
+     * Level is (0.0, 2.0]
+     */
+    void SetLevel(float m_level);
+    float GetLevel() const;
 
-    private:
-        float level = 1.0f;
-        float multiplier = 1.0f;
-    };
+private:
+    float m_level = 1.0f;
+    float m_multiplier = 1.0f;
+};
 
-}
-}
+} // namespace effects
+
+} // namespace tgvoip
 
 #endif //LIBTGVOIP_ECHOCANCELLER_H
