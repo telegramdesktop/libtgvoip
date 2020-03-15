@@ -33,9 +33,9 @@ public:
     ~BufferInputStream() = default;
 
     void Seek(size_t m_offset);
-    size_t GetLength();
-    size_t GetOffset();
-    size_t Remaining();
+    size_t GetLength() const;
+    size_t GetOffset() const;
+    size_t Remaining() const;
     unsigned char ReadByte();
     int64_t ReadInt64();
     int32_t ReadInt32();
@@ -68,8 +68,8 @@ public:
     void WriteBytes(const unsigned char* bytes, size_t count);
     void WriteBytes(const Buffer& m_buffer);
     void WriteBytes(const Buffer& m_buffer, size_t m_offset, size_t count);
-    unsigned char* GetBuffer();
-    size_t GetLength();
+    unsigned char* GetBuffer() const;
+    size_t GetLength() const;
     void Reset();
     void Rewind(size_t numBytes);
 
@@ -125,13 +125,13 @@ class HistoricBuffer
 public:
     HistoricBuffer()
     {
-        std::fill(data.begin(), data.end(), T{0});
+        std::fill(m_data.begin(), m_data.end(), T{0});
     }
 
     AVG_T Average() const
     {
         AVG_T avg = AVG_T{0};
-        for (T i : data)
+        for (T i : m_data)
         {
             avg += i;
         }
@@ -152,7 +152,7 @@ public:
     {
         AVG_T avg = AVG_T{0};
         int nonZeroCount = 0;
-        for (T i : data)
+        for (T i : m_data)
         {
             if (i != 0)
             {
@@ -167,14 +167,14 @@ public:
 
     void Add(T el)
     {
-        data[offset] = el;
-        offset = (offset + 1) % size;
+        m_data[m_offset] = el;
+        m_offset = (m_offset + 1) % size;
     }
 
     T Min() const
     {
         T min = std::numeric_limits<T>::max();
-        for (T i : data)
+        for (T i : m_data)
         {
             if (i < min)
                 min = i;
@@ -185,7 +185,7 @@ public:
     T Max() const
     {
         T max = std::numeric_limits<T>::min();
-        for (T i : data)
+        for (T i : m_data)
             if (i > max)
                 max = i;
         return max;
@@ -193,28 +193,28 @@ public:
 
     void Reset()
     {
-        std::fill(data.begin(), data.end(), T{0});
-        offset = 0;
+        std::fill(m_data.begin(), m_data.end(), T{0});
+        m_offset = 0;
     }
 
     T operator[](size_t i) const
     {
         assert(i < size);
         // [0] should return the most recent entry, [1] the one before it, and so on
-        ptrdiff_t _i = offset - i - 1;
+        ptrdiff_t _i = m_offset - i - 1;
         if (_i < 0)
             _i = size + _i;
-        return data[_i];
+        return m_data[_i];
     }
 
     T& operator[](size_t i)
     {
         assert(i < size);
         // [0] should return the most recent entry, [1] the one before it, and so on
-        ptrdiff_t _i = offset - i - 1;
+        ptrdiff_t _i = m_offset - i - 1;
         if (_i < 0)
             _i = size + _i;
-        return data[_i];
+        return m_data[_i];
     }
 
     size_t Size() const
@@ -223,8 +223,8 @@ public:
     }
 
 private:
-    std::array<T, size> data;
-    ptrdiff_t offset = 0;
+    std::array<T, size> m_data;
+    ptrdiff_t m_offset = 0;
 };
 
 template <size_t bufSize, size_t bufCount>
@@ -234,15 +234,15 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferPool);
     BufferPool()
     {
-        bufferStart = reinterpret_cast<unsigned char*>(malloc(bufSize * bufCount));
-        if (bufferStart == nullptr)
+        m_bufferStart = reinterpret_cast<unsigned char*>(malloc(bufSize * bufCount));
+        if (m_bufferStart == nullptr)
             throw std::bad_alloc();
     }
 
     ~BufferPool()
     {
-        assert(usedBuffers.none());
-        std::free(bufferStart);
+        assert(m_usedBuffers.none());
+        std::free(m_bufferStart);
     }
 
     Buffer Get()
@@ -251,14 +251,14 @@ public:
         {
             assert(_buf != nullptr);
             unsigned char* buf = reinterpret_cast<unsigned char*>(_buf);
-            size_t offset = buf - bufferStart;
+            size_t offset = buf - m_bufferStart;
             assert(offset % bufSize == 0);
             size_t index = offset / bufSize;
             assert(index < bufCount);
 
-            MutexGuard m(mutex);
-            assert(usedBuffers.test(index));
-            usedBuffers[index] = 0;
+            MutexGuard m(m_mutex);
+            assert(m_usedBuffers.test(index));
+            m_usedBuffers[index] = 0;
         };
         auto resizeFn = [](void* buf, size_t newSize) -> void*
         {
@@ -266,23 +266,24 @@ public:
                 throw std::invalid_argument("newSize>bufferSize");
             return buf;
         };
-        MutexGuard m(mutex);
+        MutexGuard m(m_mutex);
         for (size_t i = 0; i < bufCount; ++i)
         {
-            if (!usedBuffers[i])
+            if (!m_usedBuffers[i])
             {
-                usedBuffers[i] = 1;
-                return Buffer::Wrap(bufferStart + (bufSize * i), bufSize, freeFn, resizeFn);
+                m_usedBuffers[i] = 1;
+                return Buffer::Wrap(m_bufferStart + (bufSize * i), bufSize, freeFn, resizeFn);
             }
         }
         throw std::bad_alloc();
     }
 
 private:
-    std::bitset<bufCount> usedBuffers;
-    unsigned char* bufferStart;
-    Mutex mutex;
+    std::bitset<bufCount> m_usedBuffers;
+    unsigned char* m_bufferStart;
+    mutable Mutex m_mutex;
 };
-}
 
-#endif //LIBTGVOIP_BUFFERINPUTSTREAM_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_BUFFERINPUTSTREAM_H

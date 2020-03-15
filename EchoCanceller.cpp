@@ -14,9 +14,9 @@
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
 #include "logging.h"
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 
 using namespace tgvoip;
 

@@ -50,15 +50,15 @@ void VideoSourceAndroid::Stop()
 
 void VideoSourceAndroid::SendFrame(Buffer frame, uint32_t flags)
 {
-    callback(frame, flags, rotation);
+    m_callback(frame, flags, m_rotation);
 }
 
 void VideoSourceAndroid::SetStreamParameters(std::vector<Buffer> csd, unsigned int width, unsigned int height)
 {
     LOGD("Video stream parameters: %d x %d", width, height);
-    this->width = width;
-    this->height = height;
-    this->csd = std::move(csd);
+    this->m_width = width;
+    this->m_height = height;
+    this->m_csd = std::move(csd);
 }
 
 void VideoSourceAndroid::Reset(uint32_t codec, int maxResolution)
@@ -100,5 +100,5 @@ void VideoSourceAndroid::SetBitrate(uint32_t bitrate)
 
 void VideoSourceAndroid::SetStreamPaused(bool paused)
 {
-    streamStateCallback(paused);
+    m_streamStateCallback(paused);
 }

@@ -24,12 +24,12 @@ std::shared_ptr<VideoSource> VideoSource::Create()
 
 bool VideoSource::Failed()
 {
-    return failed;
+    return m_failed;
 }
 
 std::string VideoSource::GetErrorDescription()
 {
-    return error;
+    return m_error;
 }
 
 std::vector<uint32_t> VideoSource::GetAvailableEncoders()

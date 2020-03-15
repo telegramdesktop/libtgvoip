@@ -23,7 +23,7 @@ namespace video
         virtual void Stop() override;
         virtual void Reset(uint32_t codec, int maxResolution) override;
         void SendFrame(Buffer frame, uint32_t flags);
-        void SetStreamParameters(std::vector<Buffer> csd, unsigned int width, unsigned int height);
+        void SetStreamParameters(std::vector<Buffer> m_csd, unsigned int m_width, unsigned int m_height);
         virtual void RequestKeyFrame() override;
         virtual void SetBitrate(uint32_t bitrate) override;
         void SetStreamPaused(bool paused);

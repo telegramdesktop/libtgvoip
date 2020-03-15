@@ -195,20 +195,20 @@ void BufferInputStream::Seek(size_t offset)
     {
         throw std::out_of_range("Not enough bytes in buffer");
     }
-    this->m_offset = offset;
+    m_offset = offset;
 }
 
-size_t BufferInputStream::GetLength()
+size_t BufferInputStream::GetLength() const
 {
     return m_length;
 }
 
-size_t BufferInputStream::GetOffset()
+size_t BufferInputStream::GetOffset() const
 {
     return m_offset;
 }
 
-size_t BufferInputStream::Remaining()
+size_t BufferInputStream::Remaining() const
 {
     return m_length - m_offset;
 }
@@ -395,12 +395,12 @@ void BufferOutputStream::WriteBytes(const Buffer& buffer, size_t offset, size_t 
     WriteBytes(*buffer + offset, count);
 }
 
-unsigned char* BufferOutputStream::GetBuffer()
+unsigned char* BufferOutputStream::GetBuffer() const
 {
     return m_buffer;
 }
 
-size_t BufferOutputStream::GetLength()
+size_t BufferOutputStream::GetLength() const
 {
     return m_offset;
 }

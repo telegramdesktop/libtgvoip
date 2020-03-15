@@ -20,11 +20,11 @@ namespace ParityFEC
     Buffer Decode(const std::vector<Buffer>& dataPackets, const Buffer& fecPacket);
 } // namespace ParityFEC
 
-    class CM256FEC
-    {
-    };
+class CM256FEC
+{
+};
 
 } // namespace video
 } // namespace tgvoip
 
-#endif //LIBTGVOIP_VIDEOFEC_H
+#endif // LIBTGVOIP_VIDEOFEC_H

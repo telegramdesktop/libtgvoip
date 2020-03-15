@@ -43,8 +43,8 @@ private:
     bool enableVAD = false;
     bool isOn;
 #ifndef TGVOIP_NO_DSP
-    webrtc::AudioProcessing* apm = NULL;
-    webrtc::AudioFrame* audioFrame = NULL;
+    webrtc::AudioProcessing* apm = nullptr;
+    webrtc::AudioFrame* audioFrame = nullptr;
     void RunBufferFarendThread();
     bool didBufferFarend;
     Thread* bufferFarendThread;

@@ -10,12 +10,11 @@
 #include "threading.h"
 #include "utils.h"
 #include <list>
-#include <stdlib.h>
+#include <cstdlib>
+#include <functional>
 
 namespace tgvoip
 {
-
-using namespace std;
 
 template <typename T>
 class BlockingQueue
@@ -23,66 +22,66 @@ class BlockingQueue
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BlockingQueue);
     BlockingQueue(size_t capacity)
-        : semaphore(capacity, 0)
+        : m_capacity(capacity)
+        , m_semaphore(capacity, 0)
+        , m_overflowCallback(nullptr)
     {
-        this->capacity = capacity;
-        overflowCallback = NULL;
-    };
+    }
 
     ~BlockingQueue()
     {
-        semaphore.Release();
+        m_semaphore.Release();
     }
 
     void Put(T thing)
     {
-        MutexGuard sync(mutex);
-        queue.push_back(std::move(thing));
+        MutexGuard sync(m_mutex);
+        m_queue.push_back(std::move(thing));
         bool didOverflow = false;
-        while (queue.size() > capacity)
+        while (m_queue.size() > m_capacity)
         {
             didOverflow = true;
-            if (overflowCallback)
+            if (m_overflowCallback)
             {
-                overflowCallback(std::move(queue.front()));
-                queue.pop_front();
+                m_overflowCallback(std::move(m_queue.front()));
+                m_queue.pop_front();
             }
             else
             {
-                abort();
+                std::abort();
             }
         }
         if (!didOverflow)
-            semaphore.Release();
+            m_semaphore.Release();
     }
 
     T GetBlocking()
     {
-        semaphore.Acquire();
-        MutexGuard sync(mutex);
+        m_semaphore.Acquire();
+        MutexGuard sync(m_mutex);
         return GetInternal();
     }
 
-    T Get()
+    T Get() const
     {
-        MutexGuard sync(mutex);
-        if (queue.size() > 0)
-            semaphore.Acquire();
+        MutexGuard sync(m_mutex);
+        if (m_queue.size() > 0)
+            m_semaphore.Acquire();
         return GetInternal();
     }
 
-    size_t Size()
+    size_t Size() const
     {
-        return queue.size();
+        return m_queue.size();
     }
 
     void PrepareDealloc()
     {
     }
 
-    void SetOverflowCallback(void (*overflowCallback)(T))
+    void SetOverflowCallback(const std::function<void(T)>& overflowCallback)
     {
-        this->overflowCallback = overflowCallback;
+        m_overflowCallback = overflowCallback;
     }
 
 private:
@@ -90,18 +89,19 @@ private:
     {
         //if(queue.size()==0)
         //	return NULL;
-        T r = std::move(queue.front());
-        queue.pop_front();
+        T r = std::move(m_queue.front());
+        m_queue.pop_front();
         return r;
     }
 
-    std::list<T> queue;
-    size_t capacity;
+    std::list<T> m_queue;
+    size_t m_capacity;
     //tgvoip_lock_t lock;
-    Semaphore semaphore;
-    Mutex mutex;
-    void (*overflowCallback)(T);
+    mutable Semaphore m_semaphore;
+    mutable Mutex m_mutex;
+    std::function<void(T)> m_overflowCallback;
 };
-}
 
-#endif //LIBTGVOIP_BLOCKINGQUEUE_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_BLOCKINGQUEUE_H

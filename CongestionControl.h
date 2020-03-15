@@ -9,21 +9,28 @@
 
 #include "Buffers.h"
 #include "threading.h"
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
-#define TGVOIP_CONCTL_ACT_INCREASE 1
-#define TGVOIP_CONCTL_ACT_DECREASE 2
-#define TGVOIP_CONCTL_ACT_NONE 0
+//#define TGVOIP_CONCTL_ACT_INCREASE 1
+//#define TGVOIP_CONCTL_ACT_DECREASE 2
+//#define TGVOIP_CONCTL_ACT_NONE 0
 
 namespace tgvoip
 {
 
+enum class ConctlAct
+{
+    NONE,
+    INCREASE,
+    DECREASE,
+};
+
 struct tgvoip_congestionctl_packet_t
 {
-    uint32_t seq;
     double sendTime;
     size_t size;
+    uint32_t seq;
 };
 typedef struct tgvoip_congestionctl_packet_t tgvoip_congestionctl_packet_t;
 
@@ -36,31 +43,32 @@ public:
     void PacketSent(uint32_t seq, size_t size);
     void PacketLost(uint32_t seq);
     void PacketAcknowledged(uint32_t seq);
-
-    double GetAverageRTT();
-    double GetMinimumRTT();
-    size_t GetInflightDataSize();
-    size_t GetCongestionWindow();
-    size_t GetAcknowledgedDataSize();
     void Tick();
-    int GetBandwidthControlAction();
-    uint32_t GetSendLossCount();
+
+    double GetAverageRTT() const;
+    double GetMinimumRTT() const;
+    size_t GetInflightDataSize() const;
+    size_t GetCongestionWindow() const;
+    size_t GetAcknowledgedDataSize() const;
+    ConctlAct GetBandwidthControlAction() const;
+    uint32_t GetSendLossCount() const;
 
 private:
-    HistoricBuffer<double, 100> rttHistory;
-    HistoricBuffer<size_t, 30> inflightHistory;
-    tgvoip_congestionctl_packet_t inflightPackets[100];
-    uint32_t lossCount;
-    double tmpRtt;
-    double lastActionTime;
-    double lastActionRtt;
-    double stateTransitionTime;
-    int tmpRttCount;
-    uint32_t lastSentSeq;
-    uint32_t tickCount;
-    size_t inflightDataSize;
-    size_t cwnd;
+    HistoricBuffer<double, 100> m_rttHistory;
+    HistoricBuffer<size_t, 30> m_inflightHistory;
+    tgvoip_congestionctl_packet_t m_inflightPackets[100];
+    double m_tmpRtt;
+    int m_tmpRttCount;
+    uint32_t m_lossCount;
+    mutable double m_lastActionTime;
+    double m_lastActionRtt;
+    double m_stateTransitionTime;
+    uint32_t m_lastSentSeq;
+    uint32_t m_tickCount;
+    size_t m_inflightDataSize;
+    size_t m_cwnd;
 };
-}
 
-#endif //LIBTGVOIP_CONGESTIONCONTROL_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_CONGESTIONCONTROL_H

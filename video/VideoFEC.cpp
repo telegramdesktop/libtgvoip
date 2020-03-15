@@ -4,7 +4,7 @@
 
 #include "VideoFEC.h"
 #include "../logging.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace tgvoip;
 using namespace tgvoip::video;
@@ -26,9 +26,9 @@ Buffer ParityFEC::Encode(const std::vector<Buffer>& packets)
         {
             _result[i] ^= pkt[i];
         }
-        uint16_t len = (uint16_t)pkt.Length();
-        _result[maxSize] ^= (uint8_t)len;
-        _result[maxSize + 1] ^= (uint8_t)(len >> 8);
+        uint16_t len = static_cast<uint16_t>(pkt.Length());
+        _result[maxSize + 0] ^= static_cast<uint8_t>(len >> 0);
+        _result[maxSize + 1] ^= static_cast<uint8_t>(len >> 8);
     }
 
     return result;
@@ -44,7 +44,7 @@ Buffer ParityFEC::Decode(const std::vector<Buffer>& dataPackets, const Buffer& f
 
     if (fecPacket.Length() < maxSize + 2)
     {
-        LOGE("ParityFEC: FEC packet too small (%u, expected >=%u)", (unsigned int)fecPacket.Length(), (unsigned int)maxSize + 2);
+        LOGE("ParityFEC: FEC packet too small (%u, expected >=%u)", static_cast<unsigned int>(fecPacket.Length()), static_cast<unsigned int>(maxSize + 2));
         return Buffer();
     }
     Buffer result = Buffer::CopyOf(fecPacket);
@@ -61,9 +61,9 @@ Buffer ParityFEC::Decode(const std::vector<Buffer>& dataPackets, const Buffer& f
         {
             _result[i] ^= pkt[i];
         }
-        uint16_t len = (uint16_t)pkt.Length();
-        _result[maxSize] ^= (uint8_t)len;
-        _result[maxSize + 1] ^= (uint8_t)(len >> 8);
+        uint16_t len = static_cast<uint16_t>(pkt.Length());
+        _result[maxSize + 0] ^= static_cast<uint8_t>(len >> 0);
+        _result[maxSize + 1] ^= static_cast<uint8_t>(len >> 8);
     }
     if (emptyCount != 1)
     {
@@ -71,7 +71,8 @@ Buffer ParityFEC::Decode(const std::vector<Buffer>& dataPackets, const Buffer& f
         return Buffer();
     }
 
-    uint16_t len = (uint16_t)_result[maxSize] | ((uint16_t)_result[maxSize + 1] << 8);
+    uint16_t len = static_cast<uint16_t>(_result[maxSize + 0] << 0) |
+                   static_cast<uint16_t>(_result[maxSize + 1] << 8);
     if (len > maxSize)
     {
         LOGE("ParityFEC: incorrect length %u", len);
