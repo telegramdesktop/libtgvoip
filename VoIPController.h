@@ -58,7 +58,7 @@ enum class Proxy
 {
     NONE = 0,
     SOCKS5,
-    //PROXY_HTTP
+    //HTTP
 };
 
 enum class State
@@ -214,10 +214,11 @@ private:
 };
 
 class PacketSender;
+
 namespace video
 {
     class VideoPacketSender;
-}
+} // namespace video
 
 class VoIPController
 {
@@ -228,7 +229,8 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(VoIPController);
     struct Config
     {
-        Config(double initTimeout = 30.0, double recvTimeout = 20.0, DataSaving dataSaving = DataSaving::NEVER, bool enableAEC = false, bool enableNS = false, bool enableAGC = false, bool enableCallUpgrade = false)
+        Config(double initTimeout = 30.0, double recvTimeout = 20.0, DataSaving dataSaving = DataSaving::NEVER,
+               bool enableAEC = false, bool enableNS = false, bool enableAGC = false, bool enableCallUpgrade = false)
         {
             this->initTimeout = initTimeout;
             this->recvTimeout = recvTimeout;
@@ -275,176 +277,141 @@ public:
     virtual ~VoIPController();
 
     /**
-		 * Set the initial endpoints (relays)
-		 * @param endpoints Endpoints converted from phone.PhoneConnection TL objects
-		 * @param allowP2p Whether p2p connectivity is allowed
-		 * @param connectionMaxLayer The max_layer field from the phoneCallProtocol object returned by Telegram server.
-		 * DO NOT HARDCODE THIS VALUE, it's extremely important for backwards compatibility.
-		 */
+     * Set the initial endpoints (relays)
+     * @param endpoints Endpoints converted from phone.PhoneConnection TL objects
+     * @param allowP2p Whether p2p connectivity is allowed
+     * @param connectionMaxLayer The max_layer field from the phoneCallProtocol object returned by Telegram server.
+     * DO NOT HARDCODE THIS VALUE, it's extremely important for backwards compatibility.
+     */
     void SetRemoteEndpoints(std::vector<Endpoint> endpoints, bool allowP2p, std::int32_t connectionMaxLayer);
+
     /**
-		 * Initialize and start all the internal threads
-		 */
+     * Initialize and start all the internal threads
+     */
     void Start();
+
     /**
-		 * Stop any internal threads. Don't call any other methods after this.
-		 */
+     * Stop any internal threads. Don't call any other methods after this.
+     */
     void Stop();
+
     /**
-		 * Initiate connection
-		 */
+     * Initiate connection
+     */
     void Connect();
     Endpoint& GetRemoteEndpoint();
+
     /**
-		 * Get the debug info string to be displayed in client UI
-		 */
+     * Get the debug info string to be displayed in client UI
+     */
     virtual std::string GetDebugString();
+
     /**
-		 * Notify the library of network type change
-		 * @param type The new network type
-		 */
+     * Notify the library of network type change
+     * @param type The new network type
+     */
     virtual void SetNetworkType(NetType type);
+
     /**
-		 * Get the average round-trip time for network packets
-		 * @return
-		 */
+     * Get the average round-trip time for network packets
+     * @return
+     */
     double GetAverageRTT();
     static double GetCurrentTime();
+
     /**
-		 * Use this field to store any of your context data associated with this call
-		 */
+     * Use this field to store any of your context data associated with this call
+     */
     void* implData;
-    /**
-		 *
-		 * @param mute
-		 */
+
     virtual void SetMicMute(bool mute);
-    /**
-		 *
-		 * @param key
-		 * @param isOutgoing
-		 */
+
     void SetEncryptionKey(char* key, bool isOutgoing);
-    /**
-		 *
-		 * @param cfg
-		 */
+
     void SetConfig(const Config& cfg);
     void DebugCtl(int request, int param);
-    /**
-		 *
-		 * @param stats
-		 */
     void GetStats(TrafficStats* stats);
-    /**
-		 *
-		 * @return
-		 */
+
     std::int64_t GetPreferredRelayID();
-    /**
-		 *
-		 * @return
-		 */
     Error GetLastError();
-    /**
-		 *
-		 */
+
     static CryptoFunctions crypto;
-    /**
-		 *
-		 * @return
-		 */
     static const char* GetVersion();
-    /**
-		 *
-		 * @return
-		 */
     std::string GetDebugLog();
-    /**
-		 *
-		 * @return
-		 */
+
     static std::vector<AudioInputDevice> EnumerateAudioInputs();
-    /**
-		 *
-		 * @return
-		 */
     static std::vector<AudioOutputDevice> EnumerateAudioOutputs();
-    /**
-		 *
-		 * @param id
-		 */
+
     void SetCurrentAudioInput(std::string id);
-    /**
-		 *
-		 * @param id
-		 */
     void SetCurrentAudioOutput(std::string id);
-    /**
-		 *
-		 * @return
-		 */
+
     std::string GetCurrentAudioInputID();
-    /**
-		 *
-		 * @return
-		 */
     std::string GetCurrentAudioOutputID();
+
     /**
-		 * Set the proxy server to route the data through. Call this before connecting.
-         * @param protocol Proxy::NONE or Proxy::SOCKS5
-		 * @param address IP address or domain name of the server
-		 * @param port Port of the server
-		 * @param username Username; empty string for anonymous
-		 * @param password Password; empty string if none
-		 */
+     * Set the proxy server to route the data through. Call this before connecting.
+     * @param protocol Proxy::NONE or Proxy::SOCKS5
+     * @param address IP address or domain name of the server
+     * @param port Port of the server
+     * @param username Username; empty string for anonymous
+     * @param password Password; empty string if none
+     */
     void SetProxy(Proxy protocol, std::string address, std::uint16_t port, std::string username, std::string password);
+
     /**
-		 * Get the number of signal bars to display in the client UI.
-		 * @return the number of signal bars, from 1 to 4
-		 */
+     * Get the number of signal bars to display in the client UI.
+     * @return the number of signal bars, from 1 to 4
+     */
     int GetSignalBarsCount();
+
     /**
-		 * Enable or disable AGC (automatic gain control) on audio output. Should only be enabled on phones when the earpiece speaker is being used.
-		 * The audio output will be louder with this on.
-		 * AGC with speakerphone or other kinds of loud speakers has detrimental effects on some echo cancellation implementations.
-		 * @param enabled I usually pick argument names to be self-explanatory
-		 */
+     * Enable or disable AGC (automatic gain control) on audio output. Should only be enabled on phones when the earpiece speaker is being used.
+     * The audio output will be louder with this on.
+     * AGC with speakerphone or other kinds of loud speakers has detrimental effects on some echo cancellation implementations.
+     * @param enabled I usually pick argument names to be self-explanatory
+     */
     void SetAudioOutputGainControlEnabled(bool enabled);
+
     /**
-		 * Get the additional capabilities of the peer client app
-		 * @return corresponding TGVOIP_PEER_CAP_* flags OR'ed together
-		 */
+     * Get the additional capabilities of the peer client app
+     * @return corresponding TGVOIP_PEER_CAP_* flags OR'ed together
+     */
     std::uint32_t GetPeerCapabilities();
+
     /**
-		 * Send the peer the key for the group call to prepare this private call to an upgrade to a E2E group call.
-		 * The peer must have the TGVOIP_PEER_CAP_GROUP_CALLS capability. After the peer acknowledges the key, Callbacks::groupCallKeySent will be called.
-		 * @param key newly-generated group call key, must be exactly 265 bytes long
-		 */
+     * Send the peer the key for the group call to prepare this private call to an upgrade to a E2E group call.
+     * The peer must have the TGVOIP_PEER_CAP_GROUP_CALLS capability. After the peer acknowledges the key, Callbacks::groupCallKeySent will be called.
+     * @param key newly-generated group call key, must be exactly 265 bytes long
+     */
     void SendGroupCallKey(unsigned char* key);
+
     /**
-		 * In an incoming call, request the peer to generate a new encryption key, send it to you and upgrade this call to a E2E group call.
-		 */
+     * In an incoming call, request the peer to generate a new encryption key, send it to you and upgrade this call to a E2E group call.
+     */
     void RequestCallUpgrade();
+
     void SetEchoCancellationStrength(int strength);
     State GetConnectionState() const;
     bool NeedRate();
+
     /**
-		 * Get the maximum connection layer supported by this libtgvoip version.
-		 * Pass this as <code>max_layer</code> in the phone.phoneConnection TL object when requesting and accepting calls.
-		 */
+     * Get the maximum connection layer supported by this libtgvoip version.
+     * Pass this as <code>max_layer</code> in the phone.phoneConnection TL object when requesting and accepting calls.
+     */
     static std::int32_t GetConnectionMaxLayer()
     {
         return 92;
     }
+
     /**
-		 * Get the persistable state of the library, like proxy capabilities, to save somewhere on the disk. Call this at the end of the call.
-		 * Using this will speed up the connection establishment in some cases.
-		 */
+     * Get the persistable state of the library, like proxy capabilities, to save somewhere on the disk. Call this at the end of the call.
+     * Using this will speed up the connection establishment in some cases.
+     */
     std::vector<std::uint8_t> GetPersistentState();
+
     /**
-		 * Load the persistable state. Call this before starting the call.
-		 */
+     * Load the persistable state. Call this before starting the call.
+     */
     void SetPersistentState(std::vector<std::uint8_t> state);
 
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
@@ -604,14 +571,14 @@ private:
         std::uint32_t seq;
         double recvTime;
     };
-    enum
+    enum class UdpState
     {
-        UDP_UNKNOWN = 0,
-        UDP_PING_PENDING,
-        UDP_PING_SENT,
-        UDP_AVAILABLE,
-        UDP_NOT_AVAILABLE,
-        UDP_BAD
+        UNKNOWN = 0,
+        PING_PENDING,
+        PING_SENT,
+        AVAILABLE,
+        NOT_AVAILABLE,
+        BAD
     };
     struct DebugLoggedPacket
     {
@@ -734,7 +701,7 @@ private:
     HistoricBuffer<unsigned char, 4, int> signalBarsHistory;
     bool audioStarted = false;
 
-    int udpConnectivityState;
+    UdpState udpConnectivityState;
     double lastUdpPingTime;
     int udpPingCount;
     int echoCancellationStrength;
@@ -927,6 +894,6 @@ private:
     std::int32_t timeDifference;
 };
 
-};
+} // namespace tgvoip
 
-#endif
+#endif // __VOIPCONTROLLER_H

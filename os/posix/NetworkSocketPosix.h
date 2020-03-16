@@ -53,7 +53,6 @@ public:
     static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
     virtual NetworkAddress GetConnectedAddress() override;
-
     virtual std::uint16_t GetConnectedPort() override;
 
     virtual void SetTimeouts(int sendTimeout, int recvTimeout) override;
@@ -63,18 +62,19 @@ protected:
     virtual void SetMaxPriority() override;
 
 private:
+    std::atomic<int> m_fd;
+    std::mutex m_mutexFd;
+    bool m_needUpdateNat64Prefix;
+    bool m_nat64Present;
+    double m_switchToV6at;
+    std::atomic<bool> m_isV4Available;
+    std::atomic<bool> m_closing;
+    NetworkAddress m_tcpConnectedAddress = NetworkAddress::Empty();
+    std::uint16_t m_tcpConnectedPort;
+    NetworkPacket m_pendingOutgoingPacket = NetworkPacket::Empty();
+    Buffer m_recvBuffer = Buffer(2048);
+
     static int GetDescriptorFromSocket(NetworkSocket* socket);
-    std::atomic<int> fd;
-    std::mutex m_fd;
-    bool needUpdateNat64Prefix;
-    bool nat64Present;
-    double switchToV6at;
-    std::atomic<bool> isV4Available;
-    std::atomic<bool> closing;
-    NetworkAddress tcpConnectedAddress = NetworkAddress::Empty();
-    std::uint16_t tcpConnectedPort;
-    NetworkPacket pendingOutgoingPacket = NetworkPacket::Empty();
-    Buffer recvBuffer = Buffer(2048);
 };
 
 }

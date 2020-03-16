@@ -132,7 +132,7 @@ VoIPController::VoIPController()
     selectCanceller = SocketSelectCanceller::Create();
     udpSocket = NetworkSocket::Create(NetworkProtocol::UDP);
     realUdpSocket = udpSocket;
-    udpConnectivityState = UDP_UNKNOWN;
+    udpConnectivityState = UdpState::UNKNOWN;
     echoCancellationStrength = 1;
 
     peerCapabilities = 0;
@@ -793,7 +793,7 @@ std::string VoIPController::GetDebugLog()
                             {"libtgvoip_version", LIBTGVOIP_VERSION},
                             {"network", network},
                             {"protocol_version", std::min(peerVersion, PROTOCOL_VERSION)},
-                            {"udp_avail", udpConnectivityState == UDP_AVAILABLE},
+                            {"udp_avail", udpConnectivityState == UdpState::AVAILABLE},
                             {"tcp_used", useTCP},
                             {"p2p_type", p2pType},
                             {"packet_stats", json11::Json::object {{"out", (int)seq}, {"in", (int)packetsReceived}, {"lost_out", (int)conctl->GetSendLossCount()}, {"lost_in", (int)recvLossCount}}},
@@ -1841,7 +1841,7 @@ void VoIPController::RunRecvThread()
     }
     else
     {
-        udpConnectivityState = UDP_PING_PENDING;
+        udpConnectivityState = UdpState::PING_PENDING;
         udpPingTimeoutID = messageThread.Post(std::bind(&VoIPController::SendUdpPings, this), 0.0, 0.5);
     }
     while (runReceiver)
@@ -2100,14 +2100,14 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
 
         if (tlid == TLID_UDP_REFLECTOR_SELF_INFO)
         {
-            if (srcEndpoint.type == Endpoint::Type::UDP_RELAY /*&& udpConnectivityState==UDP_PING_SENT*/ && in.Remaining() >= 32)
+            if (srcEndpoint.type == Endpoint::Type::UDP_RELAY /*&& udpConnectivityState==Udp::PING_SENT*/ && in.Remaining() >= 32)
             {
                 std::int32_t date = in.ReadInt32();
                 std::int64_t queryID = in.ReadInt64();
                 unsigned char myIP[16];
                 in.ReadBytes(myIP, 16);
                 std::int32_t myPort = in.ReadInt32();
-                //udpConnectivityState=UDP_AVAILABLE;
+                //udpConnectivityState=Udp::AVAILABLE;
                 double selfRTT = 0.0;
                 srcEndpoint.udpPongCount++;
                 srcEndpoint.totalUdpPingReplies++;
@@ -2692,7 +2692,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         if (!receivedInit)
         {
             receivedInit = true;
-            if ((srcEndpoint.type == Endpoint::Type::UDP_RELAY && udpConnectivityState != UDP_BAD && udpConnectivityState != UDP_NOT_AVAILABLE) || srcEndpoint.type == Endpoint::Type::TCP_RELAY)
+            if ((srcEndpoint.type == Endpoint::Type::UDP_RELAY && udpConnectivityState != UdpState::BAD && udpConnectivityState != UdpState::NOT_AVAILABLE) || srcEndpoint.type == Endpoint::Type::TCP_RELAY)
             {
                 currentEndpoint = srcEndpoint.id;
                 if (srcEndpoint.type == Endpoint::Type::UDP_RELAY || (useTCP && srcEndpoint.type == Endpoint::Type::TCP_RELAY))
@@ -3827,7 +3827,7 @@ void VoIPController::ResetUdpAvailability()
         }
     }
     udpPingCount = 0;
-    udpConnectivityState = UDP_PING_PENDING;
+    udpConnectivityState = UdpState::PING_PENDING;
     udpPingTimeoutID = messageThread.Post(std::bind(&VoIPController::SendUdpPings, this), 0.0, 0.5);
 }
 
@@ -4020,8 +4020,8 @@ void VoIPController::SendUdpPings()
             SendUdpPing(e.second);
         }
     }
-    if (udpConnectivityState == UDP_UNKNOWN || udpConnectivityState == UDP_PING_PENDING)
-        udpConnectivityState = UDP_PING_SENT;
+    if (udpConnectivityState == UdpState::UNKNOWN || udpConnectivityState == UdpState::PING_PENDING)
+        udpConnectivityState = UdpState::PING_SENT;
     udpPingCount++;
     if (udpPingCount == 4 || udpPingCount == 10)
     {
@@ -4066,11 +4066,11 @@ void VoIPController::EvaluateUdpPingResults()
     bool configUseTCP = ServerConfig::GetSharedInstance()->GetBoolean("use_tcp", true);
     if (configUseTCP)
     {
-        if (avgPongs == 0.0 || (udpConnectivityState == UDP_BAD && avgPongs < 7.0))
+        if (avgPongs == 0.0 || (udpConnectivityState == UdpState::BAD && avgPongs < 7.0))
         {
             if (needRateFlags & NEED_RATE_FLAG_UDP_NA)
                 needRate = true;
-            udpConnectivityState = UDP_NOT_AVAILABLE;
+            udpConnectivityState = UdpState::NOT_AVAILABLE;
             useTCP = true;
             useUDP = avgPongs > 1.0;
             if (endpoints.at(currentEndpoint).type != Endpoint::Type::TCP_RELAY)
@@ -4082,7 +4082,7 @@ void VoIPController::EvaluateUdpPingResults()
         {
             if (needRateFlags & NEED_RATE_FLAG_UDP_BAD)
                 needRate = true;
-            udpConnectivityState = UDP_BAD;
+            udpConnectivityState = UdpState::BAD;
             useTCP = true;
             setCurrentEndpointToTCP = true;
             AddTCPRelays();
@@ -4091,13 +4091,13 @@ void VoIPController::EvaluateUdpPingResults()
         else
         {
             udpPingTimeoutID = MessageThread::INVALID_ID;
-            udpConnectivityState = UDP_AVAILABLE;
+            udpConnectivityState = UdpState::AVAILABLE;
         }
     }
     else
     {
         udpPingTimeoutID = MessageThread::INVALID_ID;
-        udpConnectivityState = UDP_NOT_AVAILABLE;
+        udpConnectivityState = UdpState::NOT_AVAILABLE;
     }
 }
 

@@ -329,8 +329,8 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 						/*std::int32_t p=* /in.ReadInt32();
 						//LOGV("Sent packet: %08X", p);
 					}
-					if(udpConnectivityState!=UDP_AVAILABLE)
-						udpConnectivityState=UDP_AVAILABLE;
+                    if(udpConnectivityState!=Udp::AVAILABLE)
+                        udpConnectivityState=Udp::AVAILABLE;
 					if(state!=State::ESTABLISHED)
 						SetState(State::ESTABLISHED);
 					if(!audioInput){
@@ -510,7 +510,7 @@ void VoIPGroupController::SetNetworkType(NetType type)
         activeNetItfName = itfName;
         if (isFirstChange)
             return;
-        udpConnectivityState = UDP_UNKNOWN;
+        udpConnectivityState = UdpState::UNKNOWN;
         udpPingCount = 0;
         lastUdpPingTime = 0;
         if (proxyProtocol == Proxy::SOCKS5)
