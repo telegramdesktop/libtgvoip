@@ -31,7 +31,7 @@ void tgvoip_openssl_aes_ige_decrypt(std::uint8_t* in, std::uint8_t* out, std::si
 
 void tgvoip_openssl_rand_bytes(std::uint8_t* buffer, std::size_t len)
 {
-    RAND_bytes(buffer, len);
+    RAND_bytes(buffer, static_cast<int>(len));
 }
 
 void tgvoip_openssl_sha1(std::uint8_t* msg, std::size_t len, std::uint8_t* output)
@@ -48,7 +48,7 @@ void tgvoip_openssl_aes_ctr_encrypt(std::uint8_t* inout, std::size_t length, std
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 32 * 8, &akey);
-    CRYPTO_ctr128_encrypt(inout, inout, length, &akey, iv, ecount, num, (block128_f)AES_encrypt);
+    CRYPTO_ctr128_encrypt(inout, inout, length, &akey, iv, ecount, num, reinterpret_cast<block128_f>(AES_encrypt));
 }
 
 void tgvoip_openssl_aes_cbc_encrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
@@ -65,7 +65,8 @@ void tgvoip_openssl_aes_cbc_decrypt(std::uint8_t* in, std::uint8_t* out, std::si
     AES_cbc_encrypt(in, out, length, &akey, iv, AES_DECRYPT);
 }
 
-tgvoip::CryptoFunctions tgvoip::VoIPController::crypto = {
+tgvoip::CryptoFunctions tgvoip::VoIPController::crypto =
+{
     tgvoip_openssl_rand_bytes,
     tgvoip_openssl_sha1,
     tgvoip_openssl_sha256,
@@ -73,7 +74,8 @@ tgvoip::CryptoFunctions tgvoip::VoIPController::crypto = {
     tgvoip_openssl_aes_ige_decrypt,
     tgvoip_openssl_aes_ctr_encrypt,
     tgvoip_openssl_aes_cbc_encrypt,
-    tgvoip_openssl_aes_cbc_decrypt};
+    tgvoip_openssl_aes_cbc_decrypt
+};
 #endif
 
 class TgVoipImpl : public TgVoip
@@ -105,18 +107,18 @@ public:
         tgvoip::VoIPController::crypto.aes_ctr_encrypt = crypto.aes_ctr_encrypt;
 #endif
 
-        controller_ = new tgvoip::VoIPController();
-        controller_->implData = this;
+        m_controller = new tgvoip::VoIPController();
+        m_controller->implData = this;
 
 #ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
-        controller_->SetAudioDataCallbacks(audioDataCallbacks.input, audioDataCallbacks.output, audioDataCallbacks.preprocessed);
+        m_controller->SetAudioDataCallbacks(audioDataCallbacks.input, audioDataCallbacks.output, audioDataCallbacks.preprocessed);
 #endif
 
-        controller_->SetPersistentState(persistentState.value);
+        m_controller->SetPersistentState(persistentState.value);
 
         if (proxy != nullptr)
         {
-            controller_->SetProxy(tgvoip::PROXY_SOCKS5, proxy->host, proxy->port, proxy->login, proxy->password);
+            m_controller->SetProxy(tgvoip::Proxy::SOCKS5, proxy->host, proxy->port, proxy->login, proxy->password);
         }
 
         auto callbacks = tgvoip::VoIPController::Callbacks();
@@ -125,10 +127,10 @@ public:
         callbacks.groupCallKeySent = nullptr;
         callbacks.signalBarCountChanged = &TgVoipImpl::signalBarsCallback;
         callbacks.upgradeToGroupCallRequested = nullptr;
-        controller_->SetCallbacks(callbacks);
+        m_controller->SetCallbacks(callbacks);
 
         std::vector<tgvoip::Endpoint> mappedEndpoints;
-        for (auto endpoint : endpoints)
+        for (const TgVoipEndpoint& endpoint : endpoints)
         {
             tgvoip::Endpoint::Type mappedType;
             switch (endpoint.type)
@@ -156,17 +158,17 @@ public:
             mappedEndpoints.emplace_back(endpoint.endpointId, endpoint.port, address, addressv6, mappedType, endpoint.peerTag);
         }
 
-        int mappedDataSaving;
+        tgvoip::DataSaving mappedDataSaving;
         switch (config.dataSaving)
         {
         case TgVoipDataSaving::Mobile:
-            mappedDataSaving = tgvoip::DATA_SAVING_MOBILE;
+            mappedDataSaving = tgvoip::DataSaving::MOBILE;
             break;
         case TgVoipDataSaving::Always:
-            mappedDataSaving = tgvoip::DATA_SAVING_ALWAYS;
+            mappedDataSaving = tgvoip::DataSaving::ALWAYS;
             break;
         default:
-            mappedDataSaving = tgvoip::DATA_SAVING_NEVER;
+            mappedDataSaving = tgvoip::DataSaving::NEVER;
             break;
         }
 
@@ -181,182 +183,186 @@ public:
         mappedConfig.logFilePath = config.logPath;
         mappedConfig.statsDumpFilePath = {};
 
-        controller_->SetConfig(mappedConfig);
+        m_controller->SetConfig(mappedConfig);
 
         setNetworkType(initialNetworkType);
 
         std::vector<std::uint8_t> encryptionKeyValue = encryptionKey.value;
-        controller_->SetEncryptionKey(reinterpret_cast<char*>(encryptionKeyValue.data()), encryptionKey.isOutgoing);
-        controller_->SetRemoteEndpoints(mappedEndpoints, config.enableP2P, config.maxApiLayer);
+        m_controller->SetEncryptionKey(reinterpret_cast<char*>(encryptionKeyValue.data()), encryptionKey.isOutgoing);
+        m_controller->SetRemoteEndpoints(mappedEndpoints, config.enableP2P, config.maxApiLayer);
 
-        controller_->Start();
+        m_controller->Start();
 
-        controller_->Connect();
+        m_controller->Connect();
     }
 
-    ~TgVoipImpl()
+    ~TgVoipImpl() override
     {
     }
 
-    void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated)
+    void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) override
     {
-        std::lock_guard<std::mutex> lock(m_onStateUpdated);
-        onStateUpdated_ = onStateUpdated;
+        std::lock_guard<std::mutex> lock(m_mutexOnStateUpdated);
+        m_onStateUpdated = onStateUpdated;
     }
 
-    void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated)
+    void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) override
     {
-        std::lock_guard<std::mutex> lock(m_onSignalBarsUpdated);
-        onSignalBarsUpdated_ = onSignalBarsUpdated;
+        std::lock_guard<std::mutex> lock(m_mutexOnSignalBarsUpdated);
+        m_onSignalBarsUpdated = onSignalBarsUpdated;
     }
 
     void setNetworkType(TgVoipNetworkType networkType) override
     {
-        int mappedType;
+        tgvoip::NetType mappedType;
 
         switch (networkType)
         {
         case TgVoipNetworkType::Unknown:
-            mappedType = tgvoip::NET_TYPE_UNKNOWN;
+            mappedType = tgvoip::NetType::UNKNOWN;
             break;
         case TgVoipNetworkType::Gprs:
-            mappedType = tgvoip::NET_TYPE_GPRS;
+            mappedType = tgvoip::NetType::GPRS;
             break;
         case TgVoipNetworkType::Edge:
-            mappedType = tgvoip::NET_TYPE_EDGE;
+            mappedType = tgvoip::NetType::EDGE;
             break;
         case TgVoipNetworkType::ThirdGeneration:
-            mappedType = tgvoip::NET_TYPE_3G;
+            mappedType = tgvoip::NetType::THREE_G;
             break;
         case TgVoipNetworkType::Hspa:
-            mappedType = tgvoip::NET_TYPE_HSPA;
+            mappedType = tgvoip::NetType::HSPA;
             break;
         case TgVoipNetworkType::Lte:
-            mappedType = tgvoip::NET_TYPE_LTE;
+            mappedType = tgvoip::NetType::LTE;
             break;
         case TgVoipNetworkType::WiFi:
-            mappedType = tgvoip::NET_TYPE_WIFI;
+            mappedType = tgvoip::NetType::WIFI;
             break;
         case TgVoipNetworkType::Ethernet:
-            mappedType = tgvoip::NET_TYPE_ETHERNET;
+            mappedType = tgvoip::NetType::ETHERNET;
             break;
         case TgVoipNetworkType::OtherHighSpeed:
-            mappedType = tgvoip::NET_TYPE_OTHER_HIGH_SPEED;
+            mappedType = tgvoip::NetType::OTHER_HIGH_SPEED;
             break;
         case TgVoipNetworkType::OtherLowSpeed:
-            mappedType = tgvoip::NET_TYPE_OTHER_LOW_SPEED;
+            mappedType = tgvoip::NetType::OTHER_LOW_SPEED;
             break;
         case TgVoipNetworkType::OtherMobile:
-            mappedType = tgvoip::NET_TYPE_OTHER_MOBILE;
+            mappedType = tgvoip::NetType::OTHER_MOBILE;
             break;
         case TgVoipNetworkType::Dialup:
-            mappedType = tgvoip::NET_TYPE_DIALUP;
+            mappedType = tgvoip::NetType::DIALUP;
             break;
         default:
-            mappedType = tgvoip::NET_TYPE_UNKNOWN;
+            mappedType = tgvoip::NetType::UNKNOWN;
             break;
         }
 
-        controller_->SetNetworkType(mappedType);
+        m_controller->SetNetworkType(mappedType);
     }
 
     void setMuteMicrophone(bool muteMicrophone) override
     {
-        controller_->SetMicMute(muteMicrophone);
+        m_controller->SetMicMute(muteMicrophone);
     }
 
     void setAudioOutputGainControlEnabled(bool enabled) override
     {
-        controller_->SetAudioOutputGainControlEnabled(enabled);
+        m_controller->SetAudioOutputGainControlEnabled(enabled);
     }
 
     void setEchoCancellationStrength(int strength) override
     {
-        controller_->SetEchoCancellationStrength(strength);
+        m_controller->SetEchoCancellationStrength(strength);
     }
 
     std::string getLastError() override
     {
-        switch (controller_->GetLastError())
+        switch (m_controller->GetLastError())
         {
-        case tgvoip::ERROR_INCOMPATIBLE:
-            return "ERROR_INCOMPATIBLE";
-        case tgvoip::ERROR_TIMEOUT:
-            return "ERROR_TIMEOUT";
-        case tgvoip::ERROR_AUDIO_IO:
-            return "ERROR_AUDIO_IO";
-        case tgvoip::ERROR_PROXY:
-            return "ERROR_PROXY";
+        case tgvoip::Error::INCOMPATIBLE:
+            return "Error::INCOMPATIBLE";
+        case tgvoip::Error::TIMEOUT:
+            return "Error::TIMEOUT";
+        case tgvoip::Error::AUDIO_IO:
+            return "Error::AUDIO_IO";
+        case tgvoip::Error::PROXY:
+            return "Error::PROXY";
         default:
-            return "ERROR_UNKNOWN";
+            return "Error::UNKNOWN";
         }
     }
 
     std::string getDebugInfo() override
     {
-        return controller_->GetDebugString();
+        return m_controller->GetDebugString();
     }
 
     std::int64_t getPreferredRelayId() override
     {
-        return controller_->GetPreferredRelayID();
+        return m_controller->GetPreferredRelayID();
     }
 
     TgVoipTrafficStats getTrafficStats() override
     {
         tgvoip::VoIPController::TrafficStats stats;
-        controller_->GetStats(&stats);
-        return {
+        m_controller->GetStats(&stats);
+        return TgVoipTrafficStats
+        {
             .bytesSentWifi = stats.bytesSentWifi,
             .bytesReceivedWifi = stats.bytesRecvdWifi,
             .bytesSentMobile = stats.bytesSentMobile,
-            .bytesReceivedMobile = stats.bytesRecvdMobile};
+            .bytesReceivedMobile = stats.bytesRecvdMobile
+        };
     }
 
     TgVoipPersistentState getPersistentState() override
     {
-        return {controller_->GetPersistentState()};
+        return {m_controller->GetPersistentState()};
     }
 
     TgVoipFinalState stop() override
     {
-        controller_->Stop();
+        m_controller->Stop();
 
-        TgVoipFinalState finalState = {
+        TgVoipFinalState finalState =
+        {
             .persistentState = getPersistentState(),
-            .debugLog = controller_->GetDebugLog(),
+            .debugLog = m_controller->GetDebugLog(),
             .trafficStats = getTrafficStats(),
-            .isRatingSuggested = controller_->NeedRate()};
+            .isRatingSuggested = m_controller->NeedRate()
+        };
 
-        delete controller_;
-        controller_ = nullptr;
+        delete m_controller;
+        m_controller = nullptr;
 
         return finalState;
     }
 
-    static void controllerStateCallback(tgvoip::VoIPController* controller, int state)
+    static void controllerStateCallback(tgvoip::VoIPController* controller, tgvoip::State state)
     {
         TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
-        std::lock_guard<std::mutex> lock(self->m_onStateUpdated);
+        std::lock_guard<std::mutex> lock(self->m_mutexOnStateUpdated);
 
-        if (self->onStateUpdated_)
+        if (self->m_onStateUpdated)
         {
             TgVoipState mappedState;
             switch (state)
             {
-            case tgvoip::STATE_WAIT_INIT:
+            case tgvoip::State::WAIT_INIT:
                 mappedState = TgVoipState::WaitInit;
                 break;
-            case tgvoip::STATE_WAIT_INIT_ACK:
+            case tgvoip::State::WAIT_INIT_ACK:
                 mappedState = TgVoipState::WaitInitAck;
                 break;
-            case tgvoip::STATE_ESTABLISHED:
+            case tgvoip::State::ESTABLISHED:
                 mappedState = TgVoipState::Estabilished;
                 break;
-            case tgvoip::STATE_FAILED:
+            case tgvoip::State::FAILED:
                 mappedState = TgVoipState::Failed;
                 break;
-            case tgvoip::STATE_RECONNECTING:
+            case tgvoip::State::RECONNECTING:
                 mappedState = TgVoipState::Reconnecting;
                 break;
             default:
@@ -364,29 +370,29 @@ public:
                 break;
             }
 
-            self->onStateUpdated_(mappedState);
+            self->m_onStateUpdated(mappedState);
         }
     }
 
     static void signalBarsCallback(tgvoip::VoIPController* controller, int signalBars)
     {
         TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
-        std::lock_guard<std::mutex> lock(self->m_onSignalBarsUpdated);
+        std::lock_guard<std::mutex> lock(self->m_mutexOnSignalBarsUpdated);
 
-        if (self->onSignalBarsUpdated_)
+        if (self->m_onSignalBarsUpdated)
         {
-            self->onSignalBarsUpdated_(signalBars);
+            self->m_onSignalBarsUpdated(signalBars);
         }
     }
 
 private:
-    tgvoip::VoIPController* controller_;
-    std::function<void(TgVoipState)> onStateUpdated_;
-    std::function<void(int)> onSignalBarsUpdated_;
-    std::mutex m_onStateUpdated, m_onSignalBarsUpdated;
+    tgvoip::VoIPController* m_controller;
+    std::function<void(TgVoipState)> m_onStateUpdated;
+    std::function<void(int)> m_onSignalBarsUpdated;
+    std::mutex m_mutexOnStateUpdated, m_mutexOnSignalBarsUpdated;
 };
 
-std::function<void(std::string const&)> globalLoggingFunction;
+static std::function<void(std::string const&)> globalLoggingFunction;
 
 void __tgvoip_call_tglog(const char* format, ...)
 {
@@ -398,7 +404,7 @@ void __tgvoip_call_tglog(const char* format, ...)
     const int length = std::vsnprintf(nullptr, 0, format, vaCopy);
     va_end(vaCopy);
 
-    std::vector<char> zc(length + 1);
+    std::vector<char> zc(static_cast<std::size_t>(length + 1));
     std::vsnprintf(zc.data(), zc.size(), format, vaArgs);
     va_end(vaArgs);
 

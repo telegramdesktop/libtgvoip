@@ -201,7 +201,7 @@ public:
     {
         assert(i < size);
         // [0] should return the most recent entry, [1] the one before it, and so on
-        ptrdiff_t _i = m_offset - i - 1;
+        std::ptrdiff_t _i = m_offset - i - 1;
         if (_i < 0)
             _i = size + _i;
         return m_data[_i];
@@ -211,7 +211,7 @@ public:
     {
         assert(i < size);
         // [0] should return the most recent entry, [1] the one before it, and so on
-        ptrdiff_t _i = m_offset - i - 1;
+        std::ptrdiff_t _i = m_offset - i - 1;
         if (_i < 0)
             _i = size + _i;
         return m_data[_i];
@@ -224,7 +224,7 @@ public:
 
 private:
     std::array<T, size> m_data;
-    ptrdiff_t m_offset = 0;
+    std::ptrdiff_t m_offset = 0;
 };
 
 template <std::size_t bufSize, std::size_t bufCount>

@@ -331,11 +331,11 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 					}
 					if(udpConnectivityState!=UDP_AVAILABLE)
 						udpConnectivityState=UDP_AVAILABLE;
-					if(state!=STATE_ESTABLISHED)
-						SetState(STATE_ESTABLISHED);
+					if(state!=State::ESTABLISHED)
+						SetState(State::ESTABLISHED);
 					if(!audioInput){
 						InitializeAudio();
-						if(state!=STATE_FAILED){
+						if(state!=State::FAILED){
 							//	audioOutput->Start();
 						}
 					}
@@ -445,8 +445,8 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 	lastRecvPacketTime=GetCurrentTime();
 
 	if(type==PKT_STREAM_DATA || type==PKT_STREAM_DATA_X2 || type==PKT_STREAM_DATA_X3){
-		if(state!=STATE_ESTABLISHED && receivedInitAck)
-			SetState(STATE_ESTABLISHED);
+		if(state!=State::ESTABLISHED && receivedInitAck)
+			SetState(State::ESTABLISHED);
 		int count;
 		switch(type){
 			case PKT_STREAM_DATA_X2:
@@ -496,12 +496,12 @@ void VoIPGroupController::SendUdpPing(Endpoint& endpoint)
 {
 }
 
-void VoIPGroupController::SetNetworkType(int type)
+void VoIPGroupController::SetNetworkType(NetType type)
 {
     networkType = type;
     UpdateDataSavingState();
     UpdateAudioBitrateLimit();
-    string itfName = udpSocket->GetLocalInterfaceInfo(NULL, NULL);
+    string itfName = udpSocket->GetLocalInterfaceInfo(nullptr, nullptr);
     if (itfName != activeNetItfName)
     {
         udpSocket->OnActiveInterfaceChanged();
@@ -513,7 +513,7 @@ void VoIPGroupController::SetNetworkType(int type)
         udpConnectivityState = UDP_UNKNOWN;
         udpPingCount = 0;
         lastUdpPingTime = 0;
-        if (proxyProtocol == PROXY_SOCKS5)
+        if (proxyProtocol == Proxy::SOCKS5)
             InitUDPProxy();
         selectCanceller->CancelSelect();
     }
@@ -745,8 +745,8 @@ void VoIPGroupController::SetMicMute(bool mute)
             audioInput->Start();
         if (!audioInput->IsInitialized())
         {
-            lastError = ERROR_AUDIO_IO;
-            SetState(STATE_FAILED);
+            lastError = Error::AUDIO_IO;
+            SetState(State::FAILED);
             return;
         }
     }

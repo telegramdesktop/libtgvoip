@@ -89,7 +89,7 @@ VoIPController::VoIPController()
 {
     seq = 1;
     lastRemoteSeq = 0;
-    state = STATE_WAIT_INIT;
+    state = State::WAIT_INIT;
     audioInput = nullptr;
     audioOutput = nullptr;
     encoder = nullptr;
@@ -103,7 +103,7 @@ VoIPController::VoIPController()
     recvLossCount = 0;
     packetsReceived = 0;
     waitingForAcks = false;
-    networkType = NET_TYPE_UNKNOWN;
+    networkType = NetType::UNKNOWN;
     echoCanceller = nullptr;
     dontSendPackets = 0;
     micMuted = false;
@@ -126,7 +126,7 @@ VoIPController::VoIPController()
     udpPingCount = 0;
     lastUdpPingTime = 0;
 
-    proxyProtocol = PROXY_NONE;
+    proxyProtocol = Proxy::NONE;
     proxyPort = 0;
 
     selectCanceller = SocketSelectCanceller::Create();
@@ -348,7 +348,7 @@ void VoIPController::Start()
     udpSocket->Open();
     if (udpSocket->IsFailed())
     {
-        SetState(STATE_FAILED);
+        SetState(State::FAILED);
         return;
     }
 
@@ -362,7 +362,7 @@ void VoIPController::Start()
 
 void VoIPController::Connect()
 {
-    assert(state != STATE_WAIT_INIT_ACK);
+    assert(state != State::WAIT_INIT_ACK);
     connectionInitTime = GetCurrentTime();
     if (config.initTimeout == 0.0)
     {
@@ -389,7 +389,7 @@ void VoIPController::SetEncryptionKey(char* key, bool isOutgoing)
     this->isOutgoing = isOutgoing;
 }
 
-void VoIPController::SetNetworkType(int type)
+void VoIPController::SetNetworkType(NetType type)
 {
     networkType = type;
     UpdateDataSavingState();
@@ -410,7 +410,7 @@ void VoIPController::SetNetworkType(int type)
     {
         udpSocket->OnActiveInterfaceChanged();
         LOGI("Active network interface changed: %s -> %s", activeNetItfName.c_str(), itfName.c_str());
-        bool isFirstChange = activeNetItfName.length() == 0 && state != STATE_ESTABLISHED && state != STATE_RECONNECTING;
+        bool isFirstChange = activeNetItfName.length() == 0 && state != State::ESTABLISHED && state != State::RECONNECTING;
         activeNetItfName = itfName;
         if (isFirstChange)
             return;
@@ -452,7 +452,7 @@ void VoIPController::SetNetworkType(int type)
                 }
             }
             lastUdpPingTime = 0;
-            if (proxyProtocol == PROXY_SOCKS5)
+            if (proxyProtocol == Proxy::SOCKS5)
                 InitUDPProxy();
             if (allowP2p && currentEndpoint)
             {
@@ -521,14 +521,14 @@ void VoIPController::SetMicMute(bool mute)
             audioInput->Start();
         if (!audioInput->IsInitialized())
         {
-            lastError = ERROR_AUDIO_IO;
-            SetState(STATE_FAILED);
+            lastError = Error::AUDIO_IO;
+            SetState(State::FAILED);
             return;
         }
     }
     if (echoCanceller)
         echoCanceller->Enable(!mute);
-    if (state == STATE_ESTABLISHED)
+    if (state == State::ESTABLISHED)
     {
         messageThread.Post([this] {
             for (std::shared_ptr<Stream>& s : outgoingStreams)
@@ -667,7 +667,7 @@ std::int64_t VoIPController::GetPreferredRelayID()
     return preferredRelay;
 }
 
-int VoIPController::GetLastError()
+Error VoIPController::GetLastError()
 {
     return lastError;
 }
@@ -692,7 +692,7 @@ std::string VoIPController::GetDebugLog()
             network["mnc"] = carrier.mnc;
         }
     }
-    else if (networkType == NET_TYPE_WIFI)
+    else if (networkType == NetType::WIFI)
     {
 #ifdef __ANDROID__
         jni::DoWithJNI([&](JNIEnv* env) {
@@ -775,7 +775,7 @@ std::string VoIPController::GetDebugLog()
         p2pType = "lan";
 
     std::vector<std::string> problems;
-    if (lastError == ERROR_TIMEOUT)
+    if (lastError == Error::TIMEOUT)
         problems.push_back("timeout");
     if (wasReconnecting)
         problems.push_back("reconnecting");
@@ -840,7 +840,7 @@ std::string VoIPController::GetCurrentAudioOutputID()
     return currentAudioOutput;
 }
 
-void VoIPController::SetProxy(int protocol, std::string address, std::uint16_t port, std::string username, std::string password)
+void VoIPController::SetProxy(Proxy protocol, std::string address, std::uint16_t port, std::string username, std::string password)
 {
     proxyProtocol = protocol;
     proxyAddress = std::move(address);
@@ -938,7 +938,7 @@ void VoIPController::SetAudioDataCallbacks(std::function<void(std::int16_t*, std
 }
 #endif
 
-int VoIPController::GetConnectionState()
+State VoIPController::GetConnectionState() const
 {
     return state;
 }
@@ -1026,7 +1026,7 @@ std::vector<std::uint8_t> VoIPController::GetPersistentState()
     Json::object obj = Json::object {
         {"ver", 1},
     };
-    if (proxyProtocol == PROXY_SOCKS5)
+    if (proxyProtocol == Proxy::SOCKS5)
     {
         char pbuf[128];
         snprintf(pbuf, sizeof(pbuf), "%s:%u", proxyAddress.c_str(), proxyPort);
@@ -1065,8 +1065,8 @@ void VoIPController::InitializeTimers()
 {
     initTimeoutID = messageThread.Post([this] {
         LOGW("Init timeout, disconnecting");
-        lastError = ERROR_TIMEOUT;
-        SetState(STATE_FAILED);
+        lastError = Error::TIMEOUT;
+        SetState(State::FAILED);
     },
         config.initTimeout);
 
@@ -1133,16 +1133,16 @@ void VoIPController::RunSendThread()
 
 #pragma mark - Miscellaneous
 
-void VoIPController::SetState(int state)
+void VoIPController::SetState(State state)
 {
     this->state = state;
-    LOGV("Call state changed to %d", state);
+    LOGV("Call state changed to %d", static_cast<int>(state));
     stateChangeTime = GetCurrentTime();
     messageThread.Post([this, state] {
         if (callbacks.connectionStateChanged)
             callbacks.connectionStateChanged(this, state);
     });
-    if (state == STATE_ESTABLISHED)
+    if (state == State::ESTABLISHED)
     {
         SetMicMute(micMuted);
         if (!wasEstablished)
@@ -1394,9 +1394,9 @@ void VoIPController::InitializeAudio()
     if (!audioOutput->IsInitialized())
     {
         LOGE("Error initializing audio playback");
-        lastError = ERROR_AUDIO_IO;
+        lastError = Error::AUDIO_IO;
 
-        SetState(STATE_FAILED);
+        SetState(State::FAILED);
         return;
     }
     UpdateAudioBitrateLimit();
@@ -1414,9 +1414,9 @@ void VoIPController::StartAudio()
         if (!audioInput->IsInitialized())
         {
             LOGE("Error initializing audio capture");
-            lastError = ERROR_AUDIO_IO;
+            lastError = Error::AUDIO_IO;
 
-            SetState(STATE_FAILED);
+            SetState(State::FAILED);
             return;
         }
     }
@@ -1469,12 +1469,12 @@ void VoIPController::UpdateAudioBitrateLimit()
             maxBitrate = maxAudioBitrateSaving;
             encoder->SetBitrate(initAudioBitrateSaving);
         }
-        else if (networkType == NET_TYPE_GPRS)
+        else if (networkType == NetType::GPRS)
         {
             maxBitrate = maxAudioBitrateGPRS;
             encoder->SetBitrate(initAudioBitrateGPRS);
         }
-        else if (networkType == NET_TYPE_EDGE)
+        else if (networkType == NetType::EDGE)
         {
             maxBitrate = maxAudioBitrateEDGE;
             encoder->SetBitrate(initAudioBitrateEDGE);
@@ -1492,19 +1492,19 @@ void VoIPController::UpdateAudioBitrateLimit()
 
 void VoIPController::UpdateDataSavingState()
 {
-    if (config.dataSaving == DATA_SAVING_ALWAYS)
+    if (config.dataSaving == DataSaving::ALWAYS)
     {
         dataSavingMode = true;
     }
-    else if (config.dataSaving == DATA_SAVING_MOBILE)
+    else if (config.dataSaving == DataSaving::MOBILE)
     {
-        dataSavingMode = networkType == NET_TYPE_GPRS || networkType == NET_TYPE_EDGE || networkType == NET_TYPE_3G || networkType == NET_TYPE_HSPA || networkType == NET_TYPE_LTE || networkType == NET_TYPE_OTHER_MOBILE;
+        dataSavingMode = networkType == NetType::GPRS || networkType == NetType::EDGE || networkType == NetType::THREE_G || networkType == NetType::HSPA || networkType == NetType::LTE || networkType == NetType::OTHER_MOBILE;
     }
     else
     {
         dataSavingMode = false;
     }
-    LOGI("update data saving mode, config %d, enabled %d, reqd by peer %d", config.dataSaving, dataSavingMode, dataSavingRequestedByPeer);
+    LOGI("update data saving mode, config %d, enabled %d, reqd by peer %d", static_cast<int>(config.dataSaving), dataSavingMode, dataSavingRequestedByPeer);
 }
 
 #pragma mark - Networking & crypto
@@ -1569,7 +1569,7 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
     }
     else
     {
-        if (state == STATE_WAIT_INIT || state == STATE_WAIT_INIT_ACK)
+        if (state == State::WAIT_INIT || state == State::WAIT_INIT_ACK)
         {
             s->WriteInt32(TLID_DECRYPTED_AUDIO_BLOCK);
             std::int64_t randomID;
@@ -1582,7 +1582,7 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
             std::uint32_t pflags = PFLAG_HAS_RECENT_RECV | PFLAG_HAS_SEQ;
             if (length > 0)
                 pflags |= PFLAG_HAS_DATA;
-            if (state == STATE_WAIT_INIT || state == STATE_WAIT_INIT_ACK)
+            if (state == State::WAIT_INIT || state == State::WAIT_INIT_ACK)
             {
                 pflags |= PFLAG_HAS_CALL_ID | PFLAG_HAS_PROTO;
             }
@@ -1746,10 +1746,10 @@ void VoIPController::SendInit()
             /*.endpoint=*/e.id});
     }
 
-    if (state == STATE_WAIT_INIT)
-        SetState(STATE_WAIT_INIT_ACK);
+    if (state == State::WAIT_INIT)
+        SetState(State::WAIT_INIT_ACK);
     messageThread.Post([this] {
-        if (state == STATE_WAIT_INIT_ACK)
+        if (state == State::WAIT_INIT_ACK)
         {
             SendInit();
         }
@@ -1829,13 +1829,13 @@ void VoIPController::InitUDPProxy()
 void VoIPController::RunRecvThread()
 {
     LOGI("Receive thread starting");
-    if (proxyProtocol == PROXY_SOCKS5)
+    if (proxyProtocol == Proxy::SOCKS5)
     {
         resolvedProxyAddress = NetworkSocket::ResolveDomainName(proxyAddress);
         if (resolvedProxyAddress.IsEmpty())
         {
             LOGW("Error resolving proxy address %s", proxyAddress.c_str());
-            SetState(STATE_FAILED);
+            SetState(State::FAILED);
             return;
         }
     }
@@ -1847,7 +1847,7 @@ void VoIPController::RunRecvThread()
     while (runReceiver)
     {
 
-        if (proxyProtocol == PROXY_SOCKS5 && needReInitUdpProxy)
+        if (proxyProtocol == Proxy::SOCKS5 && needReInitUdpProxy)
         {
             InitUDPProxy();
             needReInitUdpProxy = false;
@@ -1899,7 +1899,7 @@ void VoIPController::RunRecvThread()
             if (find(errorSockets.begin(), errorSockets.end(), realUdpSocket) != errorSockets.end())
             {
                 LOGW("UDP socket failed");
-                SetState(STATE_FAILED);
+                SetState(State::FAILED);
                 return;
             }
             MutexGuard m(endpointsMutex);
@@ -2227,7 +2227,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         if (memcmp(msgHash, sha + (SHA1_LENGTH - 16), 16) != 0)
         {
             LOGW("Received packet has wrong hash after decryption");
-            if (state == STATE_WAIT_INIT || state == STATE_WAIT_INIT_ACK)
+            if (state == State::WAIT_INIT || state == State::WAIT_INIT_ACK)
                 retryWith2 = true;
             else
                 return;
@@ -2309,10 +2309,10 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
 
     lastRecvPacketTime = GetCurrentTime();
 
-    if (state == STATE_RECONNECTING)
+    if (state == State::RECONNECTING)
     {
         LOGI("Received a valid packet while reconnecting - setting state to established");
-        SetState(STATE_ESTABLISHED);
+        SetState(State::ESTABLISHED);
     }
 
     if (srcEndpoint.type == Endpoint::Type::UDP_P2P_INET && !srcEndpoint.IsIPv6Only())
@@ -2368,8 +2368,8 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 {
                     LOGW("Received packet has wrong call id");
 
-                    lastError = ERROR_UNKNOWN;
-                    SetState(STATE_FAILED);
+                    lastError = Error::UNKNOWN;
+                    SetState(State::FAILED);
                     return;
                 }
             }
@@ -2383,8 +2383,8 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 {
                     LOGW("Received packet uses wrong protocol");
 
-                    lastError = ERROR_INCOMPATIBLE;
-                    SetState(STATE_FAILED);
+                    lastError = Error::INCOMPATIBLE;
+                    SetState(State::FAILED);
                     return;
                 }
             }
@@ -2611,9 +2611,9 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         std::uint32_t minVer = (std::uint32_t)in.ReadInt32();
         if (minVer > PROTOCOL_VERSION || peerVersion < MIN_PROTOCOL_VERSION)
         {
-            lastError = ERROR_INCOMPATIBLE;
+            lastError = Error::INCOMPATIBLE;
 
-            SetState(STATE_FAILED);
+            SetState(State::FAILED);
             return;
         }
         std::uint32_t flags = (std::uint32_t)in.ReadInt32();
@@ -2722,9 +2722,9 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 std::uint32_t minVer = (std::uint32_t)in.ReadInt32();
                 if (minVer > PROTOCOL_VERSION || peerVersion < MIN_PROTOCOL_VERSION)
                 {
-                    lastError = ERROR_INCOMPATIBLE;
+                    lastError = Error::INCOMPATIBLE;
 
-                    SetState(STATE_FAILED);
+                    SetState(State::FAILED);
                     return;
                 }
             }
@@ -2807,9 +2807,9 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 audioStarted = true;
             }
             messageThread.Post([this] {
-                if (state == STATE_WAIT_INIT_ACK)
+                if (state == State::WAIT_INIT_ACK)
                 {
-                    SetState(STATE_ESTABLISHED);
+                    SetState(State::ESTABLISHED);
                 }
             },
                 ServerConfig::GetSharedInstance()->GetDouble("established_delay_if_no_stream_data", 1.5));
@@ -2822,10 +2822,10 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         if (!receivedFirstStreamPacket)
         {
             receivedFirstStreamPacket = true;
-            if (state != STATE_ESTABLISHED && receivedInitAck)
+            if (state != State::ESTABLISHED && receivedInitAck)
             {
                 messageThread.Post([this]() {
-                    SetState(STATE_ESTABLISHED);
+                    SetState(State::ESTABLISHED);
                 },
                     .5);
                 LOGW("First audio packet - setting state to ESTABLISHED");
@@ -3318,12 +3318,12 @@ bool VoIPController::SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue
         if (!endpoint->socket)
         {
             LOGV("Connecting to %s:%u", endpoint->GetAddress().ToString().c_str(), endpoint->port);
-            if (proxyProtocol == PROXY_NONE)
+            if (proxyProtocol == Proxy::NONE)
             {
                 endpoint->socket = std::make_shared<NetworkSocketTCPObfuscated>(NetworkSocket::Create(NetworkProtocol::TCP));
                 endpoint->socket->Connect(endpoint->GetAddress(), endpoint->port);
             }
-            else if (proxyProtocol == PROXY_SOCKS5)
+            else if (proxyProtocol == Proxy::SOCKS5)
             {
                 NetworkSocket* tcp = NetworkSocket::Create(NetworkProtocol::TCP);
                 tcp->Connect(resolvedProxyAddress, proxyPort);
@@ -3476,31 +3476,31 @@ void VoIPController::ActuallySendPacket(NetworkPacket pkt, Endpoint& ep)
     }
 }
 
-std::string VoIPController::NetworkTypeToString(int type)
+std::string VoIPController::NetworkTypeToString(NetType type)
 {
     switch (type)
     {
-    case NET_TYPE_WIFI:
+    case NetType::WIFI:
         return "wifi";
-    case NET_TYPE_GPRS:
+    case NetType::GPRS:
         return "gprs";
-    case NET_TYPE_EDGE:
+    case NetType::EDGE:
         return "edge";
-    case NET_TYPE_3G:
+    case NetType::THREE_G:
         return "3g";
-    case NET_TYPE_HSPA:
+    case NetType::HSPA:
         return "hspa";
-    case NET_TYPE_LTE:
+    case NetType::LTE:
         return "lte";
-    case NET_TYPE_ETHERNET:
+    case NetType::ETHERNET:
         return "ethernet";
-    case NET_TYPE_OTHER_HIGH_SPEED:
+    case NetType::OTHER_HIGH_SPEED:
         return "other_high_speed";
-    case NET_TYPE_OTHER_LOW_SPEED:
+    case NetType::OTHER_LOW_SPEED:
         return "other_low_speed";
-    case NET_TYPE_DIALUP:
+    case NetType::DIALUP:
         return "dialup";
-    case NET_TYPE_OTHER_MOBILE:
+    case NetType::OTHER_MOBILE:
         return "other_mobile";
     default:
         return "unknown";
@@ -3719,14 +3719,16 @@ void VoIPController::SendPublicEndpointsRequest(const Endpoint& relay)
     Buffer buf(32);
     std::memcpy(*buf, relay.peerTag, 16);
     std::memset(*buf + 16, 0xFF, 16);
-    udpSocket->Send(NetworkPacket {
+    udpSocket->Send(NetworkPacket
+    {
         std::move(buf),
         relay.address,
         relay.port,
-        NetworkProtocol::UDP});
+        NetworkProtocol::UDP
+    });
 }
 
-Endpoint& VoIPController::GetEndpointByType(int type)
+Endpoint& VoIPController::GetEndpointByType(Endpoint::Type type)
 {
     if (type == Endpoint::Type::UDP_RELAY && preferredRelay)
         return endpoints.at(preferredRelay);
@@ -4049,7 +4051,7 @@ void VoIPController::EvaluateUdpPingResults()
     else
         avgPongs = 0.0;
     LOGI("UDP ping reply count: %.2f", avgPongs);
-    if (avgPongs == 0.0 && proxyProtocol == PROXY_SOCKS5 && udpSocket != realUdpSocket)
+    if (avgPongs == 0.0 && proxyProtocol == Proxy::SOCKS5 && udpSocket != realUdpSocket)
     {
         LOGI("Proxy does not let UDP through, closing proxy connection and using UDP directly");
         NetworkSocket* proxySocket = udpSocket;
@@ -4103,7 +4105,7 @@ void VoIPController::SendRelayPings()
 {
     ENFORCE_MSG_THREAD;
 
-    if ((state == STATE_ESTABLISHED || state == STATE_RECONNECTING) && endpoints.size() > 1)
+    if ((state == State::ESTABLISHED || state == State::RECONNECTING) && endpoints.size() > 1)
     {
         Endpoint* _preferredRelay = &endpoints.at(preferredRelay);
         Endpoint* _currentEndpoint = &endpoints.at(currentEndpoint);
@@ -4188,7 +4190,7 @@ void VoIPController::UpdateRTT()
 {
     rttHistory.Add(GetAverageRTT());
     //double v=rttHistory.Average();
-    if (rttHistory[0] > 10.0 && rttHistory[8] > 10.0 && (networkType == NET_TYPE_EDGE || networkType == NET_TYPE_GPRS))
+    if (rttHistory[0] > 10.0 && rttHistory[8] > 10.0 && (networkType == NetType::EDGE || networkType == NetType::GPRS))
     {
         waitingForAcks = true;
     }
@@ -4219,7 +4221,7 @@ void VoIPController::UpdateCongestion()
         double avgSendLossCount = sendLossCountHistory.Average() / packetsPerSec;
         //LOGV("avg send loss: %.3f%%", avgSendLossCount*100);
 
-        if (avgSendLossCount > packetLossToEnableExtraEC && networkType != NET_TYPE_GPRS && networkType != NET_TYPE_EDGE)
+        if (avgSendLossCount > packetLossToEnableExtraEC && networkType != NetType::GPRS && networkType != NetType::EDGE)
         {
             if (!shittyInternetMode)
             {
@@ -4263,7 +4265,7 @@ void VoIPController::UpdateCongestion()
         if (avgSendLossCount > rateMaxAcceptableSendLoss)
             needRate = true;
 
-        if ((avgSendLossCount < packetLossToEnableExtraEC || networkType == NET_TYPE_EDGE || networkType == NET_TYPE_GPRS) && shittyInternetMode)
+        if ((avgSendLossCount < packetLossToEnableExtraEC || networkType == NetType::EDGE || networkType == NetType::GPRS) && shittyInternetMode)
         {
             shittyInternetMode = false;
             for (std::shared_ptr<Stream>& s : outgoingStreams)
@@ -4292,8 +4294,8 @@ void VoIPController::UpdateAudioBitrate()
         if ((audioInput && !audioInput->IsInitialized()) || (audioOutput && !audioOutput->IsInitialized()))
         {
             LOGE("Audio I/O failed");
-            lastError = ERROR_AUDIO_IO;
-            SetState(STATE_FAILED);
+            lastError = Error::AUDIO_IO;
+            SetState(State::FAILED);
         }
 
         tgvoip::ConctlAct act = conctl->GetBandwidthControlAction();
@@ -4314,16 +4316,16 @@ void VoIPController::UpdateAudioBitrate()
                 encoder->SetBitrate(bitrate + audioBitrateStepIncr);
         }
 
-        if (state == STATE_ESTABLISHED && time - lastRecvPacketTime >= reconnectingTimeout)
+        if (state == State::ESTABLISHED && time - lastRecvPacketTime >= reconnectingTimeout)
         {
-            SetState(STATE_RECONNECTING);
+            SetState(State::RECONNECTING);
             if (needRateFlags & NEED_RATE_FLAG_RECONNECTING)
                 needRate = true;
             wasReconnecting = true;
             ResetUdpAvailability();
         }
 
-        if (state == STATE_ESTABLISHED || state == STATE_RECONNECTING)
+        if (state == State::ESTABLISHED || state == State::RECONNECTING)
         {
             if (time - lastRecvPacketTime >= config.recvTimeout)
             {
@@ -4363,8 +4365,8 @@ void VoIPController::UpdateAudioBitrate()
                 else
                 {
                     LOGW("Packet receive timeout, disconnecting");
-                    lastError = ERROR_TIMEOUT;
-                    SetState(STATE_FAILED);
+                    lastError = Error::TIMEOUT;
+                    SetState(State::FAILED);
                 }
             }
         }
@@ -4378,7 +4380,7 @@ void VoIPController::UpdateSignalBars()
     double avgSendLossCount = sendLossCountHistory.Average() / packetsPerSec;
 
     int signalBarCount = 4;
-    if (state == STATE_RECONNECTING || waitingForAcks)
+    if (state == State::RECONNECTING || waitingForAcks)
         signalBarCount = 1;
     if (endpoints.at(currentEndpoint).type == Endpoint::Type::TCP_RELAY)
     {
@@ -4461,7 +4463,7 @@ void VoIPController::UpdateQueuedPackets()
 
 void VoIPController::SendNopPacket()
 {
-    if (state != STATE_ESTABLISHED)
+    if (state != State::ESTABLISHED)
         return;
     SendOrEnqueuePacket(PendingOutgoingPacket {
         /*.seq=*/(firstSentPing = GenerateOutSeq()),
@@ -4544,7 +4546,7 @@ void VoIPController::TickJitterBufferAndCongestionControl()
 
 #pragma mark - Endpoint
 
-Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& _address, const IPv6Address& _v6address, Type type, unsigned char peerTag[16])
+Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& _address, const IPv6Address& _v6address, Type type, const unsigned char peerTag[16])
     : address(NetworkAddress::IPv4(_address.addr))
     , v6address(NetworkAddress::IPv6(_v6address.addr))
 {
@@ -4562,7 +4564,7 @@ Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& _addr
     udpPongCount = 0;
 }
 
-Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress _address, const NetworkAddress _v6address, Type type, unsigned char peerTag[16])
+Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress _address, const NetworkAddress _v6address, Type type, const unsigned char peerTag[16])
     : address(_address)
     , v6address(_v6address)
 {

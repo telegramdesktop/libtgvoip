@@ -360,7 +360,7 @@ void NetworkSocketWinsock::Open()
             if (res < 0)
             {
                 LOGE("error binding to port %u: %d / %s", 0, errno, strerror(errno));
-                //SetState(STATE_FAILED);
+                //SetState(State::FAILED);
                 return;
             }
         }

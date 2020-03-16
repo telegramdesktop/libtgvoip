@@ -30,7 +30,7 @@ void PacketReassembler::Reset()
 
 void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsigned int fragmentCount, std::uint32_t pts, std::uint8_t _fseq, bool keyframe, std::uint16_t rotation)
 {
-    for (std::unique_ptr<Packet>& packet : packets)
+    for (std::unique_ptr<Packet>& packet : m_packets)
     {
         if (packet->timestamp == pts)
         {
@@ -48,8 +48,8 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
             return;
         }
     }
-    std::uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (std::uint32_t)_fseq;
-    if ((std::uint8_t)lastFrameSeq > _fseq)
+    std::uint32_t fseq = (m_lastFrameSeq & 0xFFFFFF00) | static_cast<std::uint32_t>(_fseq);
+    if (static_cast<std::uint8_t>(m_lastFrameSeq) > _fseq)
         fseq += 256;
     //LOGV("fseq: %u", (unsigned int)fseq);
 
@@ -57,9 +57,9 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
 		LOGW("Received fragment doesn't belong here (ts=%u < maxTs=%u)", pts, maxTimestamp);
 		return;
 	}*/
-    if (lastFrameSeq > 3 && fseq < lastFrameSeq - 3)
+    if (m_lastFrameSeq > 3 && fseq < m_lastFrameSeq - 3)
     {
-        LOGW("Packet too late (fseq=%u, lastFseq=%u)", fseq, lastFrameSeq);
+        LOGW("Packet too late (fseq=%u, lastFseq=%u)", fseq, m_lastFrameSeq);
         return;
     }
     if (fragmentIndex >= fragmentCount)
@@ -73,97 +73,99 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
         return;
     }
 
-    maxTimestamp = std::max(maxTimestamp, pts);
+    m_maxTimestamp = std::max(m_maxTimestamp, pts);
 
-    packets.push_back(std::unique_ptr<Packet>(new Packet(fseq, pts, fragmentCount, 0, keyframe, rotation)));
-    packets[packets.size() - 1]->AddFragment(std::move(pkt), fragmentIndex);
-    while (packets.size() > 3)
+    m_packets.push_back(std::unique_ptr<Packet>(new Packet(fseq, pts, fragmentCount, 0, keyframe, rotation)));
+    m_packets[m_packets.size() - 1]->AddFragment(std::move(pkt), fragmentIndex);
+    while (m_packets.size() > 3)
     {
-        std::unique_ptr<Packet>& _old = packets[0];
+        std::unique_ptr<Packet>& _old = m_packets[0];
         if (_old->receivedPartCount == _old->partCount)
         {
-            std::unique_ptr<Packet> old = std::move(packets[0]);
-            packets.erase(packets.begin());
+            std::unique_ptr<Packet> old = std::move(m_packets[0]);
+            m_packets.erase(m_packets.begin());
 
             Buffer buffer = old->Reassemble();
-            callback(std::move(buffer), old->seq, old->isKeyframe, old->rotation);
-            oldPackets.push_back(std::move(old));
-            while (oldPackets.size() > NUM_OLD_PACKETS)
-                oldPackets.erase(oldPackets.begin());
+            m_callback(std::move(buffer), old->seq, old->isKeyframe, old->rotation);
+            m_oldPackets.push_back(std::move(old));
+            while (m_oldPackets.size() > NUM_OLD_PACKETS)
+                m_oldPackets.erase(m_oldPackets.begin());
         }
         else
         {
-            LOGW("Packet %u not reassembled (%u of %u)", packets[0]->seq, packets[0]->receivedPartCount, packets[0]->partCount);
-            if (packets[0]->partCount - packets[0]->receivedPartCount == 1 && !waitingForFEC)
+            LOGW("Packet %u not reassembled (%u of %u)", m_packets[0]->seq, m_packets[0]->receivedPartCount, m_packets[0]->partCount);
+            if (m_packets[0]->partCount - m_packets[0]->receivedPartCount == 1 && !m_waitingForFEC)
             {
                 bool found = false;
-                for (FecPacket& fec : fecPackets)
+                for (FecPacket& fec : m_fecPackets)
                 {
-                    if (packets[0]->seq <= fec.seq && packets[0]->seq > fec.seq - fec.prevFrameCount)
+                    if (m_packets[0]->seq <= fec.seq && m_packets[0]->seq > fec.seq - fec.prevFrameCount)
                     {
                         LOGI("Found FEC packet: %u %u", fec.seq, fec.prevFrameCount);
                         found = true;
                         TryDecodeFEC(fec);
-                        packets.erase(packets.begin());
+                        m_packets.erase(m_packets.begin());
                         break;
                     }
                 }
                 if (!found)
                 {
-                    waitingForFEC = true;
+                    m_waitingForFEC = true;
                     break;
                 }
             }
             else
             {
-                waitingForFEC = false;
+                m_waitingForFEC = false;
                 LOGE("unrecoverable packet loss");
-                std::unique_ptr<Packet> old = std::move(packets[0]);
-                packets.erase(packets.begin());
-                oldPackets.push_back(std::move(old));
-                while (oldPackets.size() > NUM_OLD_PACKETS)
-                    oldPackets.erase(oldPackets.begin());
+                std::unique_ptr<Packet> old = std::move(m_packets[0]);
+                m_packets.erase(m_packets.begin());
+                m_oldPackets.push_back(std::move(old));
+                while (m_oldPackets.size() > NUM_OLD_PACKETS)
+                    m_oldPackets.erase(m_oldPackets.begin());
             }
         }
     }
 
-    lastFrameSeq = fseq;
+    m_lastFrameSeq = fseq;
 }
 
 void PacketReassembler::AddFEC(Buffer data, std::uint8_t _fseq, unsigned int frameCount, unsigned int fecScheme)
 {
-    std::uint32_t fseq = (lastFrameSeq & 0xFFFFFF00) | (std::uint32_t)_fseq;
+    std::uint32_t fseq = (m_lastFrameSeq & 0xFFFFFF00) | static_cast<std::uint32_t>(_fseq);
     std::ostringstream _s;
-    for (unsigned int i = 0; i < frameCount; i++)
+    for (unsigned int i = 0; i < frameCount; ++i)
     {
         _s << (fseq - i);
-        _s << " ";
+        _s << ' ';
     }
     //LOGV("Received FEC packet: len %u, scheme %u, frames %s", (unsigned int)data.Length(), fecScheme, _s.str().c_str());
-    FecPacket fec {
+    FecPacket fec
+    {
         fseq,
         frameCount,
         fecScheme,
-        std::move(data)};
+        std::move(data)
+    };
 
-    if (waitingForFEC)
+    if (m_waitingForFEC)
     {
-        if (packets[0]->seq <= fec.seq && packets[0]->seq > fec.seq - fec.prevFrameCount)
+        if (m_packets[0]->seq <= fec.seq && m_packets[0]->seq > fec.seq - fec.prevFrameCount)
         {
             LOGI("Found FEC packet: %u %u", fec.seq, fec.prevFrameCount);
             TryDecodeFEC(fec);
-            packets.erase(packets.begin());
-            waitingForFEC = false;
+            m_packets.erase(m_packets.begin());
+            m_waitingForFEC = false;
         }
     }
-    fecPackets.push_back(std::move(fec));
-    while (fecPackets.size() > NUM_FEC_PACKETS)
-        fecPackets.erase(fecPackets.begin());
+    m_fecPackets.push_back(std::move(fec));
+    while (m_fecPackets.size() > NUM_FEC_PACKETS)
+        m_fecPackets.erase(m_fecPackets.begin());
 }
 
 void PacketReassembler::SetCallback(std::function<void(Buffer packet, std::uint32_t pts, bool keyframe, std::uint16_t rotation)> callback)
 {
-    this->callback = callback;
+    this->m_callback = callback;
 }
 
 bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
@@ -171,24 +173,24 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
     LOGI("Decoding FEC");
 
     std::vector<Buffer> packetsForRecovery;
-    for (std::unique_ptr<Packet>& p : oldPackets)
+    for (std::unique_ptr<Packet>& p : m_oldPackets)
     {
         if (p->seq <= fec.seq && p->seq > fec.seq - fec.prevFrameCount)
         {
             LOGD("Adding frame %u from old", p->seq);
-            for (std::uint32_t i = 0; i < p->partCount; i++)
+            for (std::uint32_t i = 0; i < p->partCount; ++i)
             {
                 packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
             }
         }
     }
 
-    for (std::unique_ptr<Packet>& p : packets)
+    for (std::unique_ptr<Packet>& p : m_packets)
     {
         if (p->seq <= fec.seq && p->seq > fec.seq - fec.prevFrameCount)
         {
             LOGD("Adding frame %u from pending", p->seq);
-            for (std::uint32_t i = 0; i < p->partCount; i++)
+            for (std::uint32_t i = 0; i < p->partCount; ++i)
             {
                 //LOGV("[%u] size %u", i, p.parts[i].Length());
                 packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
@@ -199,10 +201,10 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
     if (fec.fecScheme == FEC_SCHEME_XOR)
     {
         Buffer recovered = ParityFEC::Decode(packetsForRecovery, fec.data);
-        LOGI("Recovered packet size %u", (unsigned int)recovered.Length());
+        LOGI("Recovered packet size %u", static_cast<unsigned>(recovered.Length()));
         if (!recovered.IsEmpty())
         {
-            std::unique_ptr<Packet>& pkt = packets[0];
+            std::unique_ptr<Packet>& pkt = m_packets[0];
             if (pkt->parts.size() < pkt->partCount)
             {
                 pkt->parts.push_back(std::move(recovered));
@@ -218,8 +220,8 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
                     }
                 }
             }
-            pkt->receivedPartCount++;
-            callback(pkt->Reassemble(), pkt->seq, pkt->isKeyframe, pkt->rotation);
+            ++pkt->receivedPartCount;
+            m_callback(pkt->Reassemble(), pkt->seq, pkt->isKeyframe, pkt->rotation);
         }
     }
 
@@ -227,6 +229,17 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
 }
 
 #pragma mark - Packet
+
+PacketReassembler::Packet::Packet(std::uint32_t seq, std::uint32_t timestamp, std::uint32_t partCount,
+                                  std::uint32_t receivedPartCount, bool keyframe, std::uint16_t rotation)
+   : seq(seq)
+   , timestamp(timestamp)
+   , partCount(partCount)
+   , receivedPartCount(receivedPartCount)
+   , isKeyframe(keyframe)
+   , rotation(rotation)
+{
+}
 
 void PacketReassembler::Packet::AddFragment(Buffer pkt, std::uint32_t fragmentIndex)
 {
@@ -244,15 +257,14 @@ void PacketReassembler::Packet::AddFragment(Buffer pkt, std::uint32_t fragmentIn
     }
     else
     {
-        while (parts.size() < fragmentIndex)
-            parts.push_back(Buffer());
-        parts.push_back(std::move(pkt));
+        parts.resize(fragmentIndex + 1);
+        parts[fragmentIndex] = std::move(pkt);
         //LOGV("add3");
     }
-    receivedPartCount++;
+    ++receivedPartCount;
     //assert(parts.size()>=receivedPartCount);
     if (parts.size() < receivedPartCount)
-        LOGW("Received %u parts but parts.size is %u", (unsigned int)receivedPartCount, (unsigned int)parts.size());
+        LOGW("Received %u parts but parts.size is %u", static_cast<unsigned>(receivedPartCount), static_cast<unsigned>(parts.size()));
 }
 
 Buffer PacketReassembler::Packet::Reassemble()
@@ -264,7 +276,7 @@ Buffer PacketReassembler::Packet::Reassemble()
         return Buffer::CopyOf(parts[0]);
     }
     BufferOutputStream out(10240);
-    for (unsigned int i = 0; i < partCount; i++)
+    for (unsigned int i = 0; i < partCount; ++i)
     {
         out.WriteBytes(parts[i]);
         //parts[i]=Buffer();

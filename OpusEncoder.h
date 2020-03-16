@@ -21,64 +21,65 @@ struct OpusEncoder;
 
 namespace tgvoip
 {
+
 class OpusEncoder
 {
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(OpusEncoder);
-    OpusEncoder(MediaStreamItf* source, bool needSecondary);
+    OpusEncoder(MediaStreamItf* m_source, bool needSecondary);
     virtual ~OpusEncoder();
     virtual void Start();
     virtual void Stop();
+
+    using CallbackType = std::function<void(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength)>;
+    void SetCallback(CallbackType m_callback);
+
     void SetBitrate(std::uint32_t bitrate);
     void SetEchoCanceller(EchoCanceller* aec);
     void SetOutputFrameDuration(std::uint32_t duration);
     void SetPacketLoss(int percent);
-    int GetPacketLoss();
-    std::uint32_t GetBitrate();
+    int GetPacketLoss() const;
+    std::uint32_t GetBitrate() const;
     void SetDTX(bool enable);
-    void SetLevelMeter(AudioLevelMeter* levelMeter);
-    void SetCallback(std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> callback);
+    void SetLevelMeter(AudioLevelMeter* m_levelMeter);
     void SetSecondaryEncoderEnabled(bool enabled);
     void SetVadMode(bool vad);
     void AddAudioEffect(effects::AudioEffect* effect);
     void RemoveAudioEffect(effects::AudioEffect* effect);
-    int GetComplexity()
-    {
-        return complexity;
-    }
+    int GetComplexity() const;
 
 private:
+    MediaStreamItf* m_source;
+    ::OpusEncoder* m_enc;
+    ::OpusEncoder* m_secondaryEncoder;
+    unsigned char m_buffer[4096];
+    std::atomic<std::uint32_t> m_requestedBitrate;
+    std::uint32_t m_currentBitrate;
+    Thread* m_thread;
+    BlockingQueue<Buffer> m_queue;
+    BufferPool<960 * 2, 10> m_bufferPool;
+    EchoCanceller* m_echoCanceller;
+    std::atomic<int> m_complexity;
+    std::atomic<bool> m_running;
+    std::uint32_t m_frameDuration;
+    int m_packetLossPercent;
+    AudioLevelMeter* m_levelMeter;
+    std::atomic<bool> m_secondaryEncoderEnabled;
+    bool m_vadMode = false;
+    std::uint32_t m_vadNoVoiceBitrate;
+    std::vector<effects::AudioEffect*> m_postProcEffects;
+    int m_secondaryEnabledBandwidth;
+    int m_vadModeVoiceBandwidth;
+    int m_vadModeNoVoiceBandwidth;
+    bool m_wasSecondaryEncoderEnabled = false;
+    CallbackType m_callback;
+
     static std::size_t Callback(unsigned char* data, std::size_t len, void* param);
     void RunThread();
     void Encode(std::int16_t* data, std::size_t len);
     void InvokeCallback(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength);
-    MediaStreamItf* source;
-    ::OpusEncoder* enc;
-    ::OpusEncoder* secondaryEncoder;
-    unsigned char buffer[4096];
-    std::atomic<std::uint32_t> requestedBitrate;
-    std::uint32_t currentBitrate;
-    Thread* thread;
-    BlockingQueue<Buffer> queue;
-    BufferPool<960 * 2, 10> bufferPool;
-    EchoCanceller* echoCanceller;
-    std::atomic<int> complexity;
-    std::atomic<bool> running;
-    std::uint32_t frameDuration;
-    int packetLossPercent;
-    AudioLevelMeter* levelMeter;
-    std::atomic<bool> secondaryEncoderEnabled;
-    bool vadMode = false;
-    std::uint32_t vadNoVoiceBitrate;
-    std::vector<effects::AudioEffect*> postProcEffects;
-    int secondaryEnabledBandwidth;
-    int vadModeVoiceBandwidth;
-    int vadModeNoVoiceBandwidth;
-
-    bool wasSecondaryEncoderEnabled = false;
-
-    std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> callback;
 };
-}
 
-#endif //LIBTGVOIP_OPUSENCODER_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_OPUSENCODER_H

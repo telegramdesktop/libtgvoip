@@ -23,7 +23,7 @@
 //#define PKT_REQUEST_GROUP 16
 #define PKT_STREAM_EC 17
 
-#define IS_MOBILE_NETWORK(x) (x == NET_TYPE_GPRS || x == NET_TYPE_EDGE || x == NET_TYPE_3G || x == NET_TYPE_HSPA || x == NET_TYPE_LTE || x == NET_TYPE_OTHER_MOBILE)
+#define IS_MOBILE_NETWORK(x) (x == NetType::GPRS || x == NetType::EDGE || x == NetType::THREE_G || x == NetType::HSPA || x == NetType::LTE || x == NetType::OTHER_MOBILE)
 
 #define PROTOCOL_NAME 0x50567247 // "GrVP" in little endian (reversed here)
 #define PROTOCOL_VERSION 9

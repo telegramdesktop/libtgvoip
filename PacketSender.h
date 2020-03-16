@@ -11,66 +11,30 @@
 
 namespace tgvoip
 {
+
 class PacketSender
 {
 public:
-    PacketSender(VoIPController* controller)
-        : controller(controller) {};
-    virtual ~PacketSender() {};
+    PacketSender(VoIPController* m_controller);
+    virtual ~PacketSender();
     virtual void PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, std::uint8_t type, std::uint32_t size) = 0;
     virtual void PacketLost(std::uint32_t seq, std::uint8_t type, std::uint32_t size) = 0;
 
 protected:
-    void SendExtra(Buffer& data, unsigned char type)
-    {
-        controller->SendExtra(data, type);
-    }
+    VoIPController* m_controller;
 
-    void IncrementUnsentStreamPackets()
-    {
-        controller->unsentStreamPackets++;
-    }
-
-    std::uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt)
-    {
-        std::uint32_t seq = controller->GenerateOutSeq();
-        pkt.seq = seq;
-        controller->SendOrEnqueuePacket(std::move(pkt), true, this);
-        return seq;
-    }
-
-    double GetConnectionInitTime()
-    {
-        return controller->connectionInitTime;
-    }
-
-    const HistoricBuffer<double, 32>& RTTHistory()
-    {
-        return controller->rttHistory;
-    }
-
-    MessageThread& GetMessageThread()
-    {
-        return controller->messageThread;
-    }
-
-    const VoIPController::ProtocolInfo& GetProtocolInfo()
-    {
-        return controller->protocolInfo;
-    }
-
-    void SendStreamFlags(VoIPController::Stream& stm)
-    {
-        controller->SendStreamFlags(stm);
-    }
-
-    const VoIPController::Config& GetConfig()
-    {
-        return controller->config;
-    }
-
-    VoIPController* controller;
+    void SendExtra(Buffer& data, unsigned char type) const;
+    void IncrementUnsentStreamPackets();
+    std::uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt);
+    double GetConnectionInitTime() const;
+    const HistoricBuffer<double, 32>& RTTHistory() const;
+    MessageThread& GetMessageThread();
+    const MessageThread& GetMessageThread() const;
+    const VoIPController::ProtocolInfo& GetProtocolInfo() const;
+    void SendStreamFlags(VoIPController::Stream& stm) const;
+    const VoIPController::Config& GetConfig() const;
 };
-}
 
-#endif //LIBTGVOIP_PACKETSENDER_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_PACKETSENDER_H

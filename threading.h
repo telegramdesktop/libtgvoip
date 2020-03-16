@@ -21,206 +21,74 @@
 
 namespace tgvoip
 {
+
 class Mutex
 {
 public:
-    Mutex()
-    {
-        pthread_mutex_init(&mtx, nullptr);
-    }
-
-    ~Mutex()
-    {
-        pthread_mutex_destroy(&mtx);
-    }
-
-    void Lock()
-    {
-        pthread_mutex_lock(&mtx);
-    }
-
-    void Unlock()
-    {
-        pthread_mutex_unlock(&mtx);
-    }
-
-    pthread_mutex_t* NativeHandle()
-    {
-        return &mtx;
-    }
+    Mutex();
+    ~Mutex();
+    void Lock();
+    void Unlock();
+    pthread_mutex_t* NativeHandle();
 
 private:
+    pthread_mutex_t m_mtx;
     Mutex(const Mutex& other);
-    pthread_mutex_t mtx;
 };
 
 class Thread
 {
 public:
-    Thread(std::function<void()> entry)
-        : entry(entry)
-    {
-        name = nullptr;
-        thread = 0;
-    }
+    Thread(std::function<void()> entry);
+    virtual ~Thread();
 
-    virtual ~Thread()
-    {
-    }
-
-    void Start()
-    {
-        if (pthread_create(&thread, nullptr, Thread::ActualEntryPoint, this) == 0)
-        {
-            valid = true;
-        }
-    }
-
-    void Join()
-    {
-        if (valid)
-            pthread_join(thread, nullptr);
-    }
-
-    void SetName(const char* name)
-    {
-        this->name = name;
-    }
-
-    void SetMaxPriority()
-    {
-#ifdef __APPLE__
-        maxPriority = true;
-#endif
-    }
-
-    static void Sleep(double seconds)
-    {
-        usleep((useconds_t)(seconds * 1000 * 1000.0));
-    }
-
-    bool IsCurrent()
-    {
-        return pthread_equal(thread, pthread_self()) != 0;
-    }
+    void Start();
+    void Join();
+    void SetName(const char* name);
+    void SetMaxPriority();
+    bool IsCurrent();
+    static void Sleep(double seconds);
 
 private:
-    static void* ActualEntryPoint(void* arg)
-    {
-        Thread* self = reinterpret_cast<Thread*>(arg);
-        if (self->name)
-        {
-#if !defined(__APPLE__) && !defined(__gnu_hurd__)
-            pthread_setname_np(self->thread, self->name);
-#elif !defined(__gnu_hurd__)
-            pthread_setname_np(self->name);
-            if (self->maxPriority)
-            {
-                DarwinSpecific::SetCurrentThreadPriority(DarwinSpecific::THREAD_PRIO_USER_INTERACTIVE);
-            }
-#endif
-        }
-        self->entry();
-        return nullptr;
-    }
-    std::function<void()> entry;
-    pthread_t thread;
-    const char* name;
+    static void* ActualEntryPoint(void* arg);
+    std::function<void()> m_entry;
+    pthread_t m_thread;
+    const char* m_name;
 #ifdef __APPLE__
-    bool maxPriority = false;
+    bool m_maxPriority = false;
 #endif
-    bool valid = false;
+    bool m_valid = false;
 };
-}
+
+} // namespace tgvoip
 
 #ifdef __APPLE__
 #include <dispatch/dispatch.h>
+#endif
+
 namespace tgvoip
 {
+
 class Semaphore
 {
 public:
-    Semaphore(unsigned int maxCount, unsigned int initValue)
-    {
-        sem = dispatch_semaphore_create(initValue);
-    }
+    Semaphore(unsigned int maxCount, unsigned int initValue);
+    ~Semaphore();
 
-    ~Semaphore()
-    {
-#if !__has_feature(objc_arc)
-        dispatch_release(sem);
-#endif
-    }
-
-    void Acquire()
-    {
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    }
-
-    void Release()
-    {
-        dispatch_semaphore_signal(sem);
-    }
-
-    void Acquire(int count)
-    {
-        for (int i = 0; i < count; i++)
-            Acquire();
-    }
-
-    void Release(int count)
-    {
-        for (int i = 0; i < count; i++)
-            Release();
-    }
+    void Acquire();
+    void Release();
+    void Acquire(int count);
+    void Release(int count);
 
 private:
-    dispatch_semaphore_t sem;
-};
-}
+#ifdef __APPLE__
+    dispatch_semaphore_t m_sem;
 #else
-namespace tgvoip
-{
-class Semaphore
-{
-public:
-    Semaphore(unsigned int maxCount, unsigned int initValue)
-    {
-        sem_init(&sem, 0, initValue);
-    }
-
-    ~Semaphore()
-    {
-        sem_destroy(&sem);
-    }
-
-    void Acquire()
-    {
-        sem_wait(&sem);
-    }
-
-    void Release()
-    {
-        sem_post(&sem);
-    }
-
-    void Acquire(int count)
-    {
-        for (int i = 0; i < count; i++)
-            Acquire();
-    }
-
-    void Release(int count)
-    {
-        for (int i = 0; i < count; i++)
-            Release();
-    }
-
-private:
-    sem_t sem;
-};
-}
+    sem_t m_sem;
 #endif
+};
+
+} // namespace tgvoip
 
 #elif defined(_WIN32)
 
@@ -229,6 +97,7 @@ private:
 
 namespace tgvoip
 {
+
 class Mutex
 {
 public:
@@ -398,29 +267,25 @@ public:
 private:
     HANDLE h;
 };
-}
+
+} // namespace tgvoip
 #else
 #error "No threading implementation for your operating system"
 #endif
 
 namespace tgvoip
 {
+
 class MutexGuard
 {
 public:
-    MutexGuard(Mutex& mutex)
-        : mutex(mutex)
-    {
-        mutex.Lock();
-    }
-    ~MutexGuard()
-    {
-        mutex.Unlock();
-    }
+    MutexGuard(Mutex& mutex);
+    ~MutexGuard();
 
 private:
-    Mutex& mutex;
+    Mutex& m_mutex;
 };
-}
 
-#endif //__THREADING_H
+} // namespace tgvoip
+
+#endif // __THREADING_H

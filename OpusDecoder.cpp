@@ -42,54 +42,54 @@ tgvoip::OpusDecoder::OpusDecoder(MediaStreamItf* dst, bool isAsync, bool needEC)
 
 void tgvoip::OpusDecoder::Initialize(bool isAsync, bool needEC)
 {
-    async = isAsync;
-    if (async)
+    m_async = isAsync;
+    if (m_async)
     {
-        decodedQueue = new BlockingQueue<Buffer>(33);
-        semaphore = new Semaphore(32, 0);
+        m_decodedQueue = new BlockingQueue<Buffer>(33);
+        m_semaphore = new Semaphore(32, 0);
     }
     else
     {
-        decodedQueue = NULL;
-        semaphore = NULL;
+        m_decodedQueue = nullptr;
+        m_semaphore = nullptr;
     }
-    dec = opus_decoder_create(48000, 1, NULL);
+    m_dec = opus_decoder_create(48000, 1, nullptr);
     if (needEC)
-        ecDec = opus_decoder_create(48000, 1, NULL);
+        m_ecDec = opus_decoder_create(48000, 1, nullptr);
     else
-        ecDec = NULL;
-    buffer = reinterpret_cast<unsigned char*>(aligned_alloc(2, 8192));
-    lastDecoded = NULL;
-    outputBufferSize = 0;
-    echoCanceller = NULL;
-    frameDuration = 20;
-    consecutiveLostPackets = 0;
-    enableDTX = false;
-    silentPacketCount = 0;
-    levelMeter = NULL;
-    nextLen = 0;
-    running = false;
-    remainingDataLen = 0;
-    processedBuffer = NULL;
-    prevWasEC = false;
-    prevLastSample = 0;
+        m_ecDec = nullptr;
+    m_buffer = reinterpret_cast<unsigned char*>(aligned_alloc(2, 8192));
+    m_lastDecoded = nullptr;
+    m_outputBufferSize = 0;
+    m_echoCanceller = nullptr;
+    m_frameDuration = 20;
+    m_consecutiveLostPackets = 0;
+    m_enableDTX = false;
+    m_silentPacketCount = 0;
+    m_levelMeter = nullptr;
+    m_nextLen = 0;
+    m_running = false;
+    m_remainingDataLen = 0;
+    m_processedBuffer = nullptr;
+    m_prevWasEC = false;
+    m_prevLastSample = 0;
 }
 
 tgvoip::OpusDecoder::~OpusDecoder()
 {
-    opus_decoder_destroy(dec);
-    if (ecDec)
-        opus_decoder_destroy(ecDec);
-    std::free(buffer);
-    if (decodedQueue)
-        delete decodedQueue;
-    if (semaphore)
-        delete semaphore;
+    opus_decoder_destroy(m_dec);
+    if (m_ecDec)
+        opus_decoder_destroy(m_ecDec);
+    std::free(m_buffer);
+    if (m_decodedQueue)
+        delete m_decodedQueue;
+    if (m_semaphore)
+        delete m_semaphore;
 }
 
 void tgvoip::OpusDecoder::SetEchoCanceller(EchoCanceller* canceller)
 {
-    echoCanceller = canceller;
+    m_echoCanceller = canceller;
 }
 
 std::size_t tgvoip::OpusDecoder::Callback(unsigned char* data, std::size_t len, void* param)
@@ -99,130 +99,130 @@ std::size_t tgvoip::OpusDecoder::Callback(unsigned char* data, std::size_t len, 
 
 std::size_t tgvoip::OpusDecoder::HandleCallback(unsigned char* data, std::size_t len)
 {
-    if (async)
+    if (m_async)
     {
-        if (!running)
+        if (!m_running)
         {
             std::memset(data, 0, len);
             return 0;
         }
-        if (outputBufferSize == 0)
+        if (m_outputBufferSize == 0)
         {
-            outputBufferSize = len;
+            m_outputBufferSize = len;
             int packetsNeeded;
             if (len > PACKET_SIZE)
-                packetsNeeded = len / PACKET_SIZE;
+                packetsNeeded = static_cast<int>(len) / PACKET_SIZE;
             else
                 packetsNeeded = 1;
             packetsNeeded *= 2;
-            semaphore->Release(packetsNeeded);
+            m_semaphore->Release(packetsNeeded);
         }
-        assert(outputBufferSize == len && "output buffer size is supposed to be the same throughout callbacks");
+        assert(m_outputBufferSize == len && "output buffer size is supposed to be the same throughout callbacks");
         if (len == PACKET_SIZE)
         {
-            Buffer lastDecoded = decodedQueue->GetBlocking();
+            Buffer lastDecoded = m_decodedQueue->GetBlocking();
             if (lastDecoded.IsEmpty())
                 return 0;
             std::memcpy(data, *lastDecoded, PACKET_SIZE);
-            semaphore->Release();
-            if (silentPacketCount > 0)
+            m_semaphore->Release();
+            if (m_silentPacketCount > 0)
             {
-                silentPacketCount--;
-                if (levelMeter)
-                    levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
+                m_silentPacketCount--;
+                if (m_levelMeter)
+                    m_levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
                 return 0;
             }
-            if (echoCanceller)
+            if (m_echoCanceller)
             {
-                echoCanceller->SpeakerOutCallback(data, PACKET_SIZE);
+                m_echoCanceller->SpeakerOutCallback(data, PACKET_SIZE);
             }
         }
         else
         {
             LOGE("Opus decoder buffer length != 960 samples");
-            abort();
+            std::abort();
         }
     }
     else
     {
-        if (remainingDataLen == 0 && silentPacketCount == 0)
+        if (m_remainingDataLen == 0 && m_silentPacketCount == 0)
         {
             int duration = DecodeNextFrame();
-            remainingDataLen = static_cast<std::size_t>(duration) / 20 * 960 * 2;
+            m_remainingDataLen = static_cast<std::size_t>(duration) / 20 * 960 * 2;
         }
-        if (silentPacketCount > 0 || remainingDataLen == 0 || !processedBuffer)
+        if (m_silentPacketCount > 0 || m_remainingDataLen == 0 || !m_processedBuffer)
         {
-            if (silentPacketCount > 0)
-                silentPacketCount--;
+            if (m_silentPacketCount > 0)
+                m_silentPacketCount--;
             std::memset(data, 0, 960 * 2);
-            if (levelMeter)
-                levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
+            if (m_levelMeter)
+                m_levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
             return 0;
         }
-        std::memcpy(data, processedBuffer, 960 * 2);
-        remainingDataLen -= 960 * 2;
-        if (remainingDataLen > 0)
+        std::memcpy(data, m_processedBuffer, 960 * 2);
+        m_remainingDataLen -= 960 * 2;
+        if (m_remainingDataLen > 0)
         {
-            memmove(processedBuffer, processedBuffer + 960 * 2, remainingDataLen);
+            std::memmove(m_processedBuffer, m_processedBuffer + 960 * 2, static_cast<std::size_t>(m_remainingDataLen));
         }
     }
-    if (levelMeter)
-        levelMeter->Update(reinterpret_cast<std::int16_t*>(data), len / 2);
+    if (m_levelMeter)
+        m_levelMeter->Update(reinterpret_cast<std::int16_t*>(data), len / 2);
     return len;
 }
 
 void tgvoip::OpusDecoder::Start()
 {
-    if (!async)
+    if (!m_async)
         return;
-    running = true;
-    thread = new Thread(std::bind(&tgvoip::OpusDecoder::RunThread, this));
-    thread->SetName("opus_decoder");
-    thread->SetMaxPriority();
-    thread->Start();
+    m_running = true;
+    m_thread = new Thread(std::bind(&tgvoip::OpusDecoder::RunThread, this));
+    m_thread->SetName("opus_decoder");
+    m_thread->SetMaxPriority();
+    m_thread->Start();
 }
 
 void tgvoip::OpusDecoder::Stop()
 {
-    if (!running || !async)
+    if (!m_running || !m_async)
         return;
-    running = false;
-    semaphore->Release();
-    thread->Join();
-    delete thread;
+    m_running = false;
+    m_semaphore->Release();
+    m_thread->Join();
+    delete m_thread;
 }
 
 void tgvoip::OpusDecoder::RunThread()
 {
-    LOGI("decoder: packets per frame %d", packetsPerFrame);
-    while (running)
+    LOGI("decoder: packets per frame %d", m_packetsPerFrame);
+    while (m_running)
     {
         int playbackDuration = DecodeNextFrame();
         for (int i = 0; i < playbackDuration / 20; i++)
         {
-            semaphore->Acquire();
-            if (!running)
+            m_semaphore->Acquire();
+            if (!m_running)
             {
                 LOGI("==== decoder exiting ====");
                 return;
             }
             try
             {
-                Buffer buf = bufferPool.Get();
-                if (remainingDataLen > 0)
+                Buffer buf = m_bufferPool.Get();
+                if (m_remainingDataLen > 0)
                 {
-                    for (effects::AudioEffect*& effect : postProcEffects)
+                    for (effects::AudioEffect*& effect : m_postProcEffects)
                     {
-                        effect->Process(reinterpret_cast<std::int16_t*>(processedBuffer + (PACKET_SIZE * i)), 960);
+                        effect->Process(reinterpret_cast<std::int16_t*>(m_processedBuffer + (PACKET_SIZE * i)), 960);
                     }
-                    buf.CopyFrom(processedBuffer + (PACKET_SIZE * i), 0, PACKET_SIZE);
+                    buf.CopyFrom(m_processedBuffer + (PACKET_SIZE * i), 0, PACKET_SIZE);
                 }
                 else
                 {
                     //LOGE("Error decoding, result=%d", size);
                     std::memset(*buf, 0, PACKET_SIZE);
                 }
-                decodedQueue->Put(std::move(buf));
+                m_decodedQueue->Put(std::move(buf));
             }
             catch (const std::bad_alloc&)
             {
@@ -236,106 +236,106 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
 {
     int playbackDuration = 0;
     bool isEC = false;
-    std::size_t len = jitterBuffer->HandleOutput(buffer, 8192, 0, true, playbackDuration, isEC);
+    std::size_t len = m_jitterBuffer->HandleOutput(m_buffer, 8192, 0, true, playbackDuration, isEC);
     bool fec = false;
-    if (!len)
+    if (len == 0)
     {
         fec = true;
-        len = jitterBuffer->HandleOutput(buffer, 8192, 0, false, playbackDuration, isEC);
+        len = m_jitterBuffer->HandleOutput(m_buffer, 8192, 0, false, playbackDuration, isEC);
         //if(len)
         //	LOGV("Trying FEC...");
     }
     int size;
-    if (len)
+    if (len != 0)
     {
-        size = opus_decode(isEC ? ecDec : dec, buffer, len, reinterpret_cast<opus_int16*>(decodeBuffer), packetsPerFrame * 960, fec ? 1 : 0);
-        consecutiveLostPackets = 0;
-        if (prevWasEC != isEC && size)
+        size = opus_decode(isEC ? m_ecDec : m_dec, m_buffer, len, reinterpret_cast<opus_int16*>(m_decodeBuffer), m_packetsPerFrame * 960, fec ? 1 : 0);
+        m_consecutiveLostPackets = 0;
+        if (m_prevWasEC != isEC && size)
         {
             // It turns out the waveforms generated by the PLC feature are also great to help smooth out the
             // otherwise audible transition between the frames from different decoders. Those are basically an extrapolation
             // of the previous successfully decoded data -- which is exactly what we need here.
-            size = opus_decode(prevWasEC ? ecDec : dec, NULL, 0, reinterpret_cast<opus_int16*>(nextBuffer), packetsPerFrame * 960, 0);
+            size = opus_decode(m_prevWasEC ? m_ecDec : m_dec, NULL, 0, reinterpret_cast<opus_int16*>(m_nextBuffer), m_packetsPerFrame * 960, 0);
             if (size)
             {
-                std::int16_t* plcSamples = reinterpret_cast<std::int16_t*>(nextBuffer);
-                std::int16_t* samples = reinterpret_cast<std::int16_t*>(decodeBuffer);
-                constexpr float coeffs[] = {0.999802f, 0.995062f, 0.984031f, 0.966778f, 0.943413f, 0.914084f, 0.878975f, 0.838309f, 0.792344f, 0.741368f,
-                    0.685706f, 0.625708f, 0.561754f, 0.494249f, 0.423619f, 0.350311f, 0.274788f, 0.197527f, 0.119018f, 0.039757f};
-                for (int i = 0; i < 20; i++)
+                std::int16_t* plcSamples = reinterpret_cast<std::int16_t*>(m_nextBuffer);
+                std::int16_t* samples = reinterpret_cast<std::int16_t*>(m_decodeBuffer);
+                constexpr float coeffs[] = { 0.999802f, 0.995062f, 0.984031f, 0.966778f, 0.943413f, 0.914084f, 0.878975f, 0.838309f, 0.792344f, 0.741368f,
+                                             0.685706f, 0.625708f, 0.561754f, 0.494249f, 0.423619f, 0.350311f, 0.274788f, 0.197527f, 0.119018f, 0.039757f };
+                for (int i = 0; i < 20; ++i)
                 {
-                    samples[i] = static_cast<std::int16_t>(round(plcSamples[i] * coeffs[i] + samples[i] * (1.f - coeffs[i])));
+                    samples[i] = static_cast<std::int16_t>(std::round(plcSamples[i] * coeffs[i] + samples[i] * (1.f - coeffs[i])));
                 }
             }
         }
-        prevWasEC = isEC;
-        prevLastSample = decodeBuffer[size - 1];
+        m_prevWasEC = isEC;
+        m_prevLastSample = m_decodeBuffer[size - 1];
     }
     else
     { // do packet loss concealment
-        consecutiveLostPackets++;
-        if (consecutiveLostPackets > 2 && enableDTX)
+        m_consecutiveLostPackets++;
+        if (m_consecutiveLostPackets > 2 && m_enableDTX)
         {
-            silentPacketCount += packetsPerFrame;
-            size = packetsPerFrame * 960;
+            m_silentPacketCount += m_packetsPerFrame;
+            size = static_cast<int>(m_packetsPerFrame) * 960;
         }
         else
         {
-            size = opus_decode(prevWasEC ? ecDec : dec, NULL, 0, reinterpret_cast<opus_int16*>(decodeBuffer), packetsPerFrame * 960, 0);
+            size = opus_decode(m_prevWasEC ? m_ecDec : m_dec, nullptr, 0, reinterpret_cast<opus_int16*>(m_decodeBuffer), m_packetsPerFrame * 960, 0);
             //LOGV("PLC");
         }
     }
     if (size < 0)
         LOGW("decoder: opus_decode error %d", size);
-    remainingDataLen = size;
+    m_remainingDataLen = size;
     if (playbackDuration == 80)
     {
-        processedBuffer = buffer;
-        audio::Resampler::Rescale60To80(reinterpret_cast<std::int16_t*>(decodeBuffer),
-            reinterpret_cast<std::int16_t*>(processedBuffer));
+        m_processedBuffer = m_buffer;
+        audio::Resampler::Rescale60To80(reinterpret_cast<std::int16_t*>(m_decodeBuffer),
+            reinterpret_cast<std::int16_t*>(m_processedBuffer));
     }
     else if (playbackDuration == 40)
     {
-        processedBuffer = buffer;
-        audio::Resampler::Rescale60To40(reinterpret_cast<std::int16_t*>(decodeBuffer),
-            reinterpret_cast<std::int16_t*>(processedBuffer));
+        m_processedBuffer = m_buffer;
+        audio::Resampler::Rescale60To40(reinterpret_cast<std::int16_t*>(m_decodeBuffer),
+            reinterpret_cast<std::int16_t*>(m_processedBuffer));
     }
     else
     {
-        processedBuffer = decodeBuffer;
+        m_processedBuffer = m_decodeBuffer;
     }
     return playbackDuration;
 }
 
 void tgvoip::OpusDecoder::SetFrameDuration(std::uint32_t duration)
 {
-    frameDuration = duration;
-    packetsPerFrame = frameDuration / 20;
+    m_frameDuration = duration;
+    m_packetsPerFrame = m_frameDuration / 20;
 }
 
 void tgvoip::OpusDecoder::SetJitterBuffer(std::shared_ptr<JitterBuffer> jitterBuffer)
 {
-    this->jitterBuffer = jitterBuffer;
+    this->m_jitterBuffer = jitterBuffer;
 }
 
 void tgvoip::OpusDecoder::SetDTX(bool enable)
 {
-    enableDTX = enable;
+    m_enableDTX = enable;
 }
 
 void tgvoip::OpusDecoder::SetLevelMeter(AudioLevelMeter* levelMeter)
 {
-    this->levelMeter = levelMeter;
+    this->m_levelMeter = levelMeter;
 }
 
 void tgvoip::OpusDecoder::AddAudioEffect(effects::AudioEffect* effect)
 {
-    postProcEffects.push_back(effect);
+    m_postProcEffects.push_back(effect);
 }
 
 void tgvoip::OpusDecoder::RemoveAudioEffect(effects::AudioEffect* effect)
 {
-    std::vector<effects::AudioEffect*>::iterator it = std::find(postProcEffects.begin(), postProcEffects.end(), effect);
-    if (it != postProcEffects.end())
-        postProcEffects.erase(it);
+    std::vector<effects::AudioEffect*>::iterator it = std::find(m_postProcEffects.begin(), m_postProcEffects.end(), effect);
+    if (it != m_postProcEffects.end())
+        m_postProcEffects.erase(it);
 }

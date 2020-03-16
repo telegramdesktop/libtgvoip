@@ -345,7 +345,7 @@ void NetworkSocketPosix::Open()
         if (res < 0)
         {
             LOGE("error binding to port %u: %d / %s", ntohs(addr.sin6_port), errno, strerror(errno));
-            //SetState(STATE_FAILED);
+            //SetState(State::FAILED);
             m_failed = true;
             return;
         }

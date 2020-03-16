@@ -220,7 +220,7 @@ void VoIPController_nativeConnect(JNIEnv* env, jobject thiz, jlong inst)
 
 void VoIPController_nativeSetProxy(JNIEnv* env, jobject thiz, jlong inst, jstring _address, jint port, jstring _username, jstring _password)
 {
-    ((VoIPController*)(intptr_t)inst)->SetProxy(PROXY_SOCKS5, jni::JavaStringToStdString(env, _address), (std::uint16_t)port, jni::JavaStringToStdString(env, _username), jni::JavaStringToStdString(env, _password));
+    ((VoIPController*)(intptr_t)inst)->SetProxy(Proxy::SOCKS5, jni::JavaStringToStdString(env, _address), (std::uint16_t)port, jni::JavaStringToStdString(env, _username), jni::JavaStringToStdString(env, _password));
 }
 
 void VoIPController_nativeSetEncryptionKey(JNIEnv* env, jobject thiz, jlong inst, jbyteArray key, jboolean isOutgoing)
