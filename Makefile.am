@@ -11,12 +11,14 @@ CongestionControl.cpp \
 EchoCanceller.cpp \
 JitterBuffer.cpp \
 logging.cpp \
+threading.cpp \
 MediaStreamItf.cpp \
 MessageThread.cpp \
 NetworkSocket.cpp \
 OpusDecoder.cpp \
 OpusEncoder.cpp \
 PacketReassembler.cpp \
+PacketSender.cpp \
 VoIPGroupController.cpp \
 VoIPServerConfig.cpp \
 audio/AudioIO.cpp \
@@ -48,6 +50,7 @@ NetworkSocket.h \
 OpusDecoder.h \
 OpusEncoder.h \
 PacketReassembler.h \
+PacketSender.h \
 VoIPServerConfig.h \
 audio/AudioIO.h \
 audio/AudioInput.h \
