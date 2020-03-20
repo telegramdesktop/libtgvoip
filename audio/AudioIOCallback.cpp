@@ -78,7 +78,7 @@ void AudioInputCallback::RunThread()
         double t = VoIPController::GetCurrentTime();
         std::memset(buf, 0, sizeof(buf));
         dataCallback(buf, 960);
-        InvokeCallback(reinterpret_cast<unsigned char*>(buf), 960 * 2);
+        InvokeCallback(reinterpret_cast<std::uint8_t*>(buf), 960 * 2);
         double sl = 0.02 - (VoIPController::GetCurrentTime() - t);
         if (sl > 0)
             Thread::Sleep(sl);
@@ -131,7 +131,7 @@ void AudioOutputCallback::RunThread()
     while (running)
     {
         double t = VoIPController::GetCurrentTime();
-        InvokeCallback(reinterpret_cast<unsigned char*>(buf), 960 * 2);
+        InvokeCallback(reinterpret_cast<std::uint8_t*>(buf), 960 * 2);
         dataCallback(buf, 960);
         double sl = 0.02 - (VoIPController::GetCurrentTime() - t);
         if (sl > 0)

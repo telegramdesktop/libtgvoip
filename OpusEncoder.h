@@ -31,7 +31,7 @@ public:
     virtual void Start();
     virtual void Stop();
 
-    using CallbackType = std::function<void(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength)>;
+    using CallbackType = std::function<void(std::uint8_t* data, std::size_t length, std::uint8_t* secondaryData, std::size_t secondaryLength)>;
     void SetCallback(CallbackType m_callback);
 
     void SetBitrate(std::uint32_t bitrate);
@@ -74,10 +74,10 @@ private:
     bool m_wasSecondaryEncoderEnabled = false;
     CallbackType m_callback;
 
-    static std::size_t Callback(unsigned char* data, std::size_t len, void* param);
+    static std::size_t Callback(std::uint8_t* data, std::size_t len, void* param);
     void RunThread();
     void Encode(std::int16_t* data, std::size_t len);
-    void InvokeCallback(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength);
+    void InvokeCallback(std::uint8_t* data, std::size_t length, std::uint8_t* secondaryData, std::size_t secondaryLength);
 };
 
 } // namespace tgvoip

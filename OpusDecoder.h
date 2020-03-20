@@ -35,7 +35,7 @@ public:
     OpusDecoder(const std::unique_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC);
     OpusDecoder(MediaStreamItf* dst, bool isAsync, bool needEC);
     virtual ~OpusDecoder();
-    std::size_t HandleCallback(unsigned char* data, std::size_t len);
+    std::size_t HandleCallback(std::uint8_t* data, std::size_t len);
     void SetEchoCanceller(EchoCanceller* canceller);
     void SetFrameDuration(std::uint32_t duration);
     void SetJitterBuffer(std::shared_ptr<JitterBuffer> m_jitterBuffer);
@@ -49,9 +49,9 @@ private:
     ::OpusDecoder* m_ecDec;
     BlockingQueue<Buffer>* m_decodedQueue;
     BufferPool<960 * 2, 32> m_bufferPool;
-    unsigned char* m_buffer;
-    unsigned char* m_lastDecoded;
-    unsigned char* m_processedBuffer;
+    std::uint8_t* m_buffer;
+    std::uint8_t* m_lastDecoded;
+    std::uint8_t* m_processedBuffer;
     std::size_t m_outputBufferSize;
     std::atomic<bool> m_running;
     Thread* m_thread;
@@ -65,8 +65,8 @@ private:
     std::size_t m_silentPacketCount;
     std::vector<effects::AudioEffect*> m_postProcEffects;
     std::atomic<bool> m_async;
-    alignas(2) unsigned char m_nextBuffer[8192];
-    alignas(2) unsigned char m_decodeBuffer[8192];
+    alignas(2) std::uint8_t m_nextBuffer[8192];
+    alignas(2) std::uint8_t m_decodeBuffer[8192];
     std::size_t m_nextLen;
     unsigned int m_packetsPerFrame;
     std::ptrdiff_t m_remainingDataLen;
@@ -76,7 +76,7 @@ private:
     void Initialize(bool isAsync, bool needEC);
     void RunThread();
     int DecodeNextFrame();
-    static std::size_t Callback(unsigned char* data, std::size_t len, void* param);
+    static std::size_t Callback(std::uint8_t* data, std::size_t len, void* param);
 };
 
 } // namespace tgvoip

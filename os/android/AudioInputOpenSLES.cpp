@@ -45,7 +45,7 @@ AudioInputOpenSLES::AudioInputOpenSLES()
 
     buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
     nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
-    slRecorderObj = NULL;
+    slRecorderObj = nullptr;
 }
 
 AudioInputOpenSLES::~AudioInputOpenSLES()
@@ -53,15 +53,15 @@ AudioInputOpenSLES::~AudioInputOpenSLES()
     //Stop();
     (*slBufferQueue)->Clear(slBufferQueue);
     (*slRecorderObj)->Destroy(slRecorderObj);
-    slRecorderObj = NULL;
-    slRecorder = NULL;
-    slBufferQueue = NULL;
-    slEngine = NULL;
+    slRecorderObj = nullptr;
+    slRecorder = nullptr;
+    slBufferQueue = nullptr;
+    slEngine = nullptr;
     OpenSLEngineWrapper::DestroyEngine();
     std::free(buffer);
-    buffer = NULL;
+    buffer = nullptr;
     std::free(nativeBuffer);
-    nativeBuffer = NULL;
+    nativeBuffer = nullptr;
 }
 
 void AudioInputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void* context)
@@ -71,11 +71,11 @@ void AudioInputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void* 
 
 void AudioInputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)
 {
-    assert(slRecorderObj == NULL);
+    assert(slRecorderObj == nullptr);
     SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE,
         SL_IODEVICE_AUDIOINPUT,
-        SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
-    SLDataSource audioSrc = {&loc_dev, NULL};
+        SL_DEFAULTDEVICEID_AUDIOINPUT, nullptr};
+    SLDataSource audioSrc = {&loc_dev, nullptr};
     SLDataLocator_AndroidSimpleBufferQueue loc_bq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 1};
     SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, channels, sampleRate * 1000,
         SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,

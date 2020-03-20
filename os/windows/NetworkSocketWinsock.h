@@ -43,9 +43,9 @@ public:
     virtual void Connect(const NetworkAddress address, std::uint16_t port) override;
 
     static std::string V4AddressToString(std::uint32_t address);
-    static std::string V6AddressToString(const unsigned char address[16]);
+    static std::string V6AddressToString(const std::uint8_t address[16]);
     static std::uint32_t StringToV4Address(std::string address);
-    static void StringToV6Address(std::string address, unsigned char* out);
+    static void StringToV6Address(std::string address, std::uint8_t* out);
     static NetworkAddress ResolveDomainName(std::string name);
     static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
     virtual NetworkAddress GetConnectedAddress() override;

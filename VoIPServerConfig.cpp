@@ -12,7 +12,7 @@
 
 using namespace tgvoip;
 
-ServerConfig* ServerConfig::sharedInstance = NULL;
+ServerConfig* ServerConfig::sharedInstance = nullptr;
 
 ServerConfig::ServerConfig()
 {
@@ -24,7 +24,7 @@ ServerConfig::~ServerConfig()
 
 ServerConfig* ServerConfig::GetSharedInstance()
 {
-    if (!sharedInstance)
+    if (sharedInstance == nullptr)
         sharedInstance = new ServerConfig();
     return sharedInstance;
 }

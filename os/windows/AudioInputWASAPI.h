@@ -77,7 +77,7 @@ namespace audio
         IAudioSessionControl* audioSessionControl;
         IMMDevice* device;
 #endif
-        unsigned char remainingData[10240];
+        std::uint8_t remainingData[10240];
         std::size_t remainingDataLen;
         bool isDefaultDevice;
         ULONG refCount;

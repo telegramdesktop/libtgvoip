@@ -11,14 +11,14 @@ PacketSender::~PacketSender()
 {
 }
 
-void PacketSender::SendExtra(Buffer& data, unsigned char type) const
+void PacketSender::SendExtra(Buffer& data, std::uint8_t type) const
 {
     m_controller->SendExtra(data, type);
 }
 
 void PacketSender::IncrementUnsentStreamPackets()
 {
-    ++m_controller->unsentStreamPackets;
+    ++m_controller->m_unsentStreamPackets;
 }
 
 std::uint32_t PacketSender::SendPacket(VoIPController::PendingOutgoingPacket pkt)
@@ -31,27 +31,27 @@ std::uint32_t PacketSender::SendPacket(VoIPController::PendingOutgoingPacket pkt
 
 double PacketSender::GetConnectionInitTime() const
 {
-    return m_controller->connectionInitTime;
+    return m_controller->m_connectionInitTime;
 }
 
 const HistoricBuffer<double, 32>& PacketSender::RTTHistory() const
 {
-    return m_controller->rttHistory;
+    return m_controller->m_rttHistory;
 }
 
 MessageThread& PacketSender::GetMessageThread()
 {
-    return m_controller->messageThread;
+    return m_controller->m_messageThread;
 }
 
 const MessageThread& PacketSender::GetMessageThread() const
 {
-    return m_controller->messageThread;
+    return m_controller->m_messageThread;
 }
 
 const VoIPController::ProtocolInfo& PacketSender::GetProtocolInfo() const
 {
-    return m_controller->protocolInfo;
+    return m_controller->m_protocolInfo;
 }
 
 void PacketSender::SendStreamFlags(VoIPController::Stream& stm) const
@@ -61,5 +61,5 @@ void PacketSender::SendStreamFlags(VoIPController::Stream& stm) const
 
 const VoIPController::Config& PacketSender::GetConfig() const
 {
-    return m_controller->config;
+    return m_controller->m_config;
 }

@@ -32,7 +32,7 @@ namespace audio
 #endif
 
     private:
-        unsigned char remainingData[10240];
+        std::uint8_t remainingData[10240];
         std::size_t remainingDataSize;
         bool isRecording;
         AudioUnitIO* io;

@@ -17,31 +17,33 @@ using namespace std;
 
 VoIPGroupController::VoIPGroupController(std::int32_t timeDifference)
 {
-    audioMixer = new AudioMixer();
-    std::memset(&callbacks, 0, sizeof(callbacks));
-    userSelfID = 0;
-    this->timeDifference = timeDifference;
+    m_audioMixer = new AudioMixer();
+    std::memset(&m_callbacks, 0, sizeof(m_callbacks));
+    m_userSelfID = 0;
+    this->m_timeDifference = timeDifference;
     LOGV("Created VoIPGroupController; timeDifference=%d", timeDifference);
 }
 
 VoIPGroupController::~VoIPGroupController()
 {
-    if (audioOutput)
+    if (m_audioOutput)
     {
-        audioOutput->Stop();
+        m_audioOutput->Stop();
     }
     LOGD("before stop audio mixer");
-    audioMixer->Stop();
-    delete audioMixer;
+    m_audioMixer->Stop();
+    delete m_audioMixer;
 
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); p++)
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); p++)
     {
         if (p->levelMeter)
             delete p->levelMeter;
     }
 }
 
-void VoIPGroupController::SetGroupCallInfo(unsigned char* encryptionKey, unsigned char* reflectorGroupTag, unsigned char* reflectorSelfTag, unsigned char* reflectorSelfSecret, unsigned char* reflectorSelfTagHash, std::int32_t selfUserID, NetworkAddress reflectorAddress, NetworkAddress reflectorAddressV6, std::uint16_t reflectorPort)
+void VoIPGroupController::SetGroupCallInfo(std::uint8_t* encryptionKey, std::uint8_t* reflectorGroupTag, std::uint8_t* reflectorSelfTag,
+                                           std::uint8_t* reflectorSelfSecret, std::uint8_t* reflectorSelfTagHash, std::int32_t selfUserID,
+                                           NetworkAddress reflectorAddress, NetworkAddress reflectorAddressV6, std::uint16_t reflectorPort)
 {
     Endpoint e;
     e.address = reflectorAddress;
@@ -50,37 +52,37 @@ void VoIPGroupController::SetGroupCallInfo(unsigned char* encryptionKey, unsigne
     std::memcpy(e.peerTag, reflectorGroupTag, 16);
     e.type = Endpoint::Type::UDP_RELAY;
     e.id = FOURCC('G', 'R', 'P', 'R');
-    endpoints[e.id] = e;
-    groupReflector = e;
-    currentEndpoint = e.id;
+    m_endpoints[e.id] = e;
+    m_groupReflector = e;
+    m_currentEndpoint = e.id;
 
-    std::memcpy(this->encryptionKey, encryptionKey, 256);
-    std::memcpy(this->reflectorSelfTag, reflectorSelfTag, 16);
-    std::memcpy(this->reflectorSelfSecret, reflectorSelfSecret, 16);
-    std::memcpy(this->reflectorSelfTagHash, reflectorSelfTagHash, 16);
+    std::memcpy(this->m_encryptionKey, encryptionKey, 256);
+    std::memcpy(this->m_reflectorSelfTag, reflectorSelfTag, 16);
+    std::memcpy(this->m_reflectorSelfSecret, reflectorSelfSecret, 16);
+    std::memcpy(this->m_reflectorSelfTagHash, reflectorSelfTagHash, 16);
     std::uint8_t sha256[SHA256_LENGTH];
     crypto.sha256((std::uint8_t*)encryptionKey, 256, sha256);
-    std::memcpy(callID, sha256 + (SHA256_LENGTH - 16), 16);
-    std::memcpy(keyFingerprint, sha256 + (SHA256_LENGTH - 16), 8);
-    this->userSelfID = selfUserID;
+    std::memcpy(m_callID, sha256 + (SHA256_LENGTH - 16), 16);
+    std::memcpy(m_keyFingerprint, sha256 + (SHA256_LENGTH - 16), 8);
+    this->m_userSelfID = selfUserID;
 
     //LOGD("reflectorSelfTag = %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", reflectorSelfTag[0], reflectorSelfTag[1], reflectorSelfTag[2], reflectorSelfTag[3], reflectorSelfTag[4], reflectorSelfTag[5], reflectorSelfTag[6], reflectorSelfTag[7], reflectorSelfTag[8], reflectorSelfTag[9], reflectorSelfTag[10], reflectorSelfTag[11], reflectorSelfTag[12], reflectorSelfTag[13], reflectorSelfTag[14], reflectorSelfTag[15]);
     //LOGD("reflectorSelfSecret = %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", reflectorSelfSecret[0], reflectorSelfSecret[1], reflectorSelfSecret[2], reflectorSelfSecret[3], reflectorSelfSecret[4], reflectorSelfSecret[5], reflectorSelfSecret[6], reflectorSelfSecret[7], reflectorSelfSecret[8], reflectorSelfSecret[9], reflectorSelfSecret[10], reflectorSelfSecret[11], reflectorSelfSecret[12], reflectorSelfSecret[13], reflectorSelfSecret[14], reflectorSelfSecret[15]);
     //LOGD("reflectorSelfTagHash = %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", reflectorSelfTagHash[0], reflectorSelfTagHash[1], reflectorSelfTagHash[2], reflectorSelfTagHash[3], reflectorSelfTagHash[4], reflectorSelfTagHash[5], reflectorSelfTagHash[6], reflectorSelfTagHash[7], reflectorSelfTagHash[8], reflectorSelfTagHash[9], reflectorSelfTagHash[10], reflectorSelfTagHash[11], reflectorSelfTagHash[12], reflectorSelfTagHash[13], reflectorSelfTagHash[14], reflectorSelfTagHash[15]);
 }
 
-void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, unsigned char* memberTagHash, unsigned char* serializedStreams, std::size_t streamsLength)
+void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint8_t* memberTagHash, std::uint8_t* serializedStreams, std::size_t streamsLength)
 {
-    if (userID == userSelfID)
+    if (userID == m_userSelfID)
         return;
-    if (userSelfID == 0)
+    if (m_userSelfID == 0)
         return;
     //if(streamsLength==0)
     //	return;
-    MutexGuard m(participantsMutex);
-    LOGV("Adding group call user %d, streams length %u", userID, (unsigned int)streamsLength);
+    MutexGuard m(m_participantsMutex);
+    LOGV("Adding group call user %d, streams length %u", userID, static_cast<unsigned int>(streamsLength));
 
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         if (p->userID == userID)
         {
@@ -98,7 +100,7 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, unsigned 
     BufferInputStream ss(serializedStreams, streamsLength);
     vector<shared_ptr<Stream>> streams = DeserializeStreams(ss);
 
-    unsigned char audioStreamID = 0;
+    std::uint8_t audioStreamID = 0;
 
     for (vector<shared_ptr<Stream>>::iterator _s = streams.begin(); _s != streams.end(); ++_s)
     {
@@ -120,9 +122,9 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, unsigned 
             s->decoder->SetFrameDuration(s->frameDuration);
             s->decoder->SetDTX(true);
             s->decoder->SetLevelMeter(p.levelMeter);
-            audioMixer->AddInput(s->callbackWrapper);
+            m_audioMixer->AddInput(s->callbackWrapper);
         }
-        incomingStreams.push_back(s);
+        m_incomingStreams.push_back(s);
     }
 
     if (!audioStreamID)
@@ -131,36 +133,36 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, unsigned 
     }
 
     p.streams.insert(p.streams.end(), streams.begin(), streams.end());
-    participants.push_back(p);
+    m_participants.push_back(p);
     LOGI("Added group call participant %d", userID);
 }
 
 void VoIPGroupController::RemoveGroupCallParticipant(std::int32_t userID)
 {
-    MutexGuard m(participantsMutex);
-    vector<shared_ptr<Stream>>::iterator stm = incomingStreams.begin();
-    while (stm != incomingStreams.end())
+    MutexGuard m(m_participantsMutex);
+    vector<shared_ptr<Stream>>::iterator stm = m_incomingStreams.begin();
+    while (stm != m_incomingStreams.end())
     {
         if ((*stm)->userID == userID)
         {
             LOGI("Removed stream %d belonging to user %d", (*stm)->id, userID);
-            audioMixer->RemoveInput((*stm)->callbackWrapper);
+            m_audioMixer->RemoveInput((*stm)->callbackWrapper);
             (*stm)->decoder->Stop();
             //delete (*stm)->decoder;
             //delete (*stm)->jitterBuffer;
             //delete (*stm)->callbackWrapper;
-            stm = incomingStreams.erase(stm);
+            stm = m_incomingStreams.erase(stm);
             continue;
         }
         ++stm;
     }
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         if (p->userID == userID)
         {
             if (p->levelMeter)
                 delete p->levelMeter;
-            participants.erase(p);
+            m_participants.erase(p);
             LOGI("Removed group call participant %d", userID);
             break;
         }
@@ -172,33 +174,33 @@ vector<shared_ptr<VoIPController::Stream>> VoIPGroupController::DeserializeStrea
     vector<shared_ptr<Stream>> res;
     try
     {
-        unsigned char count = in.ReadByte();
-        for (unsigned char i = 0; i < count; i++)
+        std::uint8_t count = in.ReadUInt8();
+        for (int i = 0; i < count; ++i)
         {
-            std::uint16_t len = (std::uint16_t)in.ReadInt16();
+            std::uint16_t len = in.ReadUInt16();
             BufferInputStream inner = in.GetPartBuffer(len, true);
             shared_ptr<Stream> s = make_shared<Stream>();
-            s->id = inner.ReadByte();
-            s->type = inner.ReadByte();
-            s->codec = (std::uint32_t)inner.ReadInt32();
-            std::uint32_t flags = (std::uint32_t)inner.ReadInt32();
+            s->id = inner.ReadUInt8();
+            s->type = inner.ReadUInt8();
+            s->codec = inner.ReadUInt32();
+            std::uint32_t flags = inner.ReadUInt32();
             s->enabled = (flags & STREAM_FLAG_ENABLED) == STREAM_FLAG_ENABLED;
-            s->frameDuration = (std::uint16_t)inner.ReadInt16();
+            s->frameDuration = inner.ReadUInt16();
             res.push_back(s);
         }
     }
-    catch (out_of_range& x)
+    catch (const out_of_range& x)
     {
         LOGW("Error deserializing streams: %s", x.what());
     }
     return res;
 }
 
-void VoIPGroupController::SetParticipantStreams(std::int32_t userID, unsigned char* serializedStreams, std::size_t length)
+void VoIPGroupController::SetParticipantStreams(std::int32_t userID, std::uint8_t* serializedStreams, std::size_t length)
 {
     LOGD("Set participant streams for %d", userID);
-    MutexGuard m(participantsMutex);
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    MutexGuard m(m_participantsMutex);
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         if (p->userID == userID)
         {
@@ -212,8 +214,8 @@ void VoIPGroupController::SetParticipantStreams(std::int32_t userID, unsigned ch
                     if ((*s)->id == (*ns)->id)
                     {
                         (*s)->enabled = (*ns)->enabled;
-                        if (groupCallbacks.participantAudioStateChanged)
-                            groupCallbacks.participantAudioStateChanged(this, userID, (*s)->enabled);
+                        if (m_groupCallbacks.participantAudioStateChanged)
+                            m_groupCallbacks.participantAudioStateChanged(this, userID, (*s)->enabled);
                         found = true;
                         break;
                     }
@@ -228,15 +230,15 @@ void VoIPGroupController::SetParticipantStreams(std::int32_t userID, unsigned ch
     }
 }
 
-std::size_t VoIPGroupController::GetInitialStreams(unsigned char* buf, std::size_t size)
+std::size_t VoIPGroupController::GetInitialStreams(std::uint8_t* buf, std::size_t size)
 {
     BufferOutputStream s(buf, size);
-    s.WriteByte(1); // streams count
+    s.WriteUInt8(1); // streams count
 
     s.WriteInt16(12); // this object length
-    s.WriteByte(1); // stream id
-    s.WriteByte(STREAM_TYPE_AUDIO);
-    s.WriteInt32(CODEC_OPUS);
+    s.WriteUInt8(1); // stream id
+    s.WriteUInt8(STREAM_TYPE_AUDIO);
+    s.WriteUInt32(CODEC_OPUS);
     s.WriteInt32(STREAM_FLAG_ENABLED | STREAM_FLAG_DTX); // flags
     s.WriteInt16(60); // frame duration
 
@@ -352,7 +354,7 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 
 	// it's a packet relayed from another participant - find the sender
 	MutexGuard m(participantsMutex);
-	GroupCallParticipant* sender=NULL;
+    GroupCallParticipant* sender=nullptr;
 	for(vector<GroupCallParticipant>::iterator p=participants.begin();p!=participants.end();++p){
 		if(memcmp(packet.data, p->memberTagHash, 16)==0){
 			//LOGV("received data packet from user %d", p->userID);
@@ -498,24 +500,24 @@ void VoIPGroupController::SendUdpPing(Endpoint& endpoint)
 
 void VoIPGroupController::SetNetworkType(NetType type)
 {
-    networkType = type;
+    m_networkType = type;
     UpdateDataSavingState();
     UpdateAudioBitrateLimit();
-    string itfName = udpSocket->GetLocalInterfaceInfo(nullptr, nullptr);
-    if (itfName != activeNetItfName)
+    string itfName = m_udpSocket->GetLocalInterfaceInfo(nullptr, nullptr);
+    if (itfName != m_activeNetItfName)
     {
-        udpSocket->OnActiveInterfaceChanged();
-        LOGI("Active network interface changed: %s -> %s", activeNetItfName.c_str(), itfName.c_str());
-        bool isFirstChange = activeNetItfName.length() == 0;
-        activeNetItfName = itfName;
+        m_udpSocket->OnActiveInterfaceChanged();
+        LOGI("Active network interface changed: %s -> %s", m_activeNetItfName.c_str(), itfName.c_str());
+        bool isFirstChange = m_activeNetItfName.length() == 0;
+        m_activeNetItfName = itfName;
         if (isFirstChange)
             return;
-        udpConnectivityState = UdpState::UNKNOWN;
-        udpPingCount = 0;
-        lastUdpPingTime = 0;
-        if (proxyProtocol == Proxy::SOCKS5)
+        m_udpConnectivityState = UdpState::UNKNOWN;
+        m_udpPingCount = 0;
+        m_lastUdpPingTime = 0;
+        if (m_proxyProtocol == Proxy::SOCKS5)
             InitUDPProxy();
-        selectCanceller->CancelSelect();
+        m_selectCanceller->CancelSelect();
     }
 }
 
@@ -530,7 +532,7 @@ void VoIPGroupController::SendRecentPacketsRequest()
     SendSpecialReflectorRequest(out.GetBuffer(), out.GetLength());
 }
 
-void VoIPGroupController::SendSpecialReflectorRequest(unsigned char* data, std::size_t len)
+void VoIPGroupController::SendSpecialReflectorRequest(std::uint8_t* data, std::size_t len)
 {
     /*BufferOutputStream out(1024);
 	unsigned char buf[1500];
@@ -573,112 +575,112 @@ void VoIPGroupController::SendRelayPings()
 {
     //LOGV("Send relay pings 2");
     double currentTime = GetCurrentTime();
-    if (currentTime - groupReflector.lastPingTime >= 0.25)
+    if (currentTime - m_groupReflector.m_lastPingTime >= 0.25)
     {
         SendRecentPacketsRequest();
-        groupReflector.lastPingTime = currentTime;
+        m_groupReflector.m_lastPingTime = currentTime;
     }
 }
 
 void VoIPGroupController::OnAudioOutputReady()
 {
-    encoder->SetDTX(true);
-    audioMixer->SetOutput(audioOutput);
-    audioMixer->SetEchoCanceller(echoCanceller);
-    audioMixer->Start();
-    audioOutput->Start();
-    audioOutStarted = true;
-    encoder->SetLevelMeter(&selfLevelMeter);
+    m_encoder->SetDTX(true);
+    m_audioMixer->SetOutput(m_audioOutput);
+    m_audioMixer->SetEchoCanceller(m_echoCanceller);
+    m_audioMixer->Start();
+    m_audioOutput->Start();
+    m_audioOutStarted = true;
+    m_encoder->SetLevelMeter(&m_selfLevelMeter);
 }
 
-void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, unsigned char type, std::uint32_t length, PacketSender* source)
+void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, std::uint8_t type, std::uint32_t length, PacketSender* source)
 {
-    s->WriteInt32(TLID_DECRYPTED_AUDIO_BLOCK);
+    s->WriteUInt32(TLID_DECRYPTED_AUDIO_BLOCK);
     std::int64_t randomID;
-    crypto.rand_bytes((std::uint8_t*)&randomID, 8);
+    crypto.rand_bytes(reinterpret_cast<std::uint8_t*>(&randomID), 8);
     s->WriteInt64(randomID);
-    unsigned char randBytes[7];
+    std::uint8_t randBytes[7];
     crypto.rand_bytes(randBytes, 7);
-    s->WriteByte(7);
+    s->WriteUInt8(std::uint8_t{7});
     s->WriteBytes(randBytes, 7);
     std::uint32_t pflags = PFLAG_HAS_SEQ | PFLAG_HAS_SENDER_TAG_HASH;
     if (length > 0)
         pflags |= PFLAG_HAS_DATA;
-    pflags |= ((std::uint32_t)type) << 24;
-    s->WriteInt32(pflags);
+    pflags |= static_cast<std::uint32_t>(type) << 24;
+    s->WriteUInt32(pflags);
 
     if (type == PKT_STREAM_DATA || type == PKT_STREAM_DATA_X2 || type == PKT_STREAM_DATA_X3)
     {
-        conctl->PacketSent(seq, length);
+        m_conctl->PacketSent(seq, length);
     }
 
     /*if(pflags & PFLAG_HAS_CALL_ID){
 		s->WriteBytes(callID, 16);
 	}*/
     //s->WriteInt32(lastRemoteSeq);
-    s->WriteInt32(seq);
-    s->WriteBytes(reflectorSelfTagHash, 16);
+    s->WriteUInt32(seq);
+    s->WriteBytes(m_reflectorSelfTagHash, 16);
     if (length > 0)
     {
         if (length <= 253)
         {
-            s->WriteByte((unsigned char)length);
+            s->WriteUInt8(static_cast<std::uint8_t>(length));
         }
         else
         {
-            s->WriteByte(254);
-            s->WriteByte((unsigned char)(length & 0xFF));
-            s->WriteByte((unsigned char)((length >> 8) & 0xFF));
-            s->WriteByte((unsigned char)((length >> 16) & 0xFF));
+            s->WriteUInt8(254);
+            s->WriteUInt8(static_cast<std::uint8_t>(length & 0xFF));
+            s->WriteUInt8(static_cast<std::uint8_t>((length >> 8) & 0xFF));
+            s->WriteUInt8(static_cast<std::uint8_t>((length >> 16) & 0xFF));
         }
     }
 }
 
-void VoIPGroupController::SendPacket(unsigned char* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket)
+void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket)
 {
-    if (stopping)
+    if (m_stopping)
         return;
-    if (ep.type == Endpoint::Type::TCP_RELAY && !useTCP)
+    if (ep.type == Endpoint::Type::TCP_RELAY && !m_useTCP)
         return;
     BufferOutputStream out(len + 128);
     //LOGV("send group packet %u", len);
 
-    out.WriteBytes(reflectorSelfTag, 16);
+    out.WriteBytes(m_reflectorSelfTag, 16);
 
     if (len > 0)
     {
         BufferOutputStream inner(len + 128);
-        inner.WriteInt32((std::uint32_t)len);
+        inner.WriteUInt32(static_cast<std::uint32_t>(len));
         inner.WriteBytes(data, len);
         std::size_t padLen = 16 - inner.GetLength() % 16;
         if (padLen < 12)
             padLen += 16;
-        unsigned char padding[28];
-        crypto.rand_bytes((std::uint8_t*)padding, padLen);
+        std::uint8_t padding[28];
+        crypto.rand_bytes(padding, padLen);
         inner.WriteBytes(padding, padLen);
         assert(inner.GetLength() % 16 == 0);
 
-        unsigned char key[32], iv[32], msgKey[16];
-        out.WriteBytes(keyFingerprint, 8);
+        std::uint8_t key[32], iv[32], msgKey[16];
+        out.WriteBytes(m_keyFingerprint, 8);
         BufferOutputStream buf(len + 32);
         std::size_t x = 0;
-        buf.WriteBytes(encryptionKey + 88 + x, 32);
+        buf.WriteBytes(m_encryptionKey + 88 + x, 32);
         buf.WriteBytes(inner.GetBuffer() + 4, inner.GetLength() - 4);
-        unsigned char msgKeyLarge[32];
+        std::uint8_t msgKeyLarge[32];
         crypto.sha256(buf.GetBuffer(), buf.GetLength(), msgKeyLarge);
         std::memcpy(msgKey, msgKeyLarge + 8, 16);
         KDF2(msgKey, 0, key, iv);
         out.WriteBytes(msgKey, 16);
         //LOGV("<- MSG KEY: %08x %08x %08x %08x, hashed %u", *reinterpret_cast<std::int32_t*>(msgKey), *reinterpret_cast<std::int32_t*>(msgKey+4), *reinterpret_cast<std::int32_t*>(msgKey+8), *reinterpret_cast<std::int32_t*>(msgKey+12), inner.GetLength()-4);
 
-        unsigned char aesOut[MSC_STACK_FALLBACK(inner.GetLength(), 1500)];
+        std::uint8_t aesOut[MSC_STACK_FALLBACK(inner.GetLength(), 1500)];
         crypto.aes_ige_encrypt(inner.GetBuffer(), aesOut, inner.GetLength(), key, iv);
         out.WriteBytes(aesOut, inner.GetLength());
     }
 
     // relay signature
-    out.WriteBytes(reflectorSelfSecret, 16);
-    unsigned char sig[32];
+    out.WriteBytes(m_reflectorSelfSecret, 16);
+    std::uint8_t sig[32];
     crypto.sha256(out.GetBuffer(), out.GetLength(), sig);
     out.Rewind(16);
     out.WriteBytes(sig, 16);
@@ -686,18 +688,18 @@ void VoIPGroupController::SendPacket(unsigned char* data, std::size_t len, Endpo
     if (srcPacket.type == PKT_STREAM_DATA || srcPacket.type == PKT_STREAM_DATA_X2 || srcPacket.type == PKT_STREAM_DATA_X3)
     {
         PacketIdMapping mapping = {srcPacket.seq, *reinterpret_cast<std::uint16_t*>(sig + 14), 0};
-        MutexGuard m(sentPacketsMutex);
-        recentSentPackets.push_back(mapping);
+        MutexGuard m(m_sentPacketsMutex);
+        m_recentSentPackets.push_back(mapping);
         //LOGD("sent packet with id: %04X", mapping.id);
-        while (recentSentPackets.size() > 64)
-            recentSentPackets.erase(recentSentPackets.begin());
+        while (m_recentSentPackets.size() > 64)
+            m_recentSentPackets.erase(m_recentSentPackets.begin());
     }
-    lastSentSeq = srcPacket.seq;
+    m_lastSentSeq = srcPacket.seq;
 
-    if (IS_MOBILE_NETWORK(networkType))
-        stats.bytesSentMobile += (std::uint64_t)out.GetLength();
+    if (IS_MOBILE_NETWORK(m_networkType))
+        m_stats.bytesSentMobile += (std::uint64_t)out.GetLength();
     else
-        stats.bytesSentWifi += (std::uint64_t)out.GetLength();
+        m_stats.bytesSentWifi += (std::uint64_t)out.GetLength();
 
     /*NetworkPacket pkt={0};
 	pkt.address=(NetworkAddress*)&ep.address;
@@ -711,20 +713,20 @@ void VoIPGroupController::SendPacket(unsigned char* data, std::size_t len, Endpo
 void VoIPGroupController::SetCallbacks(VoIPGroupController::Callbacks callbacks)
 {
     VoIPController::SetCallbacks(callbacks);
-    this->groupCallbacks = callbacks;
+    this->m_groupCallbacks = callbacks;
 }
 
 std::int32_t VoIPGroupController::GetCurrentUnixtime()
 {
-    return time(NULL) + timeDifference;
+    return time(nullptr) + m_timeDifference;
 }
 
 float VoIPGroupController::GetParticipantAudioLevel(std::int32_t userID)
 {
-    if (userID == userSelfID)
-        return selfLevelMeter.GetLevel();
-    MutexGuard m(participantsMutex);
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    if (userID == m_userSelfID)
+        return m_selfLevelMeter.GetLevel();
+    MutexGuard m(m_participantsMutex);
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         if (p->userID == userID)
         {
@@ -736,28 +738,28 @@ float VoIPGroupController::GetParticipantAudioLevel(std::int32_t userID)
 
 void VoIPGroupController::SetMicMute(bool mute)
 {
-    micMuted = mute;
-    if (audioInput)
+    m_micMuted = mute;
+    if (m_audioInput)
     {
         if (mute)
-            audioInput->Stop();
+            m_audioInput->Stop();
         else
-            audioInput->Start();
-        if (!audioInput->IsInitialized())
+            m_audioInput->Start();
+        if (!m_audioInput->IsInitialized())
         {
-            lastError = Error::AUDIO_IO;
+            m_lastError = Error::AUDIO_IO;
             SetState(State::FAILED);
             return;
         }
     }
-    outgoingStreams[0]->enabled = !mute;
+    m_outgoingStreams[0]->enabled = !mute;
     SerializeAndUpdateOutgoingStreams();
 }
 
 void VoIPGroupController::SetParticipantVolume(std::int32_t userID, float volume)
 {
-    MutexGuard m(participantsMutex);
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    MutexGuard m(m_participantsMutex);
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         if (p->userID == userID)
         {
@@ -777,7 +779,7 @@ void VoIPGroupController::SetParticipantVolume(std::int32_t userID, float volume
                         else
                             db = 0.0f;
                         //LOGV("Setting user %u audio volume to %.2f dB", userID, db);
-                        audioMixer->SetInputVolume((*s)->callbackWrapper, db);
+                        m_audioMixer->SetInputVolume((*s)->callbackWrapper, db);
                     }
                     break;
                 }
@@ -790,28 +792,28 @@ void VoIPGroupController::SetParticipantVolume(std::int32_t userID, float volume
 void VoIPGroupController::SerializeAndUpdateOutgoingStreams()
 {
     BufferOutputStream out(1024);
-    out.WriteByte((unsigned char)outgoingStreams.size());
+    out.WriteUInt8(static_cast<std::uint8_t>(m_outgoingStreams.size()));
 
-    for (vector<shared_ptr<Stream>>::iterator s = outgoingStreams.begin(); s != outgoingStreams.end(); ++s)
+    for (vector<shared_ptr<Stream>>::iterator s = m_outgoingStreams.begin(); s != m_outgoingStreams.end(); ++s)
     {
         BufferOutputStream o(128);
-        o.WriteByte((*s)->id);
-        o.WriteByte((*s)->type);
-        o.WriteInt32((*s)->codec);
-        o.WriteInt32((unsigned char)(((*s)->enabled ? STREAM_FLAG_ENABLED : 0) | STREAM_FLAG_DTX));
-        o.WriteInt16((*s)->frameDuration);
-        out.WriteInt16((std::int16_t)o.GetLength());
+        o.WriteUInt8((*s)->id);
+        o.WriteUInt8((*s)->type);
+        o.WriteUInt32((*s)->codec);
+        o.WriteInt32(static_cast<std::uint8_t>(((*s)->enabled ? STREAM_FLAG_ENABLED : 0) | STREAM_FLAG_DTX));
+        o.WriteUInt16((*s)->frameDuration);
+        out.WriteUInt16(static_cast<std::uint16_t>(o.GetLength()));
         out.WriteBytes(o.GetBuffer(), o.GetLength());
     }
-    if (groupCallbacks.updateStreams)
-        groupCallbacks.updateStreams(this, out.GetBuffer(), out.GetLength());
+    if (m_groupCallbacks.updateStreams)
+        m_groupCallbacks.updateStreams(this, out.GetBuffer(), out.GetLength());
 }
 
 std::string VoIPGroupController::GetDebugString()
 {
     std::string r = "Remote endpoints: \n";
     char buffer[2048];
-    for (pair<const std::int64_t, Endpoint>& _endpoint : endpoints)
+    for (pair<const std::int64_t, Endpoint>& _endpoint : m_endpoints)
     {
         Endpoint& endpoint = _endpoint.second;
         const char* type;
@@ -833,11 +835,11 @@ std::string VoIPGroupController::GetDebugString()
             type = "UNKNOWN";
             break;
         }
-        snprintf(buffer, sizeof(buffer), "%s:%u %dms [%s%s]\n", endpoint.address.ToString().c_str(), endpoint.port, (int)(endpoint.averageRTT * 1000), type, currentEndpoint == endpoint.id ? ", IN_USE" : "");
+        snprintf(buffer, sizeof(buffer), "%s:%u %dms [%s%s]\n", endpoint.address.ToString().c_str(), endpoint.port, (int)(endpoint.m_averageRTT * 1000), type, m_currentEndpoint == endpoint.id ? ", IN_USE" : "");
         r += buffer;
     }
     double avgLate[3];
-    shared_ptr<JitterBuffer> jitterBuffer = incomingStreams.size() == 1 ? incomingStreams[0]->jitterBuffer : NULL;
+    shared_ptr<JitterBuffer> jitterBuffer = m_incomingStreams.size() == 1 ? m_incomingStreams[0]->jitterBuffer : nullptr;
     if (jitterBuffer)
         jitterBuffer->GetAverageLateCount(avgLate);
     else
@@ -850,17 +852,17 @@ std::string VoIPGroupController::GetDebugString()
         "Send/recv losses: %u/%u (%d%%)\n"
         "Audio bitrate: %d kbit\n"
         "Bytes sent/recvd: %llu/%llu\n\n",
-        (int)(conctl->GetAverageRTT() * 1000), (int)(conctl->GetMinimumRTT() * 1000),
-        int(conctl->GetInflightDataSize()), int(conctl->GetCongestionWindow()),
-        keyFingerprint[0], keyFingerprint[1], keyFingerprint[2], keyFingerprint[3], keyFingerprint[4], keyFingerprint[5], keyFingerprint[6], keyFingerprint[7],
-        lastSentSeq, lastRemoteAckSeq,
-        conctl->GetSendLossCount(), recvLossCount, encoder ? encoder->GetPacketLoss() : 0,
-        encoder ? (encoder->GetBitrate() / 1000) : 0,
-        (long long unsigned int)(stats.bytesSentMobile + stats.bytesSentWifi),
-        (long long unsigned int)(stats.bytesRecvdMobile + stats.bytesRecvdWifi));
+        (int)(m_conctl->GetAverageRTT() * 1000), (int)(m_conctl->GetMinimumRTT() * 1000),
+        int(m_conctl->GetInflightDataSize()), int(m_conctl->GetCongestionWindow()),
+        m_keyFingerprint[0], m_keyFingerprint[1], m_keyFingerprint[2], m_keyFingerprint[3], m_keyFingerprint[4], m_keyFingerprint[5], m_keyFingerprint[6], m_keyFingerprint[7],
+        m_lastSentSeq, m_lastRemoteAckSeq,
+        m_conctl->GetSendLossCount(), m_recvLossCount, m_encoder ? m_encoder->GetPacketLoss() : 0,
+        m_encoder ? (m_encoder->GetBitrate() / 1000) : 0,
+        (long long unsigned int)(m_stats.bytesSentMobile + m_stats.bytesSentWifi),
+        (long long unsigned int)(m_stats.bytesRecvdMobile + m_stats.bytesRecvdWifi));
 
-    MutexGuard m(participantsMutex);
-    for (vector<GroupCallParticipant>::iterator p = participants.begin(); p != participants.end(); ++p)
+    MutexGuard m(m_participantsMutex);
+    for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
     {
         snprintf(buffer, sizeof(buffer), "Participant id: %d\n", p->userID);
         r += buffer;

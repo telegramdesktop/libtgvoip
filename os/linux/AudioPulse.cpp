@@ -8,7 +8,7 @@
 #include "../../logging.h"
 #include <dlfcn.h>
 
-#define DECLARE_DL_FUNCTION(name) typeof(name)* AudioPulse::_import_##name = NULL
+#define DECLARE_DL_FUNCTION(name) typeof(name)* AudioPulse::_import_##name = nullptr
 #define CHECK_DL_ERROR(res, msg)     \
     if (!res)                        \
     {                                \
@@ -32,7 +32,7 @@ using namespace tgvoip;
 using namespace tgvoip::audio;
 
 bool AudioPulse::loaded = false;
-void* AudioPulse::lib = NULL;
+void* AudioPulse::lib = nullptr;
 
 DECLARE_DL_FUNCTION(pa_threaded_mainloop_new);
 DECLARE_DL_FUNCTION(pa_threaded_mainloop_get_api);
@@ -200,7 +200,7 @@ AudioPulse::AudioPulse(std::string inputDevice, std::string outputDevice)
     CHECK_ERROR(err, "pa_threaded_mainloop_start");
     didStart = true;
 
-    err = pa_context_connect(context, NULL, PA_CONTEXT_NOAUTOSPAWN, NULL);
+    err = pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
     CHECK_ERROR(err, "pa_context_connect");
 
     while (true)
@@ -264,14 +264,14 @@ bool AudioPulse::DoOneOperation(std::function<pa_operation*(pa_context*)> f)
     pa_mainloop* ml;
     pa_mainloop_api* mlAPI;
     pa_context* ctx;
-    pa_operation* op = NULL;
+    pa_operation* op = nullptr;
     int paReady = 0;
 
     ml = pa_mainloop_new();
     mlAPI = pa_mainloop_get_api(ml);
     ctx = pa_context_new(mlAPI, "libtgvoip");
 
-    pa_context_connect(ctx, NULL, PA_CONTEXT_NOFLAGS, NULL);
+    pa_context_connect(ctx, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
     pa_context_set_state_callback(
         ctx, [](pa_context* context, void* arg) {
             pa_context_state_t state;
@@ -301,7 +301,7 @@ bool AudioPulse::DoOneOperation(std::function<pa_operation*(pa_context*)> f)
     {
         if (paReady == 0)
         {
-            pa_mainloop_iterate(ml, 1, NULL);
+            pa_mainloop_iterate(ml, 1, nullptr);
             continue;
         }
         if (paReady == 2)
@@ -324,6 +324,6 @@ bool AudioPulse::DoOneOperation(std::function<pa_operation*(pa_context*)> f)
             pa_mainloop_free(ml);
             return true;
         }
-        pa_mainloop_iterate(ml, 1, NULL);
+        pa_mainloop_iterate(ml, 1, nullptr);
     }
 }

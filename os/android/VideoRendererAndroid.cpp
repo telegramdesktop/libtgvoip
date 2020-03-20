@@ -10,10 +10,10 @@
 using namespace tgvoip;
 using namespace tgvoip::video;
 
-jmethodID VideoRendererAndroid::resetMethod = NULL;
-jmethodID VideoRendererAndroid::decodeAndDisplayMethod = NULL;
-jmethodID VideoRendererAndroid::setStreamEnabledMethod = NULL;
-jmethodID VideoRendererAndroid::setRotationMethod = NULL;
+jmethodID VideoRendererAndroid::resetMethod = nullptr;
+jmethodID VideoRendererAndroid::decodeAndDisplayMethod = nullptr;
+jmethodID VideoRendererAndroid::setStreamEnabledMethod = nullptr;
+jmethodID VideoRendererAndroid::setRotationMethod = nullptr;
 std::vector<std::uint32_t> VideoRendererAndroid::availableDecoders;
 int VideoRendererAndroid::maxResolution;
 
@@ -79,10 +79,10 @@ void VideoRendererAndroid::DecodeAndDisplay(Buffer frame, std::uint32_t pts)
 void VideoRendererAndroid::RunThread()
 {
     JNIEnv* env;
-    sharedJVM->AttachCurrentThread(&env, NULL);
+    sharedJVM->AttachCurrentThread(&env, nullptr);
 
     constexpr std::size_t bufferSize = 200 * 1024;
-    unsigned char* buf = reinterpret_cast<unsigned char*>(std::malloc(bufferSize));
+    std::uint8_t* buf = reinterpret_cast<std::uint8_t*>(std::malloc(bufferSize));
     jobject jbuf = env->NewDirectByteBuffer(buf, bufferSize);
     std::uint16_t lastSetRotation = 0;
 
@@ -115,10 +115,10 @@ void VideoRendererAndroid::RunThread()
         }
         else if (request.type == Request::Type::ResetDecoder)
         {
-            jobjectArray jcsd = NULL;
+            jobjectArray jcsd = nullptr;
             if (!csd.empty())
             {
-                jcsd = env->NewObjectArray((jsize)csd.size(), env->FindClass("[B"), NULL);
+                jcsd = env->NewObjectArray((jsize)csd.size(), env->FindClass("[B"), nullptr);
                 jsize i = 0;
                 for (Buffer& b : csd)
                 {

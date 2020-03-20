@@ -13,20 +13,20 @@ extern JavaVM* sharedJVM;
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-jmethodID AudioOutputAndroid::initMethod = NULL;
-jmethodID AudioOutputAndroid::releaseMethod = NULL;
-jmethodID AudioOutputAndroid::startMethod = NULL;
-jmethodID AudioOutputAndroid::stopMethod = NULL;
-jclass AudioOutputAndroid::jniClass = NULL;
+jmethodID AudioOutputAndroid::initMethod = nullptr;
+jmethodID AudioOutputAndroid::releaseMethod = nullptr;
+jmethodID AudioOutputAndroid::startMethod = nullptr;
+jmethodID AudioOutputAndroid::stopMethod = nullptr;
+jclass AudioOutputAndroid::jniClass = nullptr;
 
 AudioOutputAndroid::AudioOutputAndroid()
 {
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     bool didAttach = false;
     sharedJVM->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (!env)
     {
-        sharedJVM->AttachCurrentThread(&env, NULL);
+        sharedJVM->AttachCurrentThread(&env, nullptr);
         didAttach = true;
     }
 
@@ -45,18 +45,18 @@ AudioOutputAndroid::AudioOutputAndroid()
 
 AudioOutputAndroid::~AudioOutputAndroid()
 {
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     bool didAttach = false;
     sharedJVM->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (!env)
     {
-        sharedJVM->AttachCurrentThread(&env, NULL);
+        sharedJVM->AttachCurrentThread(&env, nullptr);
         didAttach = true;
     }
 
     env->CallVoidMethod(javaObject, releaseMethod);
     env->DeleteGlobalRef(javaObject);
-    javaObject = NULL;
+    javaObject = nullptr;
 
     if (didAttach)
     {
@@ -66,12 +66,12 @@ AudioOutputAndroid::~AudioOutputAndroid()
 
 void AudioOutputAndroid::Start()
 {
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     bool didAttach = false;
     sharedJVM->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (!env)
     {
-        sharedJVM->AttachCurrentThread(&env, NULL);
+        sharedJVM->AttachCurrentThread(&env, nullptr);
         didAttach = true;
     }
 
@@ -87,12 +87,12 @@ void AudioOutputAndroid::Start()
 void AudioOutputAndroid::Stop()
 {
     running = false;
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     bool didAttach = false;
     sharedJVM->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (!env)
     {
-        sharedJVM->AttachCurrentThread(&env, NULL);
+        sharedJVM->AttachCurrentThread(&env, nullptr);
         didAttach = true;
     }
 
@@ -108,7 +108,7 @@ void AudioOutputAndroid::HandleCallback(JNIEnv* env, jbyteArray buffer)
 {
     if (!running)
         return;
-    unsigned char* buf = (unsigned char*)env->GetByteArrayElements(buffer, NULL);
+    std::uint8_t* buf = reinterpret_cast<std::uint8_t*>(env->GetByteArrayElements(buffer, nullptr));
     std::size_t len = (std::size_t)env->GetArrayLength(buffer);
     InvokeCallback(buf, len);
     env->ReleaseByteArrayElements(buffer, (jbyte*)buf, 0);

@@ -31,7 +31,7 @@ namespace audio
     private:
         static OSStatus BufferCallback(void* inRefCon, AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList* ioData);
         static OSStatus DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* inClientData);
-        unsigned char remainingData[10240];
+        std::uint8_t remainingData[10240];
         std::size_t remainingDataSize;
         bool isRecording;
         AudioUnit unit;

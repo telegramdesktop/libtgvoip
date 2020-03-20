@@ -28,7 +28,7 @@ class Buffer;
 class BufferInputStream
 {
 public:
-    BufferInputStream(const unsigned char* data, std::size_t m_length);
+    BufferInputStream(const std::uint8_t* data, std::size_t m_length);
     BufferInputStream(const Buffer& m_buffer);
     ~BufferInputStream() = default;
 
@@ -36,18 +36,22 @@ public:
     std::size_t GetLength() const;
     std::size_t GetOffset() const;
     std::size_t Remaining() const;
-    unsigned char ReadByte();
-    std::int64_t ReadInt64();
-    std::int32_t ReadInt32();
+    std::int8_t ReadInt8();
+    std::uint8_t ReadUInt8();
     std::int16_t ReadInt16();
+    std::uint16_t ReadUInt16();
+    std::int32_t ReadInt32();
+    std::uint32_t ReadUInt32();
+    std::int64_t ReadInt64();
+    std::uint64_t ReadUInt64();
     std::int32_t ReadTlLength();
-    void ReadBytes(unsigned char* to, std::size_t count);
+    void ReadBytes(std::uint8_t* to, std::size_t count);
     void ReadBytes(Buffer& to);
     BufferInputStream GetPartBuffer(std::size_t m_length, bool advance);
 
 private:
     void EnsureEnoughRemaining(std::size_t need);
-    const unsigned char* m_buffer;
+    const std::uint8_t* m_buffer;
     std::size_t m_length;
     std::size_t m_offset;
 };
@@ -57,24 +61,29 @@ class BufferOutputStream
 public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferOutputStream);
     BufferOutputStream(std::size_t m_size);
-    BufferOutputStream(unsigned char* m_buffer, std::size_t m_size);
+    BufferOutputStream(std::uint8_t* m_buffer, std::size_t m_size);
     BufferOutputStream& operator=(BufferOutputStream&& other);
     ~BufferOutputStream();
 
-    void WriteByte(unsigned char byte);
-    void WriteInt64(std::int64_t i);
-    void WriteInt32(std::int32_t i);
+    void WriteInt8(std::int8_t byte);
+    void WriteUInt8(std::uint8_t byte);
     void WriteInt16(std::int16_t i);
-    void WriteBytes(const unsigned char* bytes, std::size_t count);
+    void WriteUInt16(std::uint16_t i);
+    void WriteInt32(std::int32_t i);
+    void WriteUInt32(std::uint32_t i);
+    void WriteInt64(std::int64_t i);
+    void WriteUInt64(std::uint64_t i);
+    void WriteBytes(const std::uint8_t* bytes, std::size_t count);
+    //void WriteBytes(const std::int8_t* bytes, std::size_t count);
     void WriteBytes(const Buffer& m_buffer);
     void WriteBytes(const Buffer& m_buffer, std::size_t m_offset, std::size_t count);
-    unsigned char* GetBuffer() const;
+    std::uint8_t* GetBuffer() const;
     std::size_t GetLength() const;
     void Reset();
     void Rewind(std::size_t numBytes);
 
 private:
-    unsigned char* m_buffer = nullptr;
+    std::uint8_t* m_buffer = nullptr;
     std::size_t m_size;
     std::size_t m_offset;
     bool m_bufferProvided;
@@ -94,11 +103,11 @@ public:
     Buffer(BufferOutputStream&& stream);
     ~Buffer();
 
-    unsigned char& operator[](std::size_t i);
-    const unsigned char& operator[](std::size_t i) const;
+    std::uint8_t& operator[](std::size_t i);
+    const std::uint8_t& operator[](std::size_t i) const;
 
-    unsigned char* operator*();
-    const unsigned char* operator*() const;
+    std::uint8_t* operator*();
+    const std::uint8_t* operator*() const;
 
     void CopyFrom(const Buffer& other, std::size_t count, std::size_t srcOffset = 0, std::size_t dstOffset = 0);
     void CopyFrom(const void* ptr, std::size_t dstOffset, std::size_t count);
@@ -110,10 +119,10 @@ public:
 
     static Buffer CopyOf(const Buffer& other);
     static Buffer CopyOf(const Buffer& other, std::size_t offset, std::size_t length);
-    static Buffer Wrap(unsigned char* data, std::size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, std::size_t)> reallocFn);
+    static Buffer Wrap(std::uint8_t* data, std::size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, std::size_t)> reallocFn);
 
 private:
-    unsigned char* m_data;
+    std::uint8_t* m_data;
     std::size_t m_length;
     std::function<void(void*)> m_freeFn;
     std::function<void*(void*, std::size_t)> m_reallocFn;
@@ -234,7 +243,7 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferPool);
     BufferPool()
     {
-        m_bufferStart = reinterpret_cast<unsigned char*>(std::malloc(bufSize * bufCount));
+        m_bufferStart = reinterpret_cast<std::uint8_t*>(std::malloc(bufSize * bufCount));
         if (m_bufferStart == nullptr)
             throw std::bad_alloc();
     }
@@ -250,7 +259,7 @@ public:
         auto freeFn = [this](void* _buf)
         {
             assert(_buf != nullptr);
-            unsigned char* buf = reinterpret_cast<unsigned char*>(_buf);
+            std::uint8_t* buf = reinterpret_cast<std::uint8_t*>(_buf);
             std::size_t offset = buf - m_bufferStart;
             assert(offset % bufSize == 0);
             std::size_t index = offset / bufSize;
@@ -280,7 +289,7 @@ public:
 
 private:
     std::bitset<bufCount> m_usedBuffers;
-    unsigned char* m_bufferStart;
+    std::uint8_t* m_bufferStart;
     mutable Mutex m_mutex;
 };
 

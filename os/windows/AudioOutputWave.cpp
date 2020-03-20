@@ -24,7 +24,7 @@ using namespace tgvoip::audio;
 AudioOutputWave::AudioOutputWave(std::string deviceID)
 {
     isPlaying = false;
-    hWaveOut = NULL;
+    hWaveOut = nullptr;
 
     for (int i = 0; i < 4; i++)
     {
@@ -97,7 +97,7 @@ void AudioOutputWave::OnBufferDone(WAVEHDR* hdr)
     if (!isPlaying)
         return;
 
-    InvokeCallback((unsigned char*)hdr->lpData, hdr->dwBufferLength);
+    InvokeCallback(reinterpret_cast<std::uint8_t*>(hdr->lpData), hdr->dwBufferLength);
     hdr->dwFlags &= ~WHDR_DONE;
     MMRESULT res = waveOutWrite(hWaveOut, hdr, sizeof(WAVEHDR));
 }
@@ -111,7 +111,7 @@ void AudioOutputWave::EnumerateDevices(std::vector<tgvoip::AudioOutputDevice>& d
     {
         waveOutGetDevCapsW(i, &caps, sizeof(caps));
         AudioOutputDevice dev;
-        WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), nullptr, nullptr);
         dev.displayName = std::string(nameBuf);
         dev.id = std::string(nameBuf);
         devs.push_back(dev);
@@ -162,11 +162,11 @@ void AudioOutputWave::SetCurrentDevice(std::string deviceID)
         UINT num = waveOutGetNumDevs();
         WAVEOUTCAPSW caps;
         char nameBuf[512];
-        hWaveOut = NULL;
+        hWaveOut = nullptr;
         for (UINT i = 0; i < num; i++)
         {
             waveOutGetDevCapsW(i, &caps, sizeof(caps));
-            WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), nullptr, nullptr);
             std::string name = std::string(nameBuf);
             if (name == deviceID)
             {

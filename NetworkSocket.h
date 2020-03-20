@@ -24,9 +24,9 @@ enum class NetworkProtocol
 
 struct TCPO2State
 {
-    unsigned char key[32];
-    unsigned char iv[16];
-    unsigned char ecount[16];
+    std::uint8_t key[32];
+    std::uint8_t iv[16];
+    std::uint8_t ecount[16];
     std::uint32_t num;
 };
 
@@ -90,7 +90,7 @@ public:
     virtual ~NetworkSocket();
     virtual void Send(NetworkPacket packet) = 0;
     virtual NetworkPacket Receive(std::size_t maxLen = 0) = 0;
-    std::size_t Receive(unsigned char* buffer, std::size_t len);
+    std::size_t Receive(std::uint8_t* buffer, std::size_t len);
     virtual void Open() = 0;
     virtual void Close() = 0;
     virtual std::uint16_t GetLocalPort();
@@ -116,15 +116,15 @@ protected:
     virtual std::uint16_t GenerateLocalPort();
     virtual void SetMaxPriority();
 
-    static void GenerateTCPO2States(unsigned char* buffer, TCPO2State* recvState, TCPO2State* sendState);
-    static void EncryptForTCPO2(unsigned char* buffer, std::size_t len, TCPO2State* state);
+    static void GenerateTCPO2States(std::uint8_t* buffer, TCPO2State* recvState, TCPO2State* sendState);
+    static void EncryptForTCPO2(std::uint8_t* buffer, std::size_t len, TCPO2State* state);
 
     double m_ipv6Timeout;
     double m_lastSuccessfulOperationTime = 0.0;
     double m_timeout = 0.0;
     NetworkProtocol m_protocol;
     std::atomic<bool> m_failed;
-    unsigned char m_nat64Prefix[12];
+    std::uint8_t m_nat64Prefix[12];
     bool m_readyToSend = false;
 };
 

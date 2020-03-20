@@ -37,7 +37,7 @@ AudioOutputPulse::AudioOutputPulse(pa_context* context, pa_threaded_mainloop* ma
 
     this->mainloop = mainloop;
     this->context = context;
-    stream = NULL;
+    stream = nullptr;
     remainingDataSize = 0;
 
     pa_threaded_mainloop_lock(mainloop);
@@ -64,13 +64,13 @@ pa_stream* AudioOutputPulse::CreateAndInitStream()
         .channels = 1};
     pa_proplist* proplist = pa_proplist_new();
     pa_proplist_sets(proplist, PA_PROP_FILTER_APPLY, ""); // according to PA sources, this disables any possible filters
-    pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip playback", &sampleSpec, NULL, proplist);
+    pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip playback", &sampleSpec, nullptr, proplist);
     pa_proplist_free(proplist);
     if (!stream)
     {
         LOGE("Error initializing PulseAudio (pa_stream_new)");
         failed = true;
-        return NULL;
+        return nullptr;
     }
     pa_stream_set_state_callback(stream, AudioOutputPulse::StreamStateCallback, this);
     pa_stream_set_write_callback(stream, AudioOutputPulse::StreamWriteCallback, this);
@@ -84,7 +84,7 @@ void AudioOutputPulse::Start()
 
     isPlaying = true;
     pa_threaded_mainloop_lock(mainloop);
-    pa_operation_unref(pa_stream_cork(stream, 0, NULL, NULL));
+    pa_operation_unref(pa_stream_cork(stream, 0, nullptr, nullptr));
     pa_threaded_mainloop_unlock(mainloop);
 }
 
@@ -95,7 +95,7 @@ void AudioOutputPulse::Stop()
 
     isPlaying = false;
     pa_threaded_mainloop_lock(mainloop);
-    pa_operation_unref(pa_stream_cork(stream, 1, NULL, NULL));
+    pa_operation_unref(pa_stream_cork(stream, 1, nullptr, nullptr));
     pa_threaded_mainloop_unlock(mainloop);
 }
 
@@ -124,7 +124,7 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
         .fragsize = (std::uint32_t)-1};
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
-    int err = pa_stream_connect_playback(stream, devID == "default" ? NULL : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags, NULL, NULL);
+    int err = pa_stream_connect_playback(stream, devID == "default" ? nullptr : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags, nullptr, nullptr);
     if (err != 0 && devID != "default")
     {
         SetCurrentDevice("default");
@@ -150,7 +150,7 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
 
     if (isPlaying)
     {
-        pa_operation_unref(pa_stream_cork(stream, 0, NULL, NULL));
+        pa_operation_unref(pa_stream_cork(stream, 0, nullptr, nullptr));
     }
     pa_threaded_mainloop_unlock(mainloop);
 }
@@ -191,7 +191,7 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t reques
         requestedBytes = 960 * 2; // force buffer size to 20ms. This probably wrecks the jitter buffer, but still better than crashing
     }
     pa_usec_t latency;
-    if (pa_stream_get_latency(stream, &latency, NULL) == 0)
+    if (pa_stream_get_latency(stream, &latency, nullptr) == 0)
     {
         estimatedDelay = (std::int32_t)(latency / 100);
     }
@@ -208,7 +208,7 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t reques
             remainingDataSize = requestedBytes;
         }
     }
-    int err = pa_stream_write(stream, remainingData, requestedBytes, NULL, 0, PA_SEEK_RELATIVE);
+    int err = pa_stream_write(stream, remainingData, requestedBytes, nullptr, 0, PA_SEEK_RELATIVE);
     CHECK_ERROR(err, "pa_stream_write");
     remainingDataSize -= requestedBytes;
     if (remainingDataSize > 0)

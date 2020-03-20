@@ -74,7 +74,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                     LOGV("Updating NAT64 prefix");
                     nat64Present = false;
                     addrinfo* addr0;
-                    int res = getaddrinfo("ipv4only.arpa", NULL, NULL, &addr0);
+                    int res = getaddrinfo("ipv4only.arpa", nullptr, nullptr, &addr0);
                     if (res != 0)
                     {
                         LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerrorA(res));
@@ -82,8 +82,8 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                     else
                     {
                         addrinfo* addrPtr;
-                        unsigned char* addr170 = NULL;
-                        unsigned char* addr171 = NULL;
+                        std::uint8_t* addr170 = nullptr;
+                        std::uint8_t* addr171 = nullptr;
                         for (addrPtr = addr0; addrPtr; addrPtr = addrPtr->ai_next)
                         {
                             if (addrPtr->ai_family == AF_INET6)
@@ -410,19 +410,19 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
                 if (v4addr && n->Type == Windows::Networking::HostNameType::Ipv4)
                 {
                     char buf[INET_ADDRSTRLEN];
-                    WideCharToMultiByte(CP_UTF8, 0, n->RawName->Data(), -1, buf, sizeof(buf), NULL, NULL);
+                    WideCharToMultiByte(CP_UTF8, 0, n->RawName->Data(), -1, buf, sizeof(buf), nullptr, nullptr);
                     *v4addr = NetworkAddress::IPv4(buf);
                 }
                 else if (v6addr && n->Type == Windows::Networking::HostNameType::Ipv6)
                 {
                     char buf[INET6_ADDRSTRLEN];
-                    WideCharToMultiByte(CP_UTF8, 0, n->RawName->Data(), -1, buf, sizeof(buf), NULL, NULL);
+                    WideCharToMultiByte(CP_UTF8, 0, n->RawName->Data(), -1, buf, sizeof(buf), nullptr, nullptr);
                     *v6addr = NetworkAddress::IPv6(buf);
                 }
             }
         }
         char buf[128];
-        WideCharToMultiByte(CP_UTF8, 0, profile->NetworkAdapter->NetworkAdapterId.ToString()->Data(), -1, buf, sizeof(buf), NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, profile->NetworkAdapter->NetworkAdapterId.ToString()->Data(), -1, buf, sizeof(buf), nullptr, nullptr);
         return std::string(buf);
     }
     return "";
@@ -431,11 +431,11 @@ std::string NetworkSocketWinsock::GetLocalInterfaceInfo(NetworkAddress* v4addr, 
     ULONG size = 15 * 1024;
     ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
 
-    ULONG res = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &size);
+    ULONG res = GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, addrs, &size);
     if (res == ERROR_BUFFER_OVERFLOW)
     {
         addrs = (IP_ADAPTER_ADDRESSES*)std::realloc(addrs, size);
-        res = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, addrs, &size);
+        res = GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, addrs, &size);
     }
 
     ULONG bestMetric = 0;
@@ -535,15 +535,15 @@ std::string NetworkSocketWinsock::V4AddressToString(std::uint32_t address)
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t wbuf[INET_ADDRSTRLEN];
     ZeroMemory(wbuf, sizeof(wbuf));
-    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), NULL, wbuf, &len);
-    WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), NULL, NULL);
+    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), nullptr, wbuf, &len);
+    WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), nullptr, nullptr);
 #else
-    WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), NULL, buf, &len);
+    WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), nullptr, buf, &len);
 #endif
     return std::string(buf);
 }
 
-std::string NetworkSocketWinsock::V6AddressToString(const unsigned char* address)
+std::string NetworkSocketWinsock::V6AddressToString(const std::uint8_t* address)
 {
     char buf[INET6_ADDRSTRLEN];
     sockaddr_in6 addr;
@@ -554,10 +554,10 @@ std::string NetworkSocketWinsock::V6AddressToString(const unsigned char* address
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t wbuf[INET6_ADDRSTRLEN];
     ZeroMemory(wbuf, sizeof(wbuf));
-    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), NULL, wbuf, &len);
-    WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), NULL, NULL);
+    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), nullptr, wbuf, &len);
+    WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), nullptr, nullptr);
 #else
-    WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), NULL, buf, &len);
+    WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), nullptr, buf, &len);
 #endif
     return std::string(buf);
 }
@@ -571,14 +571,14 @@ std::uint32_t NetworkSocketWinsock::StringToV4Address(std::string address)
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t buf[INET_ADDRSTRLEN];
     MultiByteToWideChar(CP_UTF8, 0, address.c_str(), -1, buf, INET_ADDRSTRLEN);
-    WSAStringToAddressW(buf, AF_INET, NULL, (sockaddr*)&addr, &size);
+    WSAStringToAddressW(buf, AF_INET, nullptr, (sockaddr*)&addr, &size);
 #else
-    WSAStringToAddressA((char*)address.c_str(), AF_INET, NULL, (sockaddr*)&addr, &size);
+    WSAStringToAddressA((char*)address.c_str(), AF_INET, nullptr, (sockaddr*)&addr, &size);
 #endif
     return addr.sin_addr.s_addr;
 }
 
-void NetworkSocketWinsock::StringToV6Address(std::string address, unsigned char* out)
+void NetworkSocketWinsock::StringToV6Address(std::string address, std::uint8_t* out)
 {
     sockaddr_in6 addr;
     ZeroMemory(&addr, sizeof(addr));
@@ -587,9 +587,9 @@ void NetworkSocketWinsock::StringToV6Address(std::string address, unsigned char*
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t buf[INET6_ADDRSTRLEN];
     MultiByteToWideChar(CP_UTF8, 0, address.c_str(), -1, buf, INET6_ADDRSTRLEN);
-    WSAStringToAddressW(buf, AF_INET, NULL, (sockaddr*)&addr, &size);
+    WSAStringToAddressW(buf, AF_INET, nullptr, (sockaddr*)&addr, &size);
 #else
-    WSAStringToAddressA((char*)address.c_str(), AF_INET, NULL, (sockaddr*)&addr, &size);
+    WSAStringToAddressA((char*)address.c_str(), AF_INET, nullptr, (sockaddr*)&addr, &size);
 #endif
     std::memcpy(out, addr.sin6_addr.s6_addr, 16);
 }
@@ -598,7 +598,7 @@ void NetworkSocketWinsock::Connect(const NetworkAddress address, std::uint16_t p
 {
     sockaddr_in v4;
     sockaddr_in6 v6;
-    sockaddr* addr = NULL;
+    sockaddr* addr = nullptr;
     std::size_t addrLen = 0;
     if (!address.isIPv6)
     {
@@ -654,7 +654,7 @@ NetworkAddress NetworkSocketWinsock::ResolveDomainName(std::string name)
 {
     addrinfo* addr0;
     NetworkAddress ret = NetworkAddress::Empty();
-    int res = getaddrinfo(name.c_str(), NULL, NULL, &addr0);
+    int res = getaddrinfo(name.c_str(), nullptr, nullptr, &addr0);
     if (res != 0)
     {
         LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerrorA(res));

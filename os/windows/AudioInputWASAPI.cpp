@@ -34,7 +34,7 @@ void SafeRelease(T** ppT)
     if (*ppT)
     {
         (*ppT)->Release();
-        *ppT = NULL;
+        *ppT = nullptr;
     }
 }
 
@@ -46,7 +46,7 @@ AudioInputWASAPI::AudioInputWASAPI(std::string deviceID)
     remainingDataLen = 0;
     refCount = 1;
     HRESULT res;
-    res = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    res = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(res) && res != RPC_E_CHANGED_MODE)
     {
         CHECK_RES(res, "CoInitializeEx");
@@ -58,9 +58,9 @@ AudioInputWASAPI::AudioInputWASAPI(std::string deviceID)
 #undef CreateEventEx
 #define CreateEventEx __CreateEventExA
 #endif
-    shutdownEvent = CreateEventEx(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
-    audioSamplesReadyEvent = CreateEventEx(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
-    streamSwitchEvent = CreateEventEx(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
+    shutdownEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
+    audioSamplesReadyEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
+    streamSwitchEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
     ZeroMemory(&format, sizeof(format));
     format.wFormatTag = WAVE_FORMAT_PCM;
     format.nChannels = 1;
@@ -70,17 +70,17 @@ AudioInputWASAPI::AudioInputWASAPI(std::string deviceID)
     format.wBitsPerSample = 16;
 
 #ifdef TGVOIP_WINDOWS_DESKTOP
-    res = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&enumerator));
+    res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&enumerator));
     CHECK_RES(res, "CoCreateInstance(MMDeviceEnumerator)");
     res = enumerator->RegisterEndpointNotificationCallback(this);
     CHECK_RES(res, "enumerator->RegisterEndpointNotificationCallback");
-    audioSessionControl = NULL;
-    device = NULL;
+    audioSessionControl = nullptr;
+    device = nullptr;
 #endif
 
-    audioClient = NULL;
-    captureClient = NULL;
-    thread = NULL;
+    audioClient = nullptr;
+    captureClient = nullptr;
+    thread = nullptr;
     started = false;
 
     SetCurrentDevice(deviceID);
@@ -128,7 +128,7 @@ void AudioInputWASAPI::Start()
     isRecording = true;
     if (!thread)
     {
-        thread = CreateThread(NULL, 0, AudioInputWASAPI::StartThread, this, 0, NULL);
+        thread = CreateThread(nullptr, 0, AudioInputWASAPI::StartThread, this, 0, nullptr);
     }
 
     if (audioClient && !started)
@@ -153,16 +153,16 @@ void AudioInputWASAPI::EnumerateDevices(std::vector<tgvoip::AudioInputDevice>& d
 {
 #ifdef TGVOIP_WINDOWS_DESKTOP
     HRESULT res;
-    res = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    res = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(res) && res != RPC_E_CHANGED_MODE)
     {
         SCHECK_RES(res, "CoInitializeEx");
     }
 
-    IMMDeviceEnumerator* deviceEnumerator = NULL;
-    IMMDeviceCollection* deviceCollection = NULL;
+    IMMDeviceEnumerator* deviceEnumerator = nullptr;
+    IMMDeviceCollection* deviceCollection = nullptr;
 
-    res = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&deviceEnumerator));
+    res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&deviceEnumerator));
     SCHECK_RES(res, "CoCreateInstance(MMDeviceEnumerator)");
 
     res = deviceEnumerator->EnumAudioEndpoints(eCapture, DEVICE_STATE_ACTIVE, &deviceCollection);
@@ -205,9 +205,9 @@ void AudioInputWASAPI::EnumerateDevices(std::vector<tgvoip::AudioInputDevice>& d
         PropVariantClear(&friendlyName);
 
         char buf[256];
-        WideCharToMultiByte(CP_UTF8, 0, devID, -1, buf, sizeof(buf), NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, devID, -1, buf, sizeof(buf), nullptr, nullptr);
         dev.id = buf;
-        WideCharToMultiByte(CP_UTF8, 0, actualFriendlyName, -1, buf, sizeof(buf), NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, actualFriendlyName, -1, buf, sizeof(buf), nullptr, nullptr);
         dev.displayName = buf;
         devs.push_back(dev);
 
@@ -257,7 +257,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
 #ifdef TGVOIP_WINDOWS_DESKTOP
     SafeRelease(&device);
 
-    IMMDeviceCollection* deviceCollection = NULL;
+    IMMDeviceCollection* deviceCollection = nullptr;
 
     if (deviceID == "default")
     {
@@ -285,7 +285,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
             CHECK_RES(res, "get device id");
 
             char devID[128];
-            WideCharToMultiByte(CP_UTF8, 0, _devID, -1, devID, 128, NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, _devID, -1, devID, 128, nullptr, nullptr);
 
             CoTaskMemFree(_devID);
             if (deviceID == devID)
@@ -307,7 +307,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
         return;
     }
 
-    res = device->Activate(__uuidof(IAudioClient), CLSCTX_INPROC_SERVER, NULL, (void**)&audioClient);
+    res = device->Activate(__uuidof(IAudioClient), CLSCTX_INPROC_SERVER, nullptr, (void**)&audioClient);
     CHECK_RES(res, "device->Activate");
 #else
     std::wstring devID;
@@ -329,7 +329,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     }
     else
     {
-        int wchars_num = MultiByteToWideChar(CP_UTF8, 0, deviceID.c_str(), -1, NULL, 0);
+        int wchars_num = MultiByteToWideChar(CP_UTF8, 0, deviceID.c_str(), -1, nullptr, 0);
         wchar_t* wstr = new wchar_t[wchars_num];
         MultiByteToWideChar(CP_UTF8, 0, deviceID.c_str(), -1, wstr, wchars_num);
         devID = wstr;
@@ -364,7 +364,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     REFERENCE_TIME latency, devicePeriod;
     if (SUCCEEDED(audioClient->GetStreamLatency(&latency)))
     {
-        if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, NULL)))
+        if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, nullptr)))
         {
             estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
         }
@@ -404,7 +404,7 @@ void AudioInputWASAPI::RunThread()
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
     HANDLE waitArray[] = {shutdownEvent, streamSwitchEvent, audioSamplesReadyEvent};
-    HRESULT res = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    HRESULT res = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     CHECK_RES(res, "CoInitializeEx in capture thread");
 
     std::uint32_t bufferSize = 0;
@@ -439,7 +439,7 @@ void AudioInputWASAPI::RunThread()
             std::uint32_t framesAvailable = 0;
             DWORD flags;
 
-            res = captureClient->GetBuffer(&data, &framesAvailable, &flags, NULL, NULL);
+            res = captureClient->GetBuffer(&data, &framesAvailable, &flags, nullptr, nullptr);
             CHECK_RES(res, "captureClient->GetBuffer");
             std::size_t dataLen = framesAvailable * 2;
             assert(remainingDataLen + dataLen < sizeof(remainingData));
@@ -511,7 +511,7 @@ HRESULT AudioInputWASAPI::QueryInterface(REFIID iid, void** obj)
     {
         return E_POINTER;
     }
-    *obj = NULL;
+    *obj = nullptr;
 
     if (iid == IID_IUnknown)
     {

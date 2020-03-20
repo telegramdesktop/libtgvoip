@@ -52,7 +52,7 @@ AudioOutputOpenSLES::AudioOutputOpenSLES()
 
     buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
     nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
-    slPlayerObj = NULL;
+    slPlayerObj = nullptr;
     remainingDataSize = 0;
 }
 
@@ -82,14 +82,14 @@ void AudioOutputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void*
 
 void AudioOutputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)
 {
-    assert(slPlayerObj == NULL);
+    assert(slPlayerObj == nullptr);
     SLDataLocator_AndroidSimpleBufferQueue locatorBufferQueue = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 1};
     SLDataFormat_PCM formatPCM = {SL_DATAFORMAT_PCM, channels, sampleRate * 1000,
         SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
         channels == 2 ? (SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT) : SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
     SLDataSource audioSrc = {&locatorBufferQueue, &formatPCM};
     SLDataLocator_OutputMix locatorOutMix = {SL_DATALOCATOR_OUTPUTMIX, slOutputMixObj};
-    SLDataSink audioSnk = {&locatorOutMix, NULL};
+    SLDataSink audioSnk = {&locatorOutMix, nullptr};
 
     const SLInterfaceID id[2] = {SL_IID_BUFFERQUEUE, SL_IID_ANDROIDCONFIGURATION};
     const SLboolean req[2] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};

@@ -27,16 +27,16 @@
 #endif
 
 JavaVM* sharedJVM;
-jfieldID audioRecordInstanceFld = NULL;
-jfieldID audioTrackInstanceFld = NULL;
-jmethodID setStateMethod = NULL;
-jmethodID setSignalBarsMethod = NULL;
-jmethodID setSelfStreamsMethod = NULL;
-jmethodID setParticipantAudioEnabledMethod = NULL;
-jmethodID groupCallKeyReceivedMethod = NULL;
-jmethodID groupCallKeySentMethod = NULL;
-jmethodID callUpgradeRequestReceivedMethod = NULL;
-jclass jniUtilitiesClass = NULL;
+jfieldID audioRecordInstanceFld = nullptr;
+jfieldID audioTrackInstanceFld = nullptr;
+jmethodID setStateMethod = nullptr;
+jmethodID setSignalBarsMethod = nullptr;
+jmethodID setSelfStreamsMethod = nullptr;
+jmethodID setParticipantAudioEnabledMethod = nullptr;
+jmethodID groupCallKeyReceivedMethod = nullptr;
+jmethodID groupCallKeySentMethod = nullptr;
+jmethodID callUpgradeRequestReceivedMethod = nullptr;
+jclass jniUtilitiesClass = nullptr;
 
 struct ImplDataAndroid
 {
@@ -75,7 +75,7 @@ void updateSignalBarCount(VoIPController* cntrlr, int count)
     jni::AttachAndCallVoidMethod(setSignalBarsMethod, impl->javaObject, count);
 }
 
-void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams, std::size_t len)
+void updateGroupCallStreams(VoIPGroupController* cntrlr, std::uint8_t* streams, std::size_t len)
 {
     ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
     if (!impl->javaObject)
@@ -84,7 +84,7 @@ void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams,
         if (setSelfStreamsMethod)
         {
             jbyteArray jstreams = env->NewByteArray(static_cast<jsize>(len));
-            jbyte* el = env->GetByteArrayElements(jstreams, NULL);
+            jbyte* el = env->GetByteArrayElements(jstreams, nullptr);
             std::memcpy(el, streams, len);
             env->ReleaseByteArrayElements(jstreams, el, 0);
             env->CallVoidMethod(impl->javaObject, setSelfStreamsMethod, jstreams);
@@ -92,7 +92,7 @@ void updateGroupCallStreams(VoIPGroupController* cntrlr, unsigned char* streams,
     });
 }
 
-void groupCallKeyReceived(VoIPController* cntrlr, const unsigned char* key)
+void groupCallKeyReceived(VoIPController* cntrlr, const std::uint8_t* key)
 {
     ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
     if (!impl->javaObject)
@@ -101,7 +101,7 @@ void groupCallKeyReceived(VoIPController* cntrlr, const unsigned char* key)
         if (groupCallKeyReceivedMethod)
         {
             jbyteArray jkey = env->NewByteArray(256);
-            jbyte* el = env->GetByteArrayElements(jkey, NULL);
+            jbyte* el = env->GetByteArrayElements(jkey, nullptr);
             std::memcpy(el, key, 256);
             env->ReleaseByteArrayElements(jkey, el, 0);
             env->CallVoidMethod(impl->javaObject, groupCallKeyReceivedMethod, jkey);
@@ -225,7 +225,7 @@ void VoIPController_nativeSetProxy(JNIEnv* env, jobject thiz, jlong inst, jstrin
 
 void VoIPController_nativeSetEncryptionKey(JNIEnv* env, jobject thiz, jlong inst, jbyteArray key, jboolean isOutgoing)
 {
-    jbyte* akey = env->GetByteArrayElements(key, NULL);
+    jbyte* akey = env->GetByteArrayElements(key, nullptr);
     ((VoIPController*)(intptr_t)inst)->SetEncryptionKey((char*)akey, isOutgoing);
     env->ReleaseByteArrayElements(key, akey, JNI_ABORT);
 }
@@ -258,10 +258,10 @@ void VoIPController_nativeSetRemoteEndpoints(JNIEnv* env, jobject thiz, jlong in
         {
             v6addr = IPv6Address(jni::JavaStringToStdString(env, ipv6));
         }
-        unsigned char pTag[16];
+        std::uint8_t pTag[16];
         if (peerTag && env->GetArrayLength(peerTag))
         {
-            jbyte* peerTagBytes = env->GetByteArrayElements(peerTag, NULL);
+            jbyte* peerTagBytes = env->GetByteArrayElements(peerTag, nullptr);
             std::memcpy(pTag, peerTagBytes, 16);
             env->ReleaseByteArrayElements(peerTag, peerTagBytes, JNI_ABORT);
         }
@@ -396,8 +396,8 @@ jint VoIPController_nativeGetPeerCapabilities(JNIEnv* env, jclass cls, jlong ins
 
 void VoIPController_nativeSendGroupCallKey(JNIEnv* env, jclass cls, jlong inst, jbyteArray _key)
 {
-    jbyte* key = env->GetByteArrayElements(_key, NULL);
-    ((VoIPController*)(intptr_t)inst)->SendGroupCallKey((unsigned char*)key);
+    jbyte* key = env->GetByteArrayElements(_key, nullptr);
+    ((VoIPController*)(intptr_t)inst)->SendGroupCallKey(reinterpret_cast<std::uint8_t*>(key));
     env->ReleaseByteArrayElements(_key, key, JNI_ABORT);
 }
 
@@ -477,33 +477,37 @@ jlong VoIPGroupController_nativeInit(JNIEnv* env, jobject thiz, jint timeDiffere
     callbacks.connectionStateChanged = updateConnectionState;
     callbacks.updateStreams = updateGroupCallStreams;
     callbacks.participantAudioStateChanged = updateParticipantAudioState;
-    callbacks.signalBarCountChanged = NULL;
+    callbacks.signalBarCountChanged = nullptr;
     cntrlr->SetCallbacks(callbacks);
 
     return (jlong)(intptr_t)cntrlr;
 }
 
-void VoIPGroupController_nativeSetGroupCallInfo(JNIEnv* env, jclass cls, jlong inst, jbyteArray _encryptionKey, jbyteArray _reflectorGroupTag, jbyteArray _reflectorSelfTag, jbyteArray _reflectorSelfSecret, jbyteArray _reflectorSelfTagHash, jint selfUserID, jstring reflectorAddress, jstring reflectorAddressV6, jint reflectorPort)
+void VoIPGroupController_nativeSetGroupCallInfo(JNIEnv* env, jclass cls, jlong inst, jbyteArray _encryptionKey, jbyteArray _reflectorGroupTag,
+                                                jbyteArray _reflectorSelfTag, jbyteArray _reflectorSelfSecret, jbyteArray _reflectorSelfTagHash,
+                                                jint selfUserID, jstring reflectorAddress, jstring reflectorAddressV6, jint reflectorPort)
 {
     VoIPGroupController* ctlr = ((VoIPGroupController*)(intptr_t)inst);
-    jbyte* encryptionKey = env->GetByteArrayElements(_encryptionKey, NULL);
-    jbyte* reflectorGroupTag = env->GetByteArrayElements(_reflectorGroupTag, NULL);
-    jbyte* reflectorSelfTag = env->GetByteArrayElements(_reflectorSelfTag, NULL);
-    jbyte* reflectorSelfSecret = env->GetByteArrayElements(_reflectorSelfSecret, NULL);
-    jbyte* reflectorSelfTagHash = env->GetByteArrayElements(_reflectorSelfTagHash, NULL);
+    jbyte* encryptionKey = env->GetByteArrayElements(_encryptionKey, nullptr);
+    jbyte* reflectorGroupTag = env->GetByteArrayElements(_reflectorGroupTag, nullptr);
+    jbyte* reflectorSelfTag = env->GetByteArrayElements(_reflectorSelfTag, nullptr);
+    jbyte* reflectorSelfSecret = env->GetByteArrayElements(_reflectorSelfSecret, nullptr);
+    jbyte* reflectorSelfTagHash = env->GetByteArrayElements(_reflectorSelfTagHash, nullptr);
 
-    const char* ipChars = env->GetStringUTFChars(reflectorAddress, NULL);
+    const char* ipChars = env->GetStringUTFChars(reflectorAddress, nullptr);
     std::string ipLiteral(ipChars);
     NetworkAddress v4addr = NetworkAddress::IPv4(ipLiteral);
     NetworkAddress v6addr = NetworkAddress::Empty();
     env->ReleaseStringUTFChars(reflectorAddress, ipChars);
     if (reflectorAddressV6 && env->GetStringLength(reflectorAddressV6))
     {
-        const char* ipv6Chars = env->GetStringUTFChars(reflectorAddressV6, NULL);
+        const char* ipv6Chars = env->GetStringUTFChars(reflectorAddressV6, nullptr);
         v6addr = NetworkAddress::IPv6(ipv6Chars);
         env->ReleaseStringUTFChars(reflectorAddressV6, ipv6Chars);
     }
-    ctlr->SetGroupCallInfo((unsigned char*)encryptionKey, (unsigned char*)reflectorGroupTag, (unsigned char*)reflectorSelfTag, (unsigned char*)reflectorSelfSecret, (unsigned char*)reflectorSelfTagHash, selfUserID, v4addr, v6addr, (std::uint16_t)reflectorPort);
+    ctlr->SetGroupCallInfo(reinterpret_cast<std::uint8_t*>(encryptionKey), reinterpret_cast<std::uint8_t*>(reflectorGroupTag),
+                           reinterpret_cast<std::uint8_t*>(reflectorSelfTag), reinterpret_cast<std::uint8_t*>(reflectorSelfSecret),
+                           reinterpret_cast<std::uint8_t*>(reflectorSelfTagHash), selfUserID, v4addr, v6addr, static_cast<std::uint16_t>(reflectorPort));
 
     env->ReleaseByteArrayElements(_encryptionKey, encryptionKey, JNI_ABORT);
     env->ReleaseByteArrayElements(_reflectorGroupTag, reflectorGroupTag, JNI_ABORT);
@@ -515,8 +519,8 @@ void VoIPGroupController_nativeSetGroupCallInfo(JNIEnv* env, jclass cls, jlong i
 void VoIPGroupController_nativeAddGroupCallParticipant(JNIEnv* env, jclass cls, jlong inst, jint userID, jbyteArray _memberTagHash, jbyteArray _streams)
 {
     VoIPGroupController* ctlr = ((VoIPGroupController*)(intptr_t)inst);
-    jbyte* memberTagHash = env->GetByteArrayElements(_memberTagHash, NULL);
-    jbyte* streams = _streams ? env->GetByteArrayElements(_streams, NULL) : NULL;
+    jbyte* memberTagHash = env->GetByteArrayElements(_memberTagHash, nullptr);
+    jbyte* streams = _streams ? env->GetByteArrayElements(_streams, nullptr) : nullptr;
 
     ctlr->AddGroupCallParticipant(userID, (unsigned char*)memberTagHash, (unsigned char*)streams, (std::size_t)env->GetArrayLength(_streams));
 
@@ -546,7 +550,7 @@ jbyteArray VoIPGroupController_getInitialStreams(JNIEnv* env, jclass cls)
     unsigned char buf[1024];
     std::size_t len = VoIPGroupController::GetInitialStreams(buf, sizeof(buf));
     jbyteArray arr = env->NewByteArray(len);
-    jbyte* arrElems = env->GetByteArrayElements(arr, NULL);
+    jbyte* arrElems = env->GetByteArrayElements(arr, nullptr);
     std::memcpy(arrElems, buf, len);
     env->ReleaseByteArrayElements(arr, arrElems, 0);
     return arr;
@@ -554,7 +558,7 @@ jbyteArray VoIPGroupController_getInitialStreams(JNIEnv* env, jclass cls)
 
 void VoIPGroupController_nativeSetParticipantStreams(JNIEnv* env, jclass cls, jlong inst, jint userID, jbyteArray _streams)
 {
-    jbyte* streams = env->GetByteArrayElements(_streams, NULL);
+    jbyte* streams = env->GetByteArrayElements(_streams, nullptr);
 
     ((VoIPGroupController*)(intptr_t)inst)->SetParticipantStreams(userID, (unsigned char*)streams, (std::size_t)env->GetArrayLength(_streams));
 
@@ -652,7 +656,7 @@ extern "C" void tgvoipRegisterNatives(JNIEnv* env)
     jclass groupController = env->FindClass(TGVOIP_PACKAGE_PATH "/VoIPGroupController");
     if (env->ExceptionCheck())
     {
-        env->ExceptionClear(); // is returning NULL from FindClass not enough?
+        env->ExceptionClear(); // is returning nullptr from FindClass not enough?
     }
     jclass audioRecordJNI = env->FindClass(TGVOIP_PACKAGE_PATH "/AudioRecordJNI");
     jclass audioTrackJNI = env->FindClass(TGVOIP_PACKAGE_PATH "/AudioTrackJNI");
@@ -661,12 +665,12 @@ extern "C" void tgvoipRegisterNatives(JNIEnv* env)
     jclass videoSource = env->FindClass(TGVOIP_PACKAGE_PATH "/VideoSource");
     if (env->ExceptionCheck())
     {
-        env->ExceptionClear(); // is returning NULL from FindClass not enough?
+        env->ExceptionClear(); // is returning nullptr from FindClass not enough?
     }
     jclass videoRenderer = env->FindClass(TGVOIP_PACKAGE_PATH "/VideoRenderer");
     if (env->ExceptionCheck())
     {
-        env->ExceptionClear(); // is returning NULL from FindClass not enough?
+        env->ExceptionClear(); // is returning nullptr from FindClass not enough?
     }
     jclass vlog = env->FindClass(TGVOIP_PACKAGE_PATH "/VLog");
     if (env->ExceptionCheck())

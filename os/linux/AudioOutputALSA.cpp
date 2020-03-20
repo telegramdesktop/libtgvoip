@@ -36,7 +36,7 @@ using namespace tgvoip::audio;
 AudioOutputALSA::AudioOutputALSA(std::string devID)
 {
     isPlaying = false;
-    handle = NULL;
+    handle = nullptr;
 
     lib = dlopen("libasound.so.2", RTLD_LAZY);
     if (!lib)
@@ -85,7 +85,7 @@ void AudioOutputALSA::Stop()
     isPlaying = false;
     thread->Join();
     delete thread;
-    thread = NULL;
+    thread = nullptr;
 }
 
 bool AudioOutputALSA::IsPlaying()
@@ -94,7 +94,7 @@ bool AudioOutputALSA::IsPlaying()
 }
 void AudioOutputALSA::RunThread()
 {
-    unsigned char buffer[BUFFER_SIZE * 2];
+    std::uint8_t buffer[BUFFER_SIZE * 2];
     snd_pcm_sframes_t frames;
     while (isPlaying)
     {
@@ -182,10 +182,10 @@ void AudioOutputALSA::EnumerateDevices(std::vector<AudioOutputDevice>& devs)
         if (!ioid || strcmp(ioid, "Output") == 0)
         {
             char* l1 = strtok(desc, "\n");
-            char* l2 = strtok(NULL, "\n");
+            char* l2 = strtok(nullptr, "\n");
             char* tmp = strtok(l1, ",");
             char* actualName = tmp;
-            while ((tmp = strtok(NULL, ",")))
+            while ((tmp = strtok(nullptr, ",")))
             {
                 actualName = tmp;
             }

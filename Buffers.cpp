@@ -22,7 +22,7 @@ Buffer::Buffer(std::size_t capacity)
 {
     if (capacity > 0)
     {
-        m_data = reinterpret_cast<unsigned char*>(std::malloc(capacity));
+        m_data = reinterpret_cast<std::uint8_t*>(std::malloc(capacity));
         if (m_data == nullptr)
             throw std::bad_alloc();
     }
@@ -84,26 +84,26 @@ Buffer& Buffer::operator=(Buffer&& other)
     return *this;
 }
 
-unsigned char& Buffer::operator[](std::size_t i)
+std::uint8_t& Buffer::operator[](std::size_t i)
 {
     if (i >= m_length)
         throw std::out_of_range("");
     return m_data[i];
 }
 
-const unsigned char& Buffer::operator[](std::size_t i) const
+const std::uint8_t& Buffer::operator[](std::size_t i) const
 {
     if (i >= m_length)
         throw std::out_of_range("");
     return m_data[i];
 }
 
-unsigned char* Buffer::operator*()
+std::uint8_t* Buffer::operator*()
 {
     return m_data;
 }
 
-const unsigned char* Buffer::operator*() const
+const std::uint8_t* Buffer::operator*() const
 {
     return m_data;
 }
@@ -111,7 +111,7 @@ const unsigned char* Buffer::operator*() const
 void Buffer::CopyFrom(const Buffer& other, std::size_t count, std::size_t srcOffset, std::size_t dstOffset)
 {
     if (other.m_data == nullptr)
-        throw std::invalid_argument("CopyFrom can't copy from NULL");
+        throw std::invalid_argument("CopyFrom can't copy from nullptr");
     if (other.m_length < srcOffset + count || m_length < dstOffset + count)
         throw std::out_of_range("Out of offset+count bounds of either buffer");
     std::memcpy(m_data + dstOffset, other.m_data + srcOffset, count);
@@ -127,9 +127,9 @@ void Buffer::CopyFrom(const void* ptr, std::size_t dstOffset, std::size_t count)
 void Buffer::Resize(std::size_t newSize)
 {
     if (m_reallocFn)
-        m_data = reinterpret_cast<unsigned char*>(m_reallocFn(m_data, newSize));
+        m_data = reinterpret_cast<std::uint8_t*>(m_reallocFn(m_data, newSize));
     else
-        m_data = reinterpret_cast<unsigned char*>(std::realloc(m_data, newSize));
+        m_data = reinterpret_cast<std::uint8_t*>(std::realloc(m_data, newSize));
     if (m_data == nullptr)
         throw std::bad_alloc();
     m_length = newSize;
@@ -163,7 +163,7 @@ Buffer Buffer::CopyOf(const Buffer& other, std::size_t offset, std::size_t lengt
     return buf;
 }
 
-Buffer Buffer::Wrap(unsigned char* data, std::size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, std::size_t)> reallocFn)
+Buffer Buffer::Wrap(std::uint8_t* data, std::size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, std::size_t)> reallocFn)
 {
     Buffer b = Buffer();
     b.m_data = data;
@@ -175,7 +175,7 @@ Buffer Buffer::Wrap(unsigned char* data, std::size_t size, std::function<void(vo
 
 #pragma mark - BufferInputStream
 
-BufferInputStream::BufferInputStream(const unsigned char* data, std::size_t length)
+BufferInputStream::BufferInputStream(const std::uint8_t* data, std::size_t length)
     : m_buffer(data)
     , m_length(length)
     , m_offset(0)
@@ -213,19 +213,54 @@ std::size_t BufferInputStream::Remaining() const
     return m_length - m_offset;
 }
 
-unsigned char BufferInputStream::ReadByte()
+std::int8_t BufferInputStream::ReadInt8()
+{
+    EnsureEnoughRemaining(1);
+    return reinterpret_cast<const std::int8_t&>(m_buffer[m_offset++]);
+}
+
+std::uint8_t BufferInputStream::ReadUInt8()
 {
     EnsureEnoughRemaining(1);
     return m_buffer[m_offset++];
+}
+
+std::int16_t BufferInputStream::ReadInt16()
+{
+    EnsureEnoughRemaining(2);
+    std::int16_t res = static_cast<std::int16_t>(((m_buffer[m_offset + 0]) & 0xFF) << 0) |
+                       static_cast<std::int16_t>(((m_buffer[m_offset + 1]) & 0xFF) << 8);
+    m_offset += 2;
+    return res;
+}
+
+std::uint16_t BufferInputStream::ReadUInt16()
+{
+    EnsureEnoughRemaining(2);
+    std::uint16_t res = static_cast<std::uint16_t>(((m_buffer[m_offset + 0]) & 0xFF) << 0) |
+                        static_cast<std::uint16_t>(((m_buffer[m_offset + 1]) & 0xFF) << 8);
+    m_offset += 2;
+    return res;
 }
 
 std::int32_t BufferInputStream::ReadInt32()
 {
     EnsureEnoughRemaining(4);
     std::int32_t res = ((static_cast<std::int32_t>(m_buffer[m_offset + 0]) & 0xFF) <<  0) |
-                  ((static_cast<std::int32_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
-                  ((static_cast<std::int32_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
-                  ((static_cast<std::int32_t>(m_buffer[m_offset + 3]) & 0xFF) << 24);
+                       ((static_cast<std::int32_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
+                       ((static_cast<std::int32_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
+                       ((static_cast<std::int32_t>(m_buffer[m_offset + 3]) & 0xFF) << 24);
+    m_offset += 4;
+    return res;
+}
+
+std::uint32_t BufferInputStream::ReadUInt32()
+{
+    EnsureEnoughRemaining(4);
+    std::uint32_t res = ((static_cast<std::uint32_t>(m_buffer[m_offset + 0]) & 0xFF) <<  0) |
+                        ((static_cast<std::uint32_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
+                        ((static_cast<std::uint32_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
+                        ((static_cast<std::uint32_t>(m_buffer[m_offset + 3]) & 0xFF) << 24);
     m_offset += 4;
     return res;
 }
@@ -234,41 +269,47 @@ std::int64_t BufferInputStream::ReadInt64()
 {
     EnsureEnoughRemaining(8);
     std::int64_t res = ((static_cast<std::int64_t>(m_buffer[m_offset + 0]) & 0xFF) <<  0) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 3]) & 0xFF) << 24) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 4]) & 0xFF) << 32) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 5]) & 0xFF) << 40) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 6]) & 0xFF) << 48) |
-                  ((static_cast<std::int64_t>(m_buffer[m_offset + 7]) & 0xFF) << 56);
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 3]) & 0xFF) << 24) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 4]) & 0xFF) << 32) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 5]) & 0xFF) << 40) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 6]) & 0xFF) << 48) |
+                       ((static_cast<std::int64_t>(m_buffer[m_offset + 7]) & 0xFF) << 56);
     m_offset += 8;
     return res;
 }
 
-std::int16_t BufferInputStream::ReadInt16()
+std::uint64_t BufferInputStream::ReadUInt64()
 {
-    EnsureEnoughRemaining(2);
-    std::int16_t res = static_cast<std::int16_t>(((m_buffer[m_offset + 0]) & 0xFF) << 0) |
-                  static_cast<std::int16_t>(((m_buffer[m_offset + 1]) & 0xFF) << 8);
-    m_offset += 2;
+    EnsureEnoughRemaining(8);
+    std::uint64_t res = ((static_cast<std::uint64_t>(m_buffer[m_offset + 0]) & 0xFF) <<  0) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 2]) & 0xFF) << 16) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 3]) & 0xFF) << 24) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 4]) & 0xFF) << 32) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 5]) & 0xFF) << 40) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 6]) & 0xFF) << 48) |
+                        ((static_cast<std::uint64_t>(m_buffer[m_offset + 7]) & 0xFF) << 56);
+    m_offset += 8;
     return res;
 }
 
 std::int32_t BufferInputStream::ReadTlLength()
 {
-    unsigned char l = ReadByte();
+    std::uint8_t l = ReadUInt8();
     if (l < 254)
         return l;
     assert(m_length - m_offset >= 3);
     EnsureEnoughRemaining(3);
     std::int32_t res = ((static_cast<std::int32_t>(m_buffer[m_offset + 0]) & 0xFF) <<  0) |
-                  ((static_cast<std::int32_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
-                  ((static_cast<std::int32_t>(m_buffer[m_offset + 2]) & 0xFF) << 16);
+                       ((static_cast<std::int32_t>(m_buffer[m_offset + 1]) & 0xFF) <<  8) |
+                       ((static_cast<std::int32_t>(m_buffer[m_offset + 2]) & 0xFF) << 16);
     m_offset += 3;
     return res;
 }
 
-void BufferInputStream::ReadBytes(unsigned char* to, std::size_t count)
+void BufferInputStream::ReadBytes(std::uint8_t* to, std::size_t count)
 {
     EnsureEnoughRemaining(count);
     std::memcpy(to, m_buffer + m_offset, count);
@@ -300,7 +341,7 @@ void BufferInputStream::EnsureEnoughRemaining(std::size_t need)
 #pragma mark - BufferOutputStream
 
 BufferOutputStream::BufferOutputStream(std::size_t size)
-    : m_buffer(reinterpret_cast<unsigned char*>(std::malloc(size)))
+    : m_buffer(reinterpret_cast<std::uint8_t*>(std::malloc(size)))
     , m_size(size)
     , m_offset(0)
     , m_bufferProvided(false)
@@ -309,7 +350,7 @@ BufferOutputStream::BufferOutputStream(std::size_t size)
         throw std::bad_alloc();
 }
 
-BufferOutputStream::BufferOutputStream(unsigned char* buffer, std::size_t size)
+BufferOutputStream::BufferOutputStream(std::uint8_t* buffer, std::size_t size)
     : m_buffer(buffer)
     , m_size(size)
     , m_offset(0)
@@ -338,50 +379,95 @@ BufferOutputStream::~BufferOutputStream()
         std::free(m_buffer);
 }
 
-void BufferOutputStream::WriteByte(unsigned char byte)
+void BufferOutputStream::WriteUInt8(std::uint8_t byte)
 {
     this->ExpandBufferIfNeeded(1);
     m_buffer[m_offset++] = byte;
 }
 
+void BufferOutputStream::WriteInt8(std::int8_t byte)
+{
+    this->ExpandBufferIfNeeded(1);
+    m_buffer[m_offset++] = reinterpret_cast<std::uint8_t&>(byte);
+}
+
+void BufferOutputStream::WriteInt16(std::int16_t i)
+{
+    this->ExpandBufferIfNeeded(2);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >> 8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >> 0) & 0xFF);
+    m_offset += 2;
+}
+
+void BufferOutputStream::WriteUInt16(std::uint16_t i)
+{
+    this->ExpandBufferIfNeeded(2);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >> 8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >> 0) & 0xFF);
+    m_offset += 2;
+}
+
 void BufferOutputStream::WriteInt32(std::int32_t i)
 {
     this->ExpandBufferIfNeeded(4);
-    m_buffer[m_offset + 3] = static_cast<unsigned char>((i >> 24) & 0xFF);
-    m_buffer[m_offset + 2] = static_cast<unsigned char>((i >> 16) & 0xFF);
-    m_buffer[m_offset + 1] = static_cast<unsigned char>((i >>  8) & 0xFF);
-    m_buffer[m_offset + 0] = static_cast<unsigned char>((i >>  0) & 0xFF);
+    m_buffer[m_offset + 3] = static_cast<std::uint8_t>((i >> 24) & 0xFF);
+    m_buffer[m_offset + 2] = static_cast<std::uint8_t>((i >> 16) & 0xFF);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >>  8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >>  0) & 0xFF);
+    m_offset += 4;
+}
+
+void BufferOutputStream::WriteUInt32(std::uint32_t i)
+{
+    this->ExpandBufferIfNeeded(4);
+    m_buffer[m_offset + 3] = static_cast<std::uint8_t>((i >> 24) & 0xFF);
+    m_buffer[m_offset + 2] = static_cast<std::uint8_t>((i >> 16) & 0xFF);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >>  8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >>  0) & 0xFF);
     m_offset += 4;
 }
 
 void BufferOutputStream::WriteInt64(std::int64_t i)
 {
     this->ExpandBufferIfNeeded(8);
-    m_buffer[m_offset + 7] = static_cast<unsigned char>((i >> 56) & 0xFF);
-    m_buffer[m_offset + 6] = static_cast<unsigned char>((i >> 48) & 0xFF);
-    m_buffer[m_offset + 5] = static_cast<unsigned char>((i >> 40) & 0xFF);
-    m_buffer[m_offset + 4] = static_cast<unsigned char>((i >> 32) & 0xFF);
-    m_buffer[m_offset + 3] = static_cast<unsigned char>((i >> 24) & 0xFF);
-    m_buffer[m_offset + 2] = static_cast<unsigned char>((i >> 16) & 0xFF);
-    m_buffer[m_offset + 1] = static_cast<unsigned char>((i >>  8) & 0xFF);
-    m_buffer[m_offset + 0] = static_cast<unsigned char>((i >>  0) & 0xFF);
+    m_buffer[m_offset + 7] = static_cast<std::uint8_t>((i >> 56) & 0xFF);
+    m_buffer[m_offset + 6] = static_cast<std::uint8_t>((i >> 48) & 0xFF);
+    m_buffer[m_offset + 5] = static_cast<std::uint8_t>((i >> 40) & 0xFF);
+    m_buffer[m_offset + 4] = static_cast<std::uint8_t>((i >> 32) & 0xFF);
+    m_buffer[m_offset + 3] = static_cast<std::uint8_t>((i >> 24) & 0xFF);
+    m_buffer[m_offset + 2] = static_cast<std::uint8_t>((i >> 16) & 0xFF);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >>  8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >>  0) & 0xFF);
     m_offset += 8;
 }
 
-void BufferOutputStream::WriteInt16(std::int16_t i)
+void BufferOutputStream::WriteUInt64(std::uint64_t i)
 {
-    this->ExpandBufferIfNeeded(2);
-    m_buffer[m_offset + 1] = static_cast<unsigned char>((i >> 8) & 0xFF);
-    m_buffer[m_offset + 0] = static_cast<unsigned char>((i >> 0) & 0xFF);
-    m_offset += 2;
+    this->ExpandBufferIfNeeded(8);
+    m_buffer[m_offset + 7] = static_cast<std::uint8_t>((i >> 56) & 0xFF);
+    m_buffer[m_offset + 6] = static_cast<std::uint8_t>((i >> 48) & 0xFF);
+    m_buffer[m_offset + 5] = static_cast<std::uint8_t>((i >> 40) & 0xFF);
+    m_buffer[m_offset + 4] = static_cast<std::uint8_t>((i >> 32) & 0xFF);
+    m_buffer[m_offset + 3] = static_cast<std::uint8_t>((i >> 24) & 0xFF);
+    m_buffer[m_offset + 2] = static_cast<std::uint8_t>((i >> 16) & 0xFF);
+    m_buffer[m_offset + 1] = static_cast<std::uint8_t>((i >>  8) & 0xFF);
+    m_buffer[m_offset + 0] = static_cast<std::uint8_t>((i >>  0) & 0xFF);
+    m_offset += 8;
 }
 
-void BufferOutputStream::WriteBytes(const unsigned char* bytes, std::size_t count)
+void BufferOutputStream::WriteBytes(const std::uint8_t* bytes, std::size_t count)
 {
     this->ExpandBufferIfNeeded(count);
     std::memcpy(m_buffer + m_offset, bytes, count);
     m_offset += count;
 }
+
+//void BufferOutputStream::WriteBytes(const std::int8_t* bytes, std::size_t count)
+//{
+//    this->ExpandBufferIfNeeded(count);
+//    std::memcpy(m_buffer + m_offset, reinterpret_cast<const std::uint8_t*>(bytes), count);
+//    m_offset += count;
+//}
 
 void BufferOutputStream::WriteBytes(const Buffer& buffer)
 {
@@ -395,7 +481,7 @@ void BufferOutputStream::WriteBytes(const Buffer& buffer, std::size_t offset, st
     WriteBytes(*buffer + offset, count);
 }
 
-unsigned char* BufferOutputStream::GetBuffer() const
+std::uint8_t* BufferOutputStream::GetBuffer() const
 {
     return m_buffer;
 }
@@ -413,9 +499,9 @@ void BufferOutputStream::ExpandBufferIfNeeded(std::size_t need)
         {
             throw std::out_of_range("buffer overflow");
         }
-        unsigned char* new_buffer;
-        need = std::max(need, std::size_t {1024});
-        new_buffer = reinterpret_cast<unsigned char*>(std::realloc(m_buffer, m_size + need));
+        std::uint8_t* new_buffer;
+        need = std::max(need, std::size_t{1024});
+        new_buffer = reinterpret_cast<std::uint8_t*>(std::realloc(m_buffer, m_size + need));
         if (new_buffer == nullptr)
         {
             std::free(m_buffer);

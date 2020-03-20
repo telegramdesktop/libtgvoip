@@ -116,7 +116,7 @@ void EchoCanceller::Stop()
 {
 }
 
-void EchoCanceller::SpeakerOutCallback(unsigned char* data, std::size_t len)
+void EchoCanceller::SpeakerOutCallback(std::uint8_t* data, std::size_t len)
 {
     if (len != 960 * 2 || !m_enableAEC || !m_isOn)
         return;

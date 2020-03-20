@@ -34,7 +34,7 @@ AudioInputWave::AudioInputWave(std::string deviceID)
         buffers[i].lpData = (char*)std::malloc(960 * 2);
     }
 
-    hWaveIn = NULL;
+    hWaveIn = nullptr;
 
     SetCurrentDevice(deviceID);
 }
@@ -98,7 +98,7 @@ void AudioInputWave::OnData(WAVEHDR* hdr)
     if (!isRecording)
         return;
 
-    InvokeCallback((unsigned char*)hdr->lpData, hdr->dwBufferLength);
+    InvokeCallback(reinterpret_cast<std::uint8_t*>(hdr->lpData), hdr->dwBufferLength);
     hdr->dwFlags &= ~WHDR_DONE;
     MMRESULT res = waveInAddBuffer(hWaveIn, hdr, sizeof(WAVEHDR));
     CHECK_ERROR(res, "waveInAddBuffer failed");
@@ -113,7 +113,7 @@ void AudioInputWave::EnumerateDevices(std::vector<tgvoip::AudioInputDevice>& dev
     {
         waveInGetDevCapsW(i, &caps, sizeof(caps));
         AudioInputDevice dev;
-        WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), nullptr, nullptr);
         dev.displayName = std::string(nameBuf);
         dev.id = std::string(nameBuf);
         devs.push_back(dev);
@@ -165,11 +165,11 @@ void AudioInputWave::SetCurrentDevice(std::string deviceID)
         UINT num = waveInGetNumDevs();
         WAVEINCAPSW caps;
         char nameBuf[512];
-        hWaveIn = NULL;
+        hWaveIn = nullptr;
         for (UINT i = 0; i < num; i++)
         {
             waveInGetDevCapsW(i, &caps, sizeof(caps));
-            WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), nullptr, nullptr);
             std::string name = std::string(nameBuf);
             if (name == deviceID)
             {

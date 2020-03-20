@@ -196,16 +196,16 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
         if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
         {
             BufferOutputStream os(256);
-            os.WriteInt16(static_cast<std::int16_t>(m_stm->width));
-            os.WriteInt16(static_cast<std::int16_t>(m_stm->height));
+            os.WriteUInt16(static_cast<std::uint16_t>(m_stm->width));
+            os.WriteUInt16(static_cast<std::uint16_t>(m_stm->height));
             std::uint8_t sizeAndFlag = static_cast<std::uint8_t>(m_stm->codecSpecificData.size());
             if (csdInvalidated)
                 sizeAndFlag |= 0x80;
-            os.WriteByte(sizeAndFlag);
+            os.WriteUInt8(sizeAndFlag);
             for (const Buffer& b : m_stm->codecSpecificData)
             {
                 assert(b.Length() < 255);
-                os.WriteByte(static_cast<unsigned char>(b.Length()));
+                os.WriteUInt8(static_cast<std::uint8_t>(b.Length()));
                 os.WriteBytes(b);
             }
             csd = std::move(os);
@@ -234,27 +234,27 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             {
                 len = packetSize;
             }
-            unsigned char pflags = STREAM_DATA_FLAG_LEN16;
+            std::uint8_t pflags = STREAM_DATA_FLAG_LEN16;
             //pflags |= STREAM_DATA_FLAG_HAS_MORE_FLAGS;
-            pkt.WriteByte(static_cast<unsigned char>(m_stm->id | pflags)); // streamID + flags
-            std::int16_t lengthAndFlags = static_cast<std::int16_t>(len & 0x7FF);
+            pkt.WriteUInt8(static_cast<std::uint8_t>(m_stm->id | pflags)); // streamID + flags
+            std::uint16_t lengthAndFlags = static_cast<std::uint16_t>(len & 0x7FF);
             if (segmentCount > 1)
                 lengthAndFlags |= STREAM_DATA_XFLAG_FRAGMENTED;
             if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
                 lengthAndFlags |= STREAM_DATA_XFLAG_KEYFRAME;
-            pkt.WriteInt16(lengthAndFlags);
+            pkt.WriteUInt16(lengthAndFlags);
             //pkt.WriteInt32(audioTimestampOut);
-            pkt.WriteInt32(static_cast<std::int32_t>(pts));
+            pkt.WriteUInt32(pts);
             if (segmentCount > 1)
             {
-                pkt.WriteByte(static_cast<unsigned char>(seg));
-                pkt.WriteByte(static_cast<unsigned char>(segmentCount));
+                pkt.WriteUInt8(static_cast<std::uint8_t>(seg));
+                pkt.WriteUInt8(static_cast<std::uint8_t>(segmentCount));
             }
-            pkt.WriteByte(static_cast<unsigned char>(m_frameSeq));
+            pkt.WriteUInt8(static_cast<std::uint8_t>(m_frameSeq));
             std::size_t dataOffset = pkt.GetLength();
             if (seg == 0)
             {
-                unsigned char _rotation;
+                std::uint8_t _rotation;
                 switch (rotation)
                 {
                 case 90:
@@ -271,7 +271,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
                     _rotation = VIDEO_ROTATION_0;
                     break;
                 }
-                pkt.WriteByte(_rotation);
+                pkt.WriteUInt8(_rotation);
                 dataOffset++;
 
                 if (!csd.IsEmpty())
@@ -313,11 +313,11 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             m_fecFrameCount = 0;
             LOGV("FEC packet length: %u", (unsigned int)fecPacket.Length());
             BufferOutputStream out(1500);
-            out.WriteByte(m_stm->id);
-            out.WriteByte(static_cast<unsigned char>(m_frameSeq));
-            out.WriteByte(FEC_SCHEME_XOR);
-            out.WriteByte(3);
-            out.WriteInt16(static_cast<std::int16_t>(fecPacket.Length()));
+            out.WriteUInt8(m_stm->id);
+            out.WriteUInt8(static_cast<std::uint8_t>(m_frameSeq));
+            out.WriteUInt8(FEC_SCHEME_XOR);
+            out.WriteUInt8(3);
+            out.WriteUInt16(static_cast<std::uint16_t>(fecPacket.Length()));
             out.WriteBytes(fecPacket);
 
             VoIPController::PendingOutgoingPacket p {

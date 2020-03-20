@@ -44,8 +44,8 @@ using namespace tgvoip::audio;
 
 AudioUnitIO::AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID)
 {
-    input = NULL;
-    output = NULL;
+    input = nullptr;
+    output = nullptr;
     inputEnabled = false;
     outputEnabled = false;
     failed = false;
@@ -66,7 +66,7 @@ AudioUnitIO::AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID)
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
     desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    inputComponent = AudioComponentFindNext(NULL, &desc);
+    inputComponent = AudioComponentFindNext(nullptr, &desc);
     status = AudioComponentInstanceNew(inputComponent, &unit);
 
     UInt32 flag = 1;
@@ -117,11 +117,11 @@ AudioUnitIO::AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID)
     CHECK_AU_ERROR(status, "Error setting input buffer callback");
 
 #if TARGET_OS_OSX
-    CFRunLoopRef theRunLoop = NULL;
+    CFRunLoopRef theRunLoop = nullptr;
     AudioObjectPropertyAddress propertyAddress = {kAudioHardwarePropertyRunLoop,
         kAudioObjectPropertyScopeGlobal,
         kAudioObjectPropertyElementMaster};
-    status = AudioObjectSetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
+    status = AudioObjectSetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, sizeof(CFRunLoopRef), &theRunLoop);
 
     propertyAddress.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
     propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
@@ -199,7 +199,7 @@ void AudioUnitIO::EnableOutput(bool enabled)
     if (actualDuckingEnabled != duckingEnabled)
     {
         actualDuckingEnabled = duckingEnabled;
-        AudioDeviceDuck(currentOutputDeviceID, duckingEnabled ? 0.177828f : 1.0f, NULL, 0.1f);
+        AudioDeviceDuck(currentOutputDeviceID, duckingEnabled ? 0.177828f : 1.0f, nullptr, 0.1f);
     }
 #endif
 }
@@ -267,7 +267,7 @@ void AudioUnitIO::SetCurrentDevice(bool input, std::string deviceID)
         propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
         propertyAddress.mElement = kAudioObjectPropertyElementMaster;
         UInt32 propsize = sizeof(AudioDeviceID);
-        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &propsize, &device);
+        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &propsize, &device);
         CHECK_AU_ERROR(status, "Error getting default device");
     }
     else
@@ -277,19 +277,19 @@ void AudioUnitIO::SetCurrentDevice(bool input, std::string deviceID)
             kAudioObjectPropertyScopeGlobal,
             kAudioObjectPropertyElementMaster};
         UInt32 dataSize = 0;
-        status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
+        status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize);
         CHECK_AU_ERROR(status, "Error getting devices size");
         UInt32 deviceCount = (UInt32)(dataSize / sizeof(AudioDeviceID));
         AudioDeviceID audioDevices[deviceCount];
-        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, audioDevices);
+        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize, audioDevices);
         CHECK_AU_ERROR(status, "Error getting device list");
         for (UInt32 i = 0; i < deviceCount; ++i)
         {
             // Query device UID
-            CFStringRef deviceUID = NULL;
+            CFStringRef deviceUID = nullptr;
             dataSize = sizeof(deviceUID);
             propertyAddress.mSelector = kAudioDevicePropertyDeviceUID;
-            status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, &deviceUID);
+            status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
             CHECK_AU_ERROR(status, "Error getting device uid");
             char buf[1024];
             CFStringGetCString(deviceUID, buf, 1024, kCFStringEncodingUTF8);
@@ -328,7 +328,7 @@ void AudioUnitIO::SetCurrentDevice(bool input, std::string deviceID)
 	};
 	size=4;
 	UInt32 bufferFrameSize;
-	status=AudioObjectGetPropertyData(device, &propertyAddress, 0, NULL, &size, &bufferFrameSize);
+	status=AudioObjectGetPropertyData(device, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
 	if(status==noErr){
 		estimatedDelay=bufferFrameSize/48;
 		LOGD("CoreAudio buffer size for device is %u frames (%u ms)", bufferFrameSize, estimatedDelay);
@@ -352,7 +352,7 @@ void AudioUnitIO::SetDuckingEnabled(bool enabled)
     if (outputEnabled && duckingEnabled != actualDuckingEnabled)
     {
         actualDuckingEnabled = enabled;
-        AudioDeviceDuck(currentOutputDeviceID, enabled ? 0.177828f : 1.0f, NULL, 0.1f);
+        AudioDeviceDuck(currentOutputDeviceID, enabled ? 0.177828f : 1.0f, nullptr, 0.1f);
     }
 #endif
 }

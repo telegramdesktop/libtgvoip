@@ -47,7 +47,7 @@
         (static_cast<std::uint32_t>(b) << 16) | \
         (static_cast<std::uint32_t>(a) << 24)   \
     )
-#define PRINT_FOURCC(x) (char)(x >> 24), (char)(x >> 16), (char)(x >> 8), (char)x
+#define PRINT_FOURCC(x) static_cast<char>(x >> 24), static_cast<char>(x >> 16), static_cast<char>(x >> 8), static_cast<char>(x)
 
 #define CODEC_OPUS_OLD 1
 #define CODEC_OPUS FOURCC('O', 'P', 'U', 'S')

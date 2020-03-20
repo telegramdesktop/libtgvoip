@@ -63,9 +63,9 @@ void MockReflector::Start()
         return;
     running = true;
     pthread_create(
-        &thread, NULL, [](void* arg) -> void* {
+        &thread, nullptr, [](void* arg) -> void* {
             reinterpret_cast<MockReflector*>(arg)->RunThread();
-            return NULL;
+            return nullptr;
         },
         this);
 }
@@ -75,7 +75,7 @@ void MockReflector::Stop()
     running = false;
     shutdown(sfd, SHUT_RDWR);
     close(sfd);
-    pthread_join(thread, NULL);
+    pthread_join(thread, nullptr);
 }
 
 void MockReflector::SetDropAllPackets(bool drop)
@@ -124,7 +124,7 @@ void MockReflector::RunThread()
                 {
                     UdpReflectorSelfInfo response;
                     std::memcpy(response.peerTag, peerTag.data(), 16);
-                    response.date = (std::int32_t)time(NULL);
+                    response.date = (std::int32_t)time(nullptr);
                     response.query_id = *reinterpret_cast<std::uint64_t*>(buf.data() + 32);
                     response.my_ip_padding1 = 0;
                     response.my_ip_padding2 = 0xFFFF0000;

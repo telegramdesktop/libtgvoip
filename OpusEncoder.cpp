@@ -136,7 +136,7 @@ void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
     {
         //LOGV("Packet size = %d", r);
         std::int32_t secondaryLen = 0;
-        unsigned char secondaryBuffer[128];
+        std::uint8_t secondaryBuffer[128];
         if (m_secondaryEncoderEnabled && m_secondaryEncoder != nullptr)
         {
             secondaryLen = opus_encode(m_secondaryEncoder, data, static_cast<int>(len), secondaryBuffer, sizeof(secondaryBuffer));
@@ -146,7 +146,7 @@ void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
     }
 }
 
-std::size_t tgvoip::OpusEncoder::Callback(unsigned char* data, std::size_t len, void* param)
+std::size_t tgvoip::OpusEncoder::Callback(std::uint8_t* data, std::size_t len, void* param)
 {
     assert(len == 960 * 2);
     OpusEncoder* e = reinterpret_cast<OpusEncoder*>(param);
@@ -288,12 +288,12 @@ void tgvoip::OpusEncoder::SetLevelMeter(tgvoip::AudioLevelMeter* levelMeter)
     this->m_levelMeter = levelMeter;
 }
 
-void tgvoip::OpusEncoder::SetCallback(std::function<void(unsigned char*, std::size_t, unsigned char*, std::size_t)> f)
+void tgvoip::OpusEncoder::SetCallback(std::function<void(std::uint8_t*, std::size_t, std::uint8_t*, std::size_t)> f)
 {
     m_callback = f;
 }
 
-void tgvoip::OpusEncoder::InvokeCallback(unsigned char* data, std::size_t length, unsigned char* secondaryData, std::size_t secondaryLength)
+void tgvoip::OpusEncoder::InvokeCallback(std::uint8_t* data, std::size_t length, std::uint8_t* secondaryData, std::size_t secondaryLength)
 {
     m_callback(data, length, secondaryData, secondaryLength);
 }

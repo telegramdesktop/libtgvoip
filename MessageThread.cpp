@@ -26,9 +26,9 @@ MessageThread::MessageThread()
 
 #ifdef _WIN32
 #if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
-    event = CreateEvent(NULL, false, false, NULL);
+    event = CreateEvent(nullptr, false, false, nullptr);
 #else
-    event = CreateEventEx(NULL, NULL, 0, EVENT_ALL_ACCESS);
+    event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 #endif
 #else
     pthread_cond_init(&cond, nullptr);

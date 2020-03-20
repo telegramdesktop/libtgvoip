@@ -70,18 +70,18 @@ int JitterBuffer::GetMinPacketCount()
     return static_cast<int>(m_minDelay);
 }
 
-std::size_t JitterBuffer::CallbackIn(unsigned char* data, std::size_t len, void* param)
+std::size_t JitterBuffer::CallbackIn(std::uint8_t* data, std::size_t len, void* param)
 {
     //((JitterBuffer*)param)->HandleInput(data, len);
     return 0;
 }
 
-std::size_t JitterBuffer::CallbackOut(unsigned char* data, std::size_t len, void* param)
+std::size_t JitterBuffer::CallbackOut(std::uint8_t* data, std::size_t len, void* param)
 {
-    return 0; //((JitterBuffer*)param)->HandleOutput(data, len, 0, NULL);
+    return 0; //((JitterBuffer*)param)->HandleOutput(data, len, 0, nullptr);
 }
 
-void JitterBuffer::HandleInput(unsigned char* data, std::size_t len, std::uint32_t timestamp, bool isEC)
+void JitterBuffer::HandleInput(std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC)
 {
     MutexGuard m(m_mutex);
     jitter_packet_t pkt;
@@ -117,7 +117,7 @@ void JitterBuffer::Reset()
     m_dontChangeDelay = 0;
 }
 
-std::size_t JitterBuffer::HandleOutput(unsigned char* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC)
+std::size_t JitterBuffer::HandleOutput(std::uint8_t* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC)
 {
     jitter_packet_t pkt;
     pkt.buffer = Buffer::Wrap(
@@ -306,7 +306,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
     /*double prevTime=0;
     std::uint32_t closestTime=0;
 	for(i=0;i<JITTER_SLOT_COUNT;i++){
-        if(m_slots[i].buffer!=NULL && pkt->timestamp-m_slots[i].timestamp<pkt->timestamp-closestTime){
+        if(m_slots[i].buffer!=nullptr && pkt->timestamp-m_slots[i].timestamp<pkt->timestamp-closestTime){
             closestTime=m_slots[i].timestamp;
             prevTime=m_slots[i].recvTime;
 		}
@@ -483,7 +483,7 @@ void JitterBuffer::Tick()
 			adjustingDelay=false;
 		}else if(tickCount%5==0){
 			LOGD("jitter: removing a packet to reduce delay");
-			GetInternal(NULL, 0);
+			GetInternal(nullptr, 0);
 			expectNextAtTime=0;
 			if(GetCurrentDelay()<=minDelay || min<=minDelay){
 				adjustingDelay = false;

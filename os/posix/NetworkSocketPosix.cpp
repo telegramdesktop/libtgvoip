@@ -107,8 +107,8 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                 else
                 {
                     addrinfo* addrPtr;
-                    unsigned char* addr170 = nullptr;
-                    unsigned char* addr171 = nullptr;
+                    std::uint8_t* addr170 = nullptr;
+                    std::uint8_t* addr171 = nullptr;
                     for (addrPtr = addr0; addrPtr; addrPtr = addrPtr->ai_next)
                     {
                         if (addrPtr->ai_family == AF_INET6)
@@ -443,12 +443,12 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
     std::string name = "";
     // Android doesn't support ifaddrs
 #ifdef __ANDROID__
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     bool didAttach = false;
     sharedJVM->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (!env)
     {
-        sharedJVM->AttachCurrentThread(&env, NULL);
+        sharedJVM->AttachCurrentThread(&env, nullptr);
         didAttach = true;
     }
 
@@ -461,20 +461,20 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
         jstring jipv6 = static_cast<jstring>(env->GetObjectArrayElement(jinfo, 2));
         if (jitfName)
         {
-            const char* itfchars = env->GetStringUTFChars(jitfName, NULL);
+            const char* itfchars = env->GetStringUTFChars(jitfName, nullptr);
             name = std::string(itfchars);
             env->ReleaseStringUTFChars(jitfName, itfchars);
         }
 
         if (v4addr && jipv4)
         {
-            const char* ipchars = env->GetStringUTFChars(jipv4, NULL);
+            const char* ipchars = env->GetStringUTFChars(jipv4, nullptr);
             *v4addr = NetworkAddress::IPv4(ipchars);
             env->ReleaseStringUTFChars(jipv4, ipchars);
         }
         if (v6addr && jipv6)
         {
-            const char* ipchars = env->GetStringUTFChars(jipv6, NULL);
+            const char* ipchars = env->GetStringUTFChars(jipv6, nullptr);
             *v6addr = NetworkAddress::IPv6(ipchars);
             env->ReleaseStringUTFChars(jipv6, ipchars);
         }
@@ -542,7 +542,7 @@ std::string NetworkSocketPosix::V4AddressToString(std::uint32_t address)
     return std::string(buf);
 }
 
-std::string NetworkSocketPosix::V6AddressToString(const unsigned char* address)
+std::string NetworkSocketPosix::V6AddressToString(const std::uint8_t* address)
 {
     char buf[INET6_ADDRSTRLEN];
     in6_addr addr;
@@ -558,7 +558,7 @@ std::uint32_t NetworkSocketPosix::StringToV4Address(std::string address)
     return addr.s_addr;
 }
 
-void NetworkSocketPosix::StringToV6Address(std::string address, unsigned char* out)
+void NetworkSocketPosix::StringToV6Address(std::string address, std::uint8_t* out)
 {
     in6_addr addr;
     inet_pton(AF_INET6, address.c_str(), &addr);

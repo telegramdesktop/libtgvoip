@@ -12,14 +12,14 @@
     if (res != SL_RESULT_SUCCESS) \
     {                             \
         LOGE(msg);                \
-        return NULL;              \
+        return nullptr;              \
     }
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-SLObjectItf OpenSLEngineWrapper::sharedEngineObj = NULL;
-SLEngineItf OpenSLEngineWrapper::sharedEngine = NULL;
+SLObjectItf OpenSLEngineWrapper::sharedEngineObj = nullptr;
+SLEngineItf OpenSLEngineWrapper::sharedEngine = nullptr;
 int OpenSLEngineWrapper::count = 0;
 
 void OpenSLEngineWrapper::DestroyEngine()
@@ -29,8 +29,8 @@ void OpenSLEngineWrapper::DestroyEngine()
     if (count == 0)
     {
         (*sharedEngineObj)->Destroy(sharedEngineObj);
-        sharedEngineObj = NULL;
-        sharedEngine = NULL;
+        sharedEngineObj = nullptr;
+        sharedEngine = nullptr;
     }
     LOGI("after release");
 }
@@ -42,7 +42,7 @@ SLEngineItf OpenSLEngineWrapper::CreateEngine()
         return sharedEngine;
     const SLInterfaceID pIDs[1] = {SL_IID_ENGINE};
     const SLboolean pIDsRequired[1] = {SL_BOOLEAN_TRUE};
-    SLresult result = slCreateEngine(&sharedEngineObj, 0, NULL, 1, pIDs, pIDsRequired);
+    SLresult result = slCreateEngine(&sharedEngineObj, 0, nullptr, 1, pIDs, pIDsRequired);
     CHECK_SL_ERROR(result, "Error creating engine");
 
     result = (*sharedEngineObj)->Realize(sharedEngineObj, SL_BOOLEAN_FALSE);

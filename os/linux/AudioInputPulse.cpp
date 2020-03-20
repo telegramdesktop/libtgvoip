@@ -35,7 +35,7 @@ AudioInputPulse::AudioInputPulse(pa_context* context, pa_threaded_mainloop* main
 
     this->mainloop = mainloop;
     this->context = context;
-    stream = NULL;
+    stream = nullptr;
     remainingDataSize = 0;
 
     pa_threaded_mainloop_lock(mainloop);
@@ -68,13 +68,13 @@ pa_stream* AudioInputPulse::CreateAndInitStream()
         .channels = 1};
     pa_proplist* proplist = pa_proplist_new();
     pa_proplist_sets(proplist, PA_PROP_FILTER_APPLY, ""); // according to PA sources, this disables any possible filters
-    pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip capture", &sampleSpec, NULL, proplist);
+    pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip capture", &sampleSpec, nullptr, proplist);
     pa_proplist_free(proplist);
     if (!stream)
     {
         LOGE("Error initializing PulseAudio (pa_stream_new)");
         failed = true;
-        return NULL;
+        return nullptr;
     }
     pa_stream_set_state_callback(stream, AudioInputPulse::StreamStateCallback, this);
     pa_stream_set_read_callback(stream, AudioInputPulse::StreamReadCallback, this);
@@ -88,7 +88,7 @@ void AudioInputPulse::Start()
 
     pa_threaded_mainloop_lock(mainloop);
     isRecording = true;
-    pa_operation_unref(pa_stream_cork(stream, 0, NULL, NULL));
+    pa_operation_unref(pa_stream_cork(stream, 0, nullptr, nullptr));
     pa_threaded_mainloop_unlock(mainloop);
 }
 
@@ -99,7 +99,7 @@ void AudioInputPulse::Stop()
 
     isRecording = false;
     pa_threaded_mainloop_lock(mainloop);
-    pa_operation_unref(pa_stream_cork(stream, 1, NULL, NULL));
+    pa_operation_unref(pa_stream_cork(stream, 1, nullptr, nullptr));
     pa_threaded_mainloop_unlock(mainloop);
 }
 
@@ -128,7 +128,7 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
         .fragsize = 960 * 2};
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
-    int err = pa_stream_connect_record(stream, devID == "default" ? NULL : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags);
+    int err = pa_stream_connect_record(stream, devID == "default" ? nullptr : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags);
     if (err != 0)
     {
         pa_threaded_mainloop_unlock(mainloop);
@@ -158,7 +158,7 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
 
     if (isRecording)
     {
-        pa_operation_unref(pa_stream_cork(stream, 0, NULL, NULL));
+        pa_operation_unref(pa_stream_cork(stream, 0, nullptr, nullptr));
     }
     pa_threaded_mainloop_unlock(mainloop);
 }
@@ -194,9 +194,9 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
 void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requestedBytes)
 {
     std::size_t bytesRemaining = requestedBytes;
-    std::uint8_t* buffer = NULL;
+    std::uint8_t* buffer = nullptr;
     pa_usec_t latency;
-    if (pa_stream_get_latency(stream, &latency, NULL) == 0)
+    if (pa_stream_get_latency(stream, &latency, nullptr) == 0)
     {
         estimatedDelay = (std::int32_t)(latency / 100);
     }

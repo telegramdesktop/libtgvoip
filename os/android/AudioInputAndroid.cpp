@@ -14,12 +14,12 @@ extern JavaVM* sharedJVM;
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-jmethodID AudioInputAndroid::initMethod = NULL;
-jmethodID AudioInputAndroid::releaseMethod = NULL;
-jmethodID AudioInputAndroid::startMethod = NULL;
-jmethodID AudioInputAndroid::stopMethod = NULL;
-jmethodID AudioInputAndroid::getEnabledEffectsMaskMethod = NULL;
-jclass AudioInputAndroid::jniClass = NULL;
+jmethodID AudioInputAndroid::initMethod = nullptr;
+jmethodID AudioInputAndroid::releaseMethod = nullptr;
+jmethodID AudioInputAndroid::startMethod = nullptr;
+jmethodID AudioInputAndroid::stopMethod = nullptr;
+jmethodID AudioInputAndroid::getEnabledEffectsMaskMethod = nullptr;
+jclass AudioInputAndroid::jniClass = nullptr;
 
 AudioInputAndroid::AudioInputAndroid()
 {
@@ -41,7 +41,7 @@ AudioInputAndroid::~AudioInputAndroid()
         jni::DoWithJNI([this](JNIEnv* env) {
             env->CallVoidMethod(javaObject, releaseMethod);
             env->DeleteGlobalRef(javaObject);
-            javaObject = NULL;
+            javaObject = nullptr;
         });
     }
 }
@@ -68,7 +68,7 @@ void AudioInputAndroid::HandleCallback(JNIEnv* env, jobject buffer)
 {
     if (!running)
         return;
-    unsigned char* buf = (unsigned char*)env->GetDirectBufferAddress(buffer);
+    std::uint8_t* buf = reinterpret_cast<std::uint8_t*>(env->GetDirectBufferAddress(buffer));
     std::size_t len = (std::size_t)env->GetDirectBufferCapacity(buffer);
     InvokeCallback(buf, len);
 }

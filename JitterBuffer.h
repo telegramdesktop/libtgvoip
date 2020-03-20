@@ -32,8 +32,8 @@ public:
     unsigned int GetCurrentDelay();
     double GetAverageDelay();
     void Reset();
-    void HandleInput(unsigned char* data, std::size_t len, std::uint32_t timestamp, bool isEC);
-    std::size_t HandleOutput(unsigned char* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC);
+    void HandleInput(std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC);
+    std::size_t HandleOutput(std::uint8_t* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC);
     void Tick();
     void GetAverageLateCount(double* out);
     int GetAndResetLostPacketCount();
@@ -57,8 +57,8 @@ private:
         BUFFERING
     };
 
-    static std::size_t CallbackIn(unsigned char* data, std::size_t len, void* param);
-    static std::size_t CallbackOut(unsigned char* data, std::size_t len, void* param);
+    static std::size_t CallbackIn(std::uint8_t* data, std::size_t len, void* param);
+    static std::size_t CallbackOut(std::uint8_t* data, std::size_t len, void* param);
     void PutInternal(jitter_packet_t* pkt, bool overwriteExisting);
     Status GetInternal(jitter_packet_t* pkt, int offset, bool advance);
     void Advance();

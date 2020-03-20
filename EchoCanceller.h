@@ -32,7 +32,7 @@ public:
     virtual ~EchoCanceller();
     virtual void Start();
     virtual void Stop();
-    void SpeakerOutCallback(unsigned char* data, std::size_t len);
+    void SpeakerOutCallback(std::uint8_t* data, std::size_t len);
     void Enable(bool enabled);
     void ProcessInput(std::int16_t* inOut, std::size_t numSamples, bool& hasVoice);
     void SetAECStrength(int strength);

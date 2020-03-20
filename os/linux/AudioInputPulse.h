@@ -43,7 +43,7 @@ namespace audio
         bool isConnected;
         bool didStart;
         bool isLocked;
-        unsigned char remainingData[960 * 8 * 2];
+        std::uint8_t remainingData[960 * 8 * 2];
         std::size_t remainingDataSize;
     };
 

@@ -43,7 +43,7 @@ namespace audio
         std::int16_t* buffer;
         std::int16_t* nativeBuffer;
         bool stopped;
-        unsigned char remainingData[10240];
+        std::uint8_t remainingData[10240];
         std::size_t remainingDataSize;
     };
 }

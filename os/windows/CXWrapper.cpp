@@ -74,12 +74,12 @@ void VoIPControllerWrapper::SetPublicEndpoints(const Platform::Array<libtgvoip::
         char buf[128];
         if (_ep->ipv4)
         {
-            WideCharToMultiByte(CP_UTF8, 0, _ep->ipv4->Data(), -1, buf, sizeof(buf), NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, _ep->ipv4->Data(), -1, buf, sizeof(buf), nullptr, nullptr);
             ep.address = NetworkAddress::IPv4(buf);
         }
         if (_ep->ipv6)
         {
-            WideCharToMultiByte(CP_UTF8, 0, _ep->ipv6->Data(), -1, buf, sizeof(buf), NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, _ep->ipv6->Data(), -1, buf, sizeof(buf), nullptr, nullptr);
             ep.v6address = NetworkAddress::IPv6(buf);
         }
         ep.port = _ep->port;
@@ -236,9 +236,9 @@ void VoIPControllerWrapper::SetProxy(ProxyProtocol protocol, Platform::String ^ 
     char _username[256];
     char _password[256];
 
-    WideCharToMultiByte(CP_UTF8, 0, address->Data(), -1, _address, sizeof(_address), NULL, NULL);
-    WideCharToMultiByte(CP_UTF8, 0, username->Data(), -1, _username, sizeof(_username), NULL, NULL);
-    WideCharToMultiByte(CP_UTF8, 0, password->Data(), -1, _password, sizeof(_password), NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, address->Data(), -1, _address, sizeof(_address), nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, username->Data(), -1, _username, sizeof(_username), nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, password->Data(), -1, _password, sizeof(_password), nullptr, nullptr);
 
     controller->SetProxy((int)protocol, _address, port, _username, _password);
 }
@@ -364,7 +364,7 @@ typedef std::uint8_t u8;
 #define L_ENDIAN
 
 /* increment counter (128-bit int) by 2^64 */
-static void AES_ctr128_inc(unsigned char* counter)
+static void AES_ctr128_inc(std::uint8_t* counter)
 {
     unsigned long c;
 

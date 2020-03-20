@@ -27,15 +27,15 @@ class MediaStreamItf
 public:
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    void SetCallback(std::function<std::size_t(unsigned char*, std::size_t, void*)> f, void* param);
+    void SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> f, void* param);
 
     //protected:
-    std::size_t InvokeCallback(unsigned char* data, std::size_t length);
+    std::size_t InvokeCallback(std::uint8_t* data, std::size_t length);
 
     virtual ~MediaStreamItf() = default;
 
 private:
-    std::function<std::size_t(unsigned char*, std::size_t, void*)> m_callback = nullptr;
+    std::function<std::size_t(std::uint8_t*, std::size_t, void*)> m_callback = nullptr;
     std::mutex m_mutexCallback;
     void* m_callbackParam;
 };
@@ -69,8 +69,8 @@ private:
     bool m_running;
 
     void RunThread();
-    void DoCallback(unsigned char* data, std::size_t length);
-    static std::size_t OutputCallback(unsigned char* data, std::size_t length, void* arg);
+    void DoCallback(std::uint8_t* data, std::size_t length);
+    static std::size_t OutputCallback(std::uint8_t* data, std::size_t length, void* arg);
 };
 
 class CallbackWrapper : public MediaStreamItf

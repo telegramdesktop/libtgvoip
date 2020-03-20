@@ -19,10 +19,10 @@ IAudioClient2* WindowsSandboxUtils::ActivateAudioDevice(const wchar_t* devID, HR
 {
 #ifndef TGVOIP_WP_SILVERLIGHT
     // Did I say that I hate pointlessly asynchronous things?
-    HANDLE event = CreateEventEx(NULL, NULL, 0, EVENT_ALL_ACCESS);
+    HANDLE event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     ActivationHandler activationHandler(event);
     IActivateAudioInterfaceAsyncOperation* actHandler;
-    HRESULT cr = ActivateAudioInterfaceAsync(devID, __uuidof(IAudioClient2), NULL, (IActivateAudioInterfaceCompletionHandler*)&activationHandler, &actHandler);
+    HRESULT cr = ActivateAudioInterfaceAsync(devID, __uuidof(IAudioClient2), nullptr, (IActivateAudioInterfaceCompletionHandler*)&activationHandler, &actHandler);
     if (callRes)
         *callRes = cr;
     DWORD resulttt = WaitForSingleObjectEx(event, INFINITE, false);

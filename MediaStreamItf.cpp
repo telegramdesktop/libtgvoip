@@ -15,14 +15,14 @@
 
 using namespace tgvoip;
 
-void MediaStreamItf::SetCallback(std::function<std::size_t(unsigned char*, std::size_t, void*)> f, void* param)
+void MediaStreamItf::SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> f, void* param)
 {
     std::lock_guard<std::mutex> lock(m_mutexCallback);
     m_callback = std::move(f);
     m_callbackParam = param;
 }
 
-std::size_t MediaStreamItf::InvokeCallback(unsigned char* data, std::size_t length)
+std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t length)
 {
     std::lock_guard<std::mutex> lock(m_mutexCallback);
     if (m_callback)
@@ -69,7 +69,7 @@ void AudioMixer::Stop()
     m_thread = nullptr;
 }
 
-void AudioMixer::DoCallback(unsigned char* data, std::size_t length)
+void AudioMixer::DoCallback(std::uint8_t* data, std::size_t length)
 {
     //std::memset(data, 0, 960*2);
     //LOGD("audio mixer callback, %d inputs", inputs.size());
@@ -81,7 +81,7 @@ void AudioMixer::DoCallback(unsigned char* data, std::size_t length)
     std::memcpy(data, *buf, 960 * 2);
 }
 
-std::size_t AudioMixer::OutputCallback(unsigned char* data, std::size_t length, void* arg)
+std::size_t AudioMixer::OutputCallback(std::uint8_t* data, std::size_t length, void* arg)
 {
     reinterpret_cast<AudioMixer*>(arg)->DoCallback(data, length);
     return 960 * 2;
@@ -146,7 +146,7 @@ void AudioMixer::RunThread()
             int usedInputs = 0;
             for (std::vector<MixerInput>::iterator in = m_inputs.begin(); in != m_inputs.end(); ++in)
             {
-                std::size_t res = in->source->InvokeCallback(reinterpret_cast<unsigned char*>(input), 960 * 2);
+                std::size_t res = in->source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input), 960 * 2);
                 if (!res || in->multiplier == 0)
                 {
                     //LOGV("AudioMixer: skipping silent packet");

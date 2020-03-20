@@ -34,7 +34,7 @@ AudioOutputAudioUnitLegacy::AudioOutputAudioUnitLegacy(std::string deviceID)
     OSStatus status;
     AudioComponentDescription inputDesc = {
         .componentType = kAudioUnitType_Output, .componentSubType = kAudioUnitSubType_HALOutput, .componentFlags = 0, .componentFlagsMask = 0, .componentManufacturer = kAudioUnitManufacturer_Apple};
-    AudioComponent component = AudioComponentFindNext(NULL, &inputDesc);
+    AudioComponent component = AudioComponentFindNext(nullptr, &inputDesc);
     status = AudioComponentInstanceNew(component, &unit);
     CHECK_AU_ERROR(status, "Error creating AudioUnit");
 
@@ -48,7 +48,7 @@ AudioOutputAudioUnitLegacy::AudioOutputAudioUnitLegacy(std::string deviceID)
     char model[128];
     std::memset(model, 0, sizeof(model));
     std::size_t msize = sizeof(model);
-    int mres = sysctlbyname("hw.model", model, &msize, NULL, 0);
+    int mres = sysctlbyname("hw.model", model, &msize, nullptr, 0);
     if (mres == 0)
     {
         LOGV("Mac model: %s", model);
@@ -57,11 +57,11 @@ AudioOutputAudioUnitLegacy::AudioOutputAudioUnitLegacy(std::string deviceID)
 
     SetCurrentDevice(deviceID);
 
-    CFRunLoopRef theRunLoop = NULL;
+    CFRunLoopRef theRunLoop = nullptr;
     AudioObjectPropertyAddress propertyAddress = {kAudioHardwarePropertyRunLoop,
         kAudioObjectPropertyScopeGlobal,
         kAudioObjectPropertyElementMaster};
-    status = AudioObjectSetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
+    status = AudioObjectSetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, sizeof(CFRunLoopRef), &theRunLoop);
 
     propertyAddress.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
     propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
@@ -161,7 +161,7 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
         kAudioObjectPropertyElementMaster};
 
     UInt32 dataSize = 0;
-    OSStatus status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
+    OSStatus status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize);
     if (kAudioHardwareNoError != status)
     {
         LOGE("AudioObjectGetPropertyDataSize (kAudioHardwarePropertyDevices) failed: %i", status);
@@ -172,12 +172,12 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
 
     AudioDeviceID* audioDevices = (AudioDeviceID*)(std::malloc(dataSize));
 
-    status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, audioDevices);
+    status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize, audioDevices);
     if (kAudioHardwareNoError != status)
     {
         LOGE("AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %i", status);
         std::free(audioDevices);
-        audioDevices = NULL;
+        audioDevices = nullptr;
         return;
     }
 
@@ -186,10 +186,10 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
     for (UInt32 i = 0; i < deviceCount; ++i)
     {
         // Query device UID
-        CFStringRef deviceUID = NULL;
+        CFStringRef deviceUID = nullptr;
         dataSize = sizeof(deviceUID);
         propertyAddress.mSelector = kAudioDevicePropertyDeviceUID;
-        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, &deviceUID);
+        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
         if (kAudioHardwareNoError != status)
         {
             LOGE("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %i", status);
@@ -197,10 +197,10 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
         }
 
         // Query device name
-        CFStringRef deviceName = NULL;
+        CFStringRef deviceName = nullptr;
         dataSize = sizeof(deviceName);
         propertyAddress.mSelector = kAudioDevicePropertyDeviceNameCFString;
-        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, &deviceName);
+        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize, &deviceName);
         if (kAudioHardwareNoError != status)
         {
             LOGE("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceNameCFString) failed: %i", status);
@@ -210,7 +210,7 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
         // Determine if the device is an input device (it is an input device if it has input channels)
         dataSize = 0;
         propertyAddress.mSelector = kAudioDevicePropertyStreamConfiguration;
-        status = AudioObjectGetPropertyDataSize(audioDevices[i], &propertyAddress, 0, NULL, &dataSize);
+        status = AudioObjectGetPropertyDataSize(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize);
         if (kAudioHardwareNoError != status)
         {
             LOGE("AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration) failed: %i", status);
@@ -219,18 +219,18 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
 
         AudioBufferList* bufferList = (AudioBufferList*)(std::malloc(dataSize));
 
-        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, bufferList);
+        status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize, bufferList);
         if (kAudioHardwareNoError != status || 0 == bufferList->mNumberBuffers)
         {
             if (kAudioHardwareNoError != status)
                 LOGE("AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration) failed: %i", status);
             std::free(bufferList);
-            bufferList = NULL;
+            bufferList = nullptr;
             continue;
         }
 
         std::free(bufferList);
-        bufferList = NULL;
+        bufferList = nullptr;
 
         AudioOutputDevice dev;
         char buf[1024];
@@ -244,7 +244,7 @@ void AudioOutputAudioUnitLegacy::EnumerateDevices(std::vector<AudioOutputDevice>
     }
 
     std::free(audioDevices);
-    audioDevices = NULL;
+    audioDevices = nullptr;
 }
 
 void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
@@ -269,7 +269,7 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
         propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
         propertyAddress.mElement = kAudioObjectPropertyElementMaster;
         UInt32 propsize = sizeof(AudioDeviceID);
-        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &propsize, &outputDevice);
+        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &propsize, &outputDevice);
         CHECK_AU_ERROR(status, "Error getting default input device");
     }
     else
@@ -279,19 +279,19 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
             kAudioObjectPropertyScopeGlobal,
             kAudioObjectPropertyElementMaster};
         UInt32 dataSize = 0;
-        status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
+        status = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize);
         CHECK_AU_ERROR(status, "Error getting devices size");
         UInt32 deviceCount = (UInt32)(dataSize / sizeof(AudioDeviceID));
         AudioDeviceID audioDevices[deviceCount];
-        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, audioDevices);
+        status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &dataSize, audioDevices);
         CHECK_AU_ERROR(status, "Error getting device list");
         for (UInt32 i = 0; i < deviceCount; ++i)
         {
             // Query device UID
-            CFStringRef deviceUID = NULL;
+            CFStringRef deviceUID = nullptr;
             dataSize = sizeof(deviceUID);
             propertyAddress.mSelector = kAudioDevicePropertyDeviceUID;
-            status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, NULL, &dataSize, &deviceUID);
+            status = AudioObjectGetPropertyData(audioDevices[i], &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
             CHECK_AU_ERROR(status, "Error getting device uid");
             char buf[1024];
             CFStringGetCString(deviceUID, buf, 1024, kCFStringEncodingUTF8);
@@ -341,7 +341,7 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
         kAudioObjectPropertyElementMaster};
     size = 4;
     UInt32 bufferFrameSize;
-    status = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, NULL, &size, &bufferFrameSize);
+    status = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
     if (status == noErr)
     {
         estimatedDelay = bufferFrameSize / 48;
@@ -354,7 +354,7 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
         {
             UInt32 dataSource;
             size = 4;
-            AudioObjectGetPropertyData(outputDevice, &dataSourceProp, 0, NULL, &size, &dataSource);
+            AudioObjectGetPropertyData(outputDevice, &dataSourceProp, 0, nullptr, &size, &dataSource);
             SetPanRight(dataSource == 'ispk');
             AudioObjectAddPropertyListener(outputDevice, &dataSourceProp, AudioOutputAudioUnitLegacy::DefaultDeviceChangedCallback, this);
         }
@@ -388,7 +388,7 @@ OSStatus AudioOutputAudioUnitLegacy::DefaultDeviceChangedCallback(AudioObjectID 
     {
         UInt32 dataSource;
         UInt32 size = 4;
-        AudioObjectGetPropertyData(inObjectID, inAddresses, 0, NULL, &size, &dataSource);
+        AudioObjectGetPropertyData(inObjectID, inAddresses, 0, nullptr, &size, &dataSource);
         self->SetPanRight(dataSource == 'ispk');
     }
     return noErr;
