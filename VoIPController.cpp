@@ -2160,7 +2160,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                 std::int64_t queryID = in.ReadInt64();
                 std::uint8_t myIP[16];
                 in.ReadBytes(myIP, 16);
-                std::int32_t myPort = in.ReadInt32();
+                std::int16_t myPort = in.ReadInt16();
                 //udpConnectivityState=Udp::AVAILABLE;
                 double selfRTT = 0.0;
                 srcEndpoint.m_udpPongCount++;
@@ -2197,9 +2197,9 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
             if (in.Remaining() >= 16)
             {
                 std::uint32_t myAddr   = in.ReadUInt32();
-                std::uint32_t myPort   = in.ReadUInt32();
+                std::uint16_t myPort   = in.ReadUInt16();
                 std::uint32_t peerAddr = in.ReadUInt32();
-                std::uint32_t peerPort = in.ReadUInt32();
+                std::uint16_t peerPort = in.ReadUInt16();
 
                 constexpr std::int64_t p2pID = static_cast<std::int64_t>(FOURCC('P', '2', 'P', '4')) << 32;
                 constexpr std::int64_t lanID = static_cast<std::int64_t>(FOURCC('L', 'A', 'N', '4')) << 32;
@@ -2217,7 +2217,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                 LOGW("Received reflector peer info, my=%s:%u, peer=%s:%u", NetworkAddress::IPv4(myAddr).ToString().c_str(), myPort, NetworkAddress::IPv4(peerAddr).ToString().c_str(), peerPort);
                 if (m_waitingForRelayPeerInfo)
                 {
-                    Endpoint p2p(p2pID, static_cast<std::uint16_t>(peerPort), NetworkAddress::IPv4(peerAddr), NetworkAddress::Empty(), Endpoint::Type::UDP_P2P_INET, peerTag);
+                    Endpoint p2p(p2pID, peerPort, NetworkAddress::IPv4(peerAddr), NetworkAddress::Empty(), Endpoint::Type::UDP_P2P_INET, peerTag);
                     {
                         MutexGuard m(m_endpointsMutex);
                         m_endpoints[p2pID] = p2p;
@@ -2230,7 +2230,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
 
                         BufferOutputStream pkt(8);
                         pkt.WriteUInt32(lanAddr.addr.ipv4);
-                        pkt.WriteInt32(m_udpSocket->GetLocalPort());
+                        pkt.WriteUInt16(m_udpSocket->GetLocalPort());
                         if (m_peerVersion < 6)
                         {
                             SendPacketReliably(PKT_LAN_ENDPOINT, pkt.GetBuffer(), pkt.GetLength(), 0.5, 10);
