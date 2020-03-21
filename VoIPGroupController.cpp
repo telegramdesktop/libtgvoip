@@ -105,7 +105,7 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint
     {
         shared_ptr<Stream>& s = *_s;
         s->userID = userID;
-        if (s->type == STREAM_TYPE_AUDIO && s->codec == CODEC_OPUS && !audioStreamID)
+        if (s->type == StreamType::AUDIO && s->codec == CODEC_OPUS && !audioStreamID)
         {
             audioStreamID = s->id;
             s->jitterBuffer = make_shared<JitterBuffer>(nullptr, s->frameDuration);
@@ -180,7 +180,7 @@ vector<shared_ptr<VoIPController::Stream>> VoIPGroupController::DeserializeStrea
             BufferInputStream inner = in.GetPartBuffer(len, true);
             shared_ptr<Stream> s = make_shared<Stream>();
             s->id = inner.ReadUInt8();
-            s->type = inner.ReadUInt8();
+            s->type = static_cast<StreamType>(inner.ReadUInt8());
             s->codec = inner.ReadUInt32();
             std::uint32_t flags = inner.ReadUInt32();
             s->enabled = (flags & STREAM_FLAG_ENABLED) == STREAM_FLAG_ENABLED;
@@ -236,7 +236,7 @@ std::size_t VoIPGroupController::GetInitialStreams(std::uint8_t* buf, std::size_
 
     s.WriteInt16(12); // this object length
     s.WriteUInt8(1); // stream id
-    s.WriteUInt8(STREAM_TYPE_AUDIO);
+    s.WriteUInt8(static_cast<std::uint8_t>(StreamType::AUDIO));
     s.WriteUInt32(CODEC_OPUS);
     s.WriteInt32(STREAM_FLAG_ENABLED | STREAM_FLAG_DTX); // flags
     s.WriteInt16(60); // frame duration
@@ -764,7 +764,7 @@ void VoIPGroupController::SetParticipantVolume(std::int32_t userID, float volume
         {
             for (vector<shared_ptr<Stream>>::iterator s = p->streams.begin(); s != p->streams.end(); ++s)
             {
-                if ((*s)->type == STREAM_TYPE_AUDIO)
+                if ((*s)->type == StreamType::AUDIO)
                 {
                     if ((*s)->decoder)
                     {
@@ -797,7 +797,7 @@ void VoIPGroupController::SerializeAndUpdateOutgoingStreams()
     {
         BufferOutputStream o(128);
         o.WriteUInt8((*s)->id);
-        o.WriteUInt8((*s)->type);
+        o.WriteUInt8(static_cast<std::uint8_t>((*s)->type));
         o.WriteUInt32((*s)->codec);
         o.WriteInt32(static_cast<std::uint8_t>(((*s)->enabled ? STREAM_FLAG_ENABLED : 0) | STREAM_FLAG_DTX));
         o.WriteUInt16((*s)->frameDuration);
@@ -883,8 +883,8 @@ std::string VoIPGroupController::GetDebugString()
         for (vector<shared_ptr<Stream>>::iterator stm = p->streams.begin(); stm != p->streams.end(); ++stm)
         {
             char* codec = reinterpret_cast<char*>(&(*stm)->codec);
-            snprintf(buffer, sizeof(buffer), "Stream %d (type %d, codec '%c%c%c%c', %sabled)\n",
-                (*stm)->id, (*stm)->type, codec[3], codec[2], codec[1], codec[0], (*stm)->enabled ? "en" : "dis");
+            snprintf(buffer, sizeof(buffer), "Stream %d (type %u, codec '%c%c%c%c', %sabled)\n",
+                (*stm)->id, static_cast<std::uint8_t>((*stm)->type), codec[3], codec[2], codec[1], codec[0], (*stm)->enabled ? "en" : "dis");
             r += buffer;
             if ((*stm)->enabled)
             {

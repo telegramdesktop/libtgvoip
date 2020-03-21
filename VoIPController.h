@@ -100,6 +100,12 @@ enum class PktType : std::uint8_t
     STREAM_EC,
 };
 
+enum class StreamType : std::uint8_t
+{
+    AUDIO = 1,
+    VIDEO,
+};
+
 enum class NetType
 {
     UNKNOWN = 0,
@@ -299,7 +305,7 @@ public:
     {
         std::int32_t userID;
         std::uint8_t id;
-        std::uint8_t type;
+        StreamType type;
         std::uint32_t codec;
         bool enabled;
         bool extraECEnabled;
@@ -542,7 +548,7 @@ protected:
     void ResetEndpointPingStats();
     void SendVideoFrame(const Buffer& frame, std::uint32_t flags, std::uint32_t rotation);
     void ProcessIncomingVideoFrame(Buffer frame, std::uint32_t pts, bool keyframe, std::uint16_t rotation);
-    std::shared_ptr<Stream> GetStreamByType(int type, bool outgoing);
+    std::shared_ptr<Stream> GetStreamByType(StreamType, bool outgoing);
     std::shared_ptr<Stream> GetStreamByID(std::uint8_t id, bool outgoing);
     Endpoint* GetEndpointForPacket(const PendingOutgoingPacket& pkt);
     bool SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue = true, PacketSender* source = nullptr);

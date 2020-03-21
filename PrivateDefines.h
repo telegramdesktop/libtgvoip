@@ -19,8 +19,8 @@
 #define STREAM_DATA_XFLAG_FRAGMENTED (1 << 14)
 #define STREAM_DATA_XFLAG_EXTRA_FEC (1 << 13)
 
-#define STREAM_TYPE_AUDIO 1
-#define STREAM_TYPE_VIDEO 2
+//#define StreamType::AUDIO 1
+//#define StreamType::VIDEO 2
 
 #define FOURCC(a, b, c, d) \
     (                                      \
@@ -130,4 +130,4 @@ inline bool seqgt(std::uint32_t s1, std::uint32_t s2)
 #define FEC_SCHEME_XOR 1
 #define FEC_SCHEME_CM256 2
 
-#endif //TGVOIP_PRIVATEDEFINES_H
+#endif // TGVOIP_PRIVATEDEFINES_H
