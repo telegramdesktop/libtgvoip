@@ -36,7 +36,7 @@ double PacketSender::GetConnectionInitTime() const
 
 const HistoricBuffer<double, 32>& PacketSender::RTTHistory() const
 {
-    return m_controller->m_rttHistory;
+    return m_controller->m_RTTHistory;
 }
 
 MessageThread& PacketSender::GetMessageThread()

@@ -374,6 +374,11 @@ bool VoIPController::NeedRate()
     return m_needRate && ServerConfig::GetSharedInstance()->GetBoolean("bad_call_rating", false);
 }
 
+std::int32_t VoIPController::GetConnectionMaxLayer()
+{
+    return 92;
+}
+
 void VoIPController::SetRemoteEndpoints(std::vector<Endpoint> endpoints, bool allowP2p, std::int32_t connectionMaxLayer)
 {
     LOGW("Set remote endpoints, allowP2P=%d, connectionMaxLayer=%u", allowP2p ? 1 : 0, connectionMaxLayer);
@@ -1024,7 +1029,7 @@ void VoIPController::RequestCallUpgrade()
 void VoIPController::SetEchoCancellationStrength(int strength)
 {
     m_echoCancellationStrength = strength;
-    if (m_echoCanceller)
+    if (m_echoCanceller != nullptr)
         m_echoCanceller->SetAECStrength(strength);
 }
 
@@ -2578,7 +2583,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 
         if (m_waitingForAcks && m_lastRemoteAckSeq >= m_firstSentPing)
         {
-            m_rttHistory.Reset();
+            m_RTTHistory.Reset();
             m_waitingForAcks = false;
             m_dontSendPackets = 10;
             m_messageThread.Post([this] {
@@ -4326,9 +4331,9 @@ void VoIPController::SendRelayPings()
 
 void VoIPController::UpdateRTT()
 {
-    m_rttHistory.Add(GetAverageRTT());
+    m_RTTHistory.Add(GetAverageRTT());
     //double v=rttHistory.Average();
-    if (m_rttHistory[0] > 10.0 && m_rttHistory[8] > 10.0 && (m_networkType == NetType::EDGE || m_networkType == NetType::GPRS))
+    if (m_RTTHistory[0] > 10.0 && m_RTTHistory[8] > 10.0 && (m_networkType == NetType::EDGE || m_networkType == NetType::GPRS))
     {
         m_waitingForAcks = true;
     }

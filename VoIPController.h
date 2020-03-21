@@ -364,6 +364,11 @@ public:
         bool callUpgradeSupported;
     };
 
+    /**
+     * Use this field to store any of your context data associated with this call
+     */
+    void* implData;
+
     VoIPController();
     virtual ~VoIPController();
 
@@ -390,6 +395,7 @@ public:
      * Initiate connection
      */
     void Connect();
+
     Endpoint& GetRemoteEndpoint();
 
     /**
@@ -408,12 +414,8 @@ public:
      * @return
      */
     double GetAverageRTT();
-    static double GetCurrentTime();
 
-    /**
-     * Use this field to store any of your context data associated with this call
-     */
-    void* implData;
+    static double GetCurrentTime();
 
     virtual void SetMicMute(bool mute);
 
@@ -489,10 +491,7 @@ public:
      * Get the maximum connection layer supported by this libtgvoip version.
      * Pass this as <code>max_layer</code> in the phone.phoneConnection TL object when requesting and accepting calls.
      */
-    static std::int32_t GetConnectionMaxLayer()
-    {
-        return 92;
-    }
+    static std::int32_t GetConnectionMaxLayer();
 
     /**
      * Get the persistable state of the library, like proxy capabilities, to save somewhere on the disk. Call this at the end of the call.
@@ -713,7 +712,7 @@ private:
     std::uint32_t m_prevSendLossCount;
     std::uint32_t m_firstSentPing;
 
-    HistoricBuffer<double, 32> m_rttHistory;
+    HistoricBuffer<double, 32> m_RTTHistory;
 
     bool m_waitingForAcks;
 
