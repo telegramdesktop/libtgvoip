@@ -426,7 +426,7 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 	}
 	in.Seek(in.GetOffset()+16); // random bytes
 	std::int32_t flags=in.ReadInt32();
-	if(!(flags & PFLAG_HAS_SEQ) || !(flags & PFLAG_HAS_SENDER_TAG_HASH)){
+    if(!(flags & PFlag::HAS_SEQ) || !(flags & PFlag::HAS_SENDER_TAG_HASH)){
 		LOGW("Received packet has wrong flags");
 		return;
 	}
@@ -439,7 +439,7 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 	}
 
 	//std::int32_t oneMoreInnerLengthWhyDoWeEvenNeedThis;
-	if(flags & PFLAG_HAS_DATA){
+    if(flags & PFlag::HAS_DATA){
 		/*oneMoreInnerLengthWhyDoWeEvenNeedThis=* /in.ReadTlLength();
 	}
 	unsigned char type=(unsigned char) ((flags >> 24) & 0xFF);
@@ -613,7 +613,7 @@ void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStrea
         m_conctl->PacketSent(seq, length);
     }
 
-    /*if(pflags & PFLAG_HAS_CALL_ID){
+    /*if(pflags & PFlag::HAS_CALL_ID){
 		s->WriteBytes(callID, 16);
 	}*/
     //s->WriteInt32(lastRemoteSeq);

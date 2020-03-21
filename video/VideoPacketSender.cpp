@@ -94,7 +94,7 @@ void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_
             return;
         }
     }
-    //abort();
+    //std::abort();
 }
 
 void VideoPacketSender::SetSource(VideoSource* source)
@@ -255,24 +255,24 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             std::size_t dataOffset = pkt.GetLength();
             if (seg == 0)
             {
-                std::uint8_t _rotation;
+                VideoRotation _rotation;
                 switch (rotation)
                 {
                 case 90:
-                    _rotation = VIDEO_ROTATION_90;
+                    _rotation = VideoRotation::_90;
                     break;
                 case 180:
-                    _rotation = VIDEO_ROTATION_180;
+                    _rotation = VideoRotation::_180;
                     break;
                 case 270:
-                    _rotation = VIDEO_ROTATION_270;
+                    _rotation = VideoRotation::_270;
                     break;
                 case 0:
                 default:
-                    _rotation = VIDEO_ROTATION_0;
+                    _rotation = VideoRotation::_0;
                     break;
                 }
-                pkt.WriteUInt8(_rotation);
+                pkt.WriteUInt8(static_cast<std::uint8_t>(_rotation));
                 dataOffset++;
 
                 if (!csd.IsEmpty())

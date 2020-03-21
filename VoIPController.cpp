@@ -218,7 +218,7 @@ VoIPController::~VoIPController()
     if (!m_stopping)
     {
         LOGE("!!!!!!!!!!!!!!!!!!!! CALL controller->Stop() BEFORE DELETING THE CONTROLLER OBJECT !!!!!!!!!!!!!!!!!!!!!!!1");
-        abort();
+        std::abort();
     }
     LOGD("before close socket");
     if (m_udpSocket)
@@ -2470,7 +2470,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             type = static_cast<PktType>((flags >> 24) & 0xFF);
             if (!(flags & PFLAG_HAS_SEQ && flags & PFLAG_HAS_RECENT_RECV))
             {
-                LOGW("Received packet doesn't have PFLAG_HAS_SEQ, PFLAG_HAS_RECENT_RECV, or both");
+                LOGW("Received packet doesn't have PFlag::HAS_SEQ, PFlag::HAS_RECENT_RECV, or both");
 
                 return;
             }
@@ -3034,23 +3034,23 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                     std::uint16_t rotation = 0;
                     if (fragmentIndex == 0)
                     {
-                        std::uint8_t _rotation = in.ReadUInt8() & std::uint8_t{VIDEO_ROTATION_MASK};
+                        VideoRotation _rotation = static_cast<VideoRotation>(in.ReadUInt8() & std::uint8_t{VIDEO_ROTATION_MASK});
                         switch (_rotation)
                         {
-                        case VIDEO_ROTATION_0:
+                        case VideoRotation::_0:
                             rotation = 0;
                             break;
-                        case VIDEO_ROTATION_90:
+                        case VideoRotation::_90:
                             rotation = 90;
                             break;
-                        case VIDEO_ROTATION_180:
+                        case VideoRotation::_180:
                             rotation = 180;
                             break;
-                        case VIDEO_ROTATION_270:
+                        case VideoRotation::_270:
                             rotation = 270;
                             break;
                         default: // unreachable on sane CPUs
-                            abort();
+                            std::abort();
                         }
                         //if(rotation!=stm->rotation){
                         //	stm->rotation=rotation;
@@ -3429,9 +3429,9 @@ bool VoIPController::SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue
     ENFORCE_MSG_THREAD;
 
     Endpoint* endpoint = GetEndpointForPacket(pkt);
-    if (!endpoint)
+    if (endpoint == nullptr)
     {
-        abort();
+        std::abort();
         return false;
     }
 

@@ -4,8 +4,8 @@
 // you should have received with this source code distribution.
 //
 
-#ifndef __VOIPCONTROLLER_H
-#define __VOIPCONTROLLER_H
+#ifndef VOIPCONTROLLER_H
+#define VOIPCONTROLLER_H
 
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -150,6 +150,14 @@ enum class InitVideoRes : std::uint8_t
     _1080,
     _1440,
     _4K,
+};
+
+enum class VideoRotation : std::uint8_t
+{
+    _0 = 0,
+    _90,
+    _180,
+    _270,
 };
 
 struct CryptoFunctions
@@ -955,4 +963,4 @@ private:
 
 } // namespace tgvoip
 
-#endif // __VOIPCONTROLLER_H
+#endif // VOIPCONTROLLER_H

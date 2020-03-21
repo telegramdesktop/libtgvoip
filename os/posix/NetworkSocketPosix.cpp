@@ -748,7 +748,7 @@ SocketSelectCancellerPosix::SocketSelectCancellerPosix()
     if (pipeRes != 0)
     {
         LOGE("pipe() failed");
-        abort();
+        std::abort();
     }
     pipeRead = p[0];
     pipeWrite = p[1];

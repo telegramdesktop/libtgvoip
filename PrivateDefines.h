@@ -5,6 +5,8 @@
 #ifndef TGVOIP_PRIVATEDEFINES_H
 #define TGVOIP_PRIVATEDEFINES_H
 
+#include <cstdint>
+
 #define IS_MOBILE_NETWORK(x) (x == NetType::GPRS || x == NetType::EDGE || x == NetType::THREE_G || x == NetType::HSPA || x == NetType::LTE || x == NetType::OTHER_MOBILE)
 
 #define PROTOCOL_NAME 0x50567247 // "GrVP" in little endian (reversed here)
@@ -39,39 +41,42 @@
 
 #define DEFAULT_MTU 1100
 
-/*flags:# voice_call_id:flags.2?int128 in_seq_no:flags.4?int out_seq_no:flags.4?int
-	 * recent_received_mask:flags.5?int proto:flags.3?int extra:flags.1?string raw_data:flags.0?string*/
-#define PFLAG_HAS_DATA 1
-#define PFLAG_HAS_EXTRA 2
-#define PFLAG_HAS_CALL_ID 4
-#define PFLAG_HAS_PROTO 8
-#define PFLAG_HAS_SEQ 16
-#define PFLAG_HAS_RECENT_RECV 32
-#define PFLAG_HAS_SENDER_TAG_HASH 64
+/* flags:# voice_call_id:flags.2?int128 in_seq_no:flags.4?int out_seq_no:flags.4?int
+ * recent_received_mask:flags.5?int proto:flags.3?int extra:flags.1?string raw_data:flags.0?string
+ */
 
-#define XPFLAG_HAS_EXTRA 1
-#define XPFLAG_HAS_RECV_TS 2
+#define PFLAG_HAS_DATA            std::uint32_t{1 << 0}
+#define PFLAG_HAS_EXTRA           std::uint32_t{1 << 1}
+#define PFLAG_HAS_CALL_ID         std::uint32_t{1 << 2}
+#define PFLAG_HAS_PROTO           std::uint32_t{1 << 3}
+#define PFLAG_HAS_SEQ             std::uint32_t{1 << 4}
+#define PFLAG_HAS_RECENT_RECV     std::uint32_t{1 << 5}
+#define PFLAG_HAS_SENDER_TAG_HASH std::uint32_t{1 << 6}
 
-#define STREAM_FLAG_ENABLED 1
-#define STREAM_FLAG_DTX 2
-#define STREAM_FLAG_EXTRA_EC 4
-#define STREAM_FLAG_PAUSED 8
+#define XPFLAG_HAS_EXTRA   std::uint8_t{1 << 0}
+#define XPFLAG_HAS_RECV_TS std::uint8_t{1 << 1}
+
+#define STREAM_FLAG_ENABLED  std::uint8_t{1 << 0}
+#define STREAM_FLAG_DTX      std::uint8_t{1 << 1}
+#define STREAM_FLAG_EXTRA_EC std::uint8_t{1 << 2}
+#define STREAM_FLAG_PAUSED   std::uint8_t{1 << 3}
 
 #define STREAM_RFLAG_SUPPORTED 1
 
-#define INIT_FLAG_DATA_SAVING_ENABLED 1
-#define INIT_FLAG_GROUP_CALLS_SUPPORTED 2
-#define INIT_FLAG_VIDEO_SEND_SUPPORTED 4
-#define INIT_FLAG_VIDEO_RECV_SUPPORTED 8
+#define INIT_FLAG_DATA_SAVING_ENABLED   std::uint8_t{1 << 0}
+#define INIT_FLAG_GROUP_CALLS_SUPPORTED std::uint8_t{1 << 1}
+#define INIT_FLAG_VIDEO_SEND_SUPPORTED  std::uint8_t{1 << 2}
+#define INIT_FLAG_VIDEO_RECV_SUPPORTED  std::uint8_t{1 << 3}
 
-#define TLID_DECRYPTED_AUDIO_BLOCK 0xDBF948C1
-#define TLID_SIMPLE_AUDIO_BLOCK 0xCC0D0E76
-#define TLID_UDP_REFLECTOR_PEER_INFO 0x27D9371C
-#define TLID_UDP_REFLECTOR_PEER_INFO_IPV6 0x83fc73b1
-#define TLID_UDP_REFLECTOR_SELF_INFO 0xc01572c7
-#define TLID_UDP_REFLECTOR_REQUEST_PACKETS_INFO 0x1a06fc96
-#define TLID_UDP_REFLECTOR_LAST_PACKETS_INFO 0x0e107305
-#define TLID_VECTOR 0x1cb5c415
+#define TLID_DECRYPTED_AUDIO_BLOCK              std::uint32_t{0xDBF948C1}
+#define TLID_SIMPLE_AUDIO_BLOCK                 std::uint32_t{0xCC0D0E76}
+#define TLID_UDP_REFLECTOR_PEER_INFO            std::uint32_t{0x27D9371C}
+#define TLID_UDP_REFLECTOR_PEER_INFO_IPV6       std::uint32_t{0x83fc73b1}
+#define TLID_UDP_REFLECTOR_SELF_INFO            std::uint32_t{0xc01572c7}
+#define TLID_UDP_REFLECTOR_REQUEST_PACKETS_INFO std::uint32_t{0x1a06fc96}
+#define TLID_UDP_REFLECTOR_LAST_PACKETS_INFO    std::uint32_t{0x0e107305}
+#define TLID_VECTOR                             std::uint32_t{0x1cb5c415}
+
 #define PAD4(x) (4 - (x + (x <= 253 ? 1 : 0)) % 4)
 
 #define MAX_RECENT_PACKETS 128
@@ -94,18 +99,14 @@ inline bool seqgt(std::uint32_t s1, std::uint32_t s2)
     return ((s1 > s2) && (s1 - s2 <= SEQ_MAX / 2)) || ((s1 < s2) && (s2 - s1 > SEQ_MAX / 2));
 }
 
-#define NEED_RATE_FLAG_SHITTY_INTERNET_MODE 1
-#define NEED_RATE_FLAG_UDP_NA 2
-#define NEED_RATE_FLAG_UDP_BAD 4
-#define NEED_RATE_FLAG_RECONNECTING 8
+#define NEED_RATE_FLAG_SHITTY_INTERNET_MODE std::uint8_t{1 << 0}
+#define NEED_RATE_FLAG_UDP_NA               std::uint8_t{1 << 1}
+#define NEED_RATE_FLAG_UDP_BAD              std::uint8_t{1 << 2}
+#define NEED_RATE_FLAG_RECONNECTING         std::uint8_t{1 << 3}
 
 #define VIDEO_FRAME_FLAG_KEYFRAME 1
 
 #define VIDEO_ROTATION_MASK 3
-#define VIDEO_ROTATION_0 0
-#define VIDEO_ROTATION_90 1
-#define VIDEO_ROTATION_180 2
-#define VIDEO_ROTATION_270 3
 
 #define FEC_SCHEME_XOR 1
 #define FEC_SCHEME_CM256 2

@@ -4,8 +4,8 @@
 // you should have received with this source code distribution.
 //
 
-#ifndef __THREADING_H
-#define __THREADING_H
+#ifndef THREADING_H
+#define THREADING_H
 
 #include <functional>
 
@@ -288,4 +288,4 @@ private:
 
 } // namespace tgvoip
 
-#endif // __THREADING_H
+#endif // THREADING_H

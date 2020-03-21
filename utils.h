@@ -16,4 +16,4 @@
     TypeName(TypeName&&) = default;            \
     TypeName& operator=(TypeName&&) = default
 
-#endif /* LIBTGVOIP_UTILS_H */
+#endif // LIBTGVOIP_UTILS_H

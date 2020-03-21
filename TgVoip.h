@@ -1,5 +1,5 @@
-#ifndef __TGVOIP_H
-#define __TGVOIP_H
+#ifndef TGVOIP_H
+#define TGVOIP_H
 
 #include <functional>
 #include <memory>
@@ -181,4 +181,4 @@ public:
     virtual TgVoipFinalState stop() = 0;
 };
 
-#endif
+#endif // TGVOIP_H

@@ -4,8 +4,8 @@
 // you should have received with this source code distribution.
 //
 
-#ifndef __LOGGING_H
-#define __LOGGING_H
+#ifndef LOGGING_H
+#define LOGGING_H
 #define LSTR_INT(x) LSTR_DO_INT(x)
 #define LSTR_DO_INT(x) #x
 
@@ -160,4 +160,4 @@ void tgvoip_log_file_write_header(FILE* file);
 #endif
 #endif
 
-#endif // __LOGGING_H
+#endif // LOGGING_H
