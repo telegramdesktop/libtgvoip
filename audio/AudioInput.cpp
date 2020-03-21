@@ -40,18 +40,18 @@
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
-std::int32_t AudioInput::estimatedDelay = 60;
+std::int32_t AudioInput::m_estimatedDelay = 60;
 
 AudioInput::AudioInput()
-    : currentDevice("default")
+    : m_currentDevice("default")
+    , m_failed(false)
 {
-    failed = false;
 }
 
 AudioInput::AudioInput(std::string deviceID)
-    : currentDevice(deviceID)
+    : m_currentDevice(std::move(deviceID))
+    , m_failed(false)
 {
-    failed = false;
 }
 
 AudioInput::~AudioInput()
@@ -60,7 +60,7 @@ AudioInput::~AudioInput()
 
 bool AudioInput::IsInitialized()
 {
-    return !failed;
+    return !m_failed;
 }
 
 void AudioInput::EnumerateDevices(std::vector<AudioInputDevice>& devs)
@@ -90,16 +90,17 @@ void AudioInput::EnumerateDevices(std::vector<AudioInputDevice>& devs)
 #endif
 }
 
-std::string AudioInput::GetCurrentDevice()
+std::string AudioInput::GetCurrentDevice() const
 {
-    return currentDevice;
+    return m_currentDevice;
 }
 
 void AudioInput::SetCurrentDevice(std::string deviceID)
 {
+    m_currentDevice = std::move(deviceID);
 }
 
 std::int32_t AudioInput::GetEstimatedDelay()
 {
-    return estimatedDelay;
+    return m_estimatedDelay;
 }

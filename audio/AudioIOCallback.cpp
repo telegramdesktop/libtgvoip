@@ -15,24 +15,24 @@ using namespace tgvoip::audio;
 
 AudioIOCallback::AudioIOCallback()
 {
-    input = new AudioInputCallback();
-    output = new AudioOutputCallback();
+    m_input = new AudioInputCallback();
+    m_output = new AudioOutputCallback();
 }
 
 AudioIOCallback::~AudioIOCallback()
 {
-    delete input;
-    delete output;
+    delete m_input;
+    delete m_output;
 }
 
 AudioInput* AudioIOCallback::GetInput()
 {
-    return input;
+    return m_input;
 }
 
 AudioOutput* AudioIOCallback::GetOutput()
 {
-    return output;
+    return m_output;
 }
 
 #pragma mark - Input
@@ -89,50 +89,50 @@ void AudioInputCallback::RunThread()
 
 AudioOutputCallback::AudioOutputCallback()
 {
-    thread = new Thread(std::bind(&AudioOutputCallback::RunThread, this));
-    thread->SetName("AudioOutputCallback");
+    m_thread = new Thread(std::bind(&AudioOutputCallback::RunThread, this));
+    m_thread->SetName("AudioOutputCallback");
 }
 
 AudioOutputCallback::~AudioOutputCallback()
 {
-    running = false;
-    thread->Join();
-    delete thread;
+    m_running = false;
+    m_thread->Join();
+    delete m_thread;
 }
 
 void AudioOutputCallback::Start()
 {
-    if (!running)
+    if (!m_running)
     {
-        running = true;
-        thread->Start();
+        m_running = true;
+        m_thread->Start();
     }
-    playing = true;
+    m_playing = true;
 }
 
 void AudioOutputCallback::Stop()
 {
-    playing = false;
+    m_playing = false;
 }
 
 bool AudioOutputCallback::IsPlaying()
 {
-    return playing;
+    return m_playing;
 }
 
 void AudioOutputCallback::SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c)
 {
-    dataCallback = c;
+    m_dataCallback = c;
 }
 
 void AudioOutputCallback::RunThread()
 {
     std::int16_t buf[960];
-    while (running)
+    while (m_running)
     {
         double t = VoIPController::GetCurrentTime();
         InvokeCallback(reinterpret_cast<std::uint8_t*>(buf), 960 * 2);
-        dataCallback(buf, 960);
+        m_dataCallback(buf, 960);
         double sl = 0.02 - (VoIPController::GetCurrentTime() - t);
         if (sl > 0)
             Thread::Sleep(sl);

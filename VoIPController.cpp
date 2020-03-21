@@ -76,6 +76,16 @@ extern jclass jniUtilitiesClass;
 
 extern FILE* tgvoipLogFile;
 
+IPv4Address::IPv4Address(std::string addr)
+    : addr(std::move(addr))
+{
+}
+
+IPv6Address::IPv6Address(std::string addr)
+    : addr(std::move(addr))
+{
+}
+
 #pragma mark - Public API
 
 VoIPController::VoIPController()
@@ -261,6 +271,50 @@ VoIPController::~VoIPController()
         m_preprocDecoder = nullptr;
     }
 #endif
+}
+
+VoIPController::Config::Config(double initTimeout, double recvTimeout, DataSaving dataSaving,
+                               bool enableAEC, bool enableNS, bool enableAGC, bool enableCallUpgrade)
+    : initTimeout(initTimeout)
+    , recvTimeout(recvTimeout)
+    , dataSaving(dataSaving)
+    , enableAEC(enableAEC)
+    , enableNS(enableNS)
+    , enableAGC(enableAGC)
+    , enableCallUpgrade(enableCallUpgrade)
+{
+}
+
+VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(std::uint32_t seq, std::uint8_t type, std::size_t len, Buffer&& data, std::int64_t endpoint)
+    : seq(seq)
+    , type(type)
+    , len(len)
+    , data(std::move(data))
+    , endpoint(endpoint)
+{
+}
+
+VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(PendingOutgoingPacket&& other)
+    : seq(other.seq)
+    , type(other.type)
+    , len(other.len)
+    , data(std::move(other.data))
+    , endpoint(other.endpoint)
+{
+
+}
+
+VoIPController::PendingOutgoingPacket& VoIPController::PendingOutgoingPacket::operator=(PendingOutgoingPacket&& other)
+{
+    if (this != &other)
+    {
+        seq = other.seq;
+        type = other.type;
+        len = other.len;
+        data = std::move(other.data);
+        endpoint = other.endpoint;
+    }
+    return *this;
 }
 
 void VoIPController::Stop()
@@ -902,6 +956,11 @@ void VoIPController::SetCallbacks(VoIPController::Callbacks callbacks)
         callbacks.connectionStateChanged(this, m_state);
 }
 
+float VoIPController::GetOutputLevel() const
+{
+    return 0.0f;
+}
+
 void VoIPController::SetAudioOutputGainControlEnabled(bool enabled)
 {
     LOGD("New output AGC state: %d", enabled);
@@ -1036,7 +1095,7 @@ void VoIPController::SetConfig(const Config& cfg)
     UpdateAudioBitrateLimit();
 }
 
-void VoIPController::SetPersistentState(std::vector<std::uint8_t> state)
+void VoIPController::SetPersistentState(const std::vector<std::uint8_t>& state)
 {
     using namespace json11;
 
@@ -3339,9 +3398,9 @@ Endpoint* VoIPController::GetEndpointForPacket(const PendingOutgoingPacket& pkt)
         {
             endpoint = &m_endpoints.at(pkt.endpoint);
         }
-        catch (std::out_of_range& x)
+        catch (const std::out_of_range& x)
         {
-            LOGW("Unable to send packet via nonexistent endpoint %" PRIu64, pkt.endpoint);
+            LOGW("Unable to send packet via nonexistent endpoint %" PRIu64 "\ne.what(): %s", pkt.endpoint, x.what());
             return nullptr;
         }
     }
@@ -3401,7 +3460,7 @@ bool VoIPController::SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue
     {
         //BufferOutputStream p(buf, sizeof(buf));
         BufferOutputStream p(1500);
-        WritePacketHeader(pkt.seq, &p, pkt.type, (std::uint32_t)pkt.len, source);
+        WritePacketHeader(pkt.seq, &p, pkt.type, static_cast<std::uint32_t>(pkt.len), source);
         p.WriteBytes(pkt.data);
         SendPacket(p.GetBuffer(), p.GetLength(), *endpoint, pkt);
         if (pkt.type == PKT_STREAM_DATA)
@@ -3475,7 +3534,7 @@ void VoIPController::SendPacket(std::uint8_t* data, std::size_t len, Endpoint& e
             {
                 std::size_t padLen = 16 - inner.GetLength() % 16;
                 std::uint8_t padding[16];
-                crypto.rand_bytes((std::uint8_t*)padding, padLen);
+                crypto.rand_bytes(padding, padLen);
                 inner.WriteBytes(padding, padLen);
             }
             assert(inner.GetLength() % 16 == 0);
@@ -3484,9 +3543,9 @@ void VoIPController::SendPacket(std::uint8_t* data, std::size_t len, Endpoint& e
             out.WriteBytes(m_keyFingerprint, 8);
             out.WriteBytes((msgHash + (SHA1_LENGTH - 16)), 16);
             KDF(msgHash + (SHA1_LENGTH - 16), m_isOutgoing ? 0 : 8, key, iv);
-            std::uint8_t aesOut[MSC_STACK_FALLBACK(inner.GetLength(), 1500)];
-            crypto.aes_ige_encrypt(inner.GetBuffer(), aesOut, inner.GetLength(), key, iv);
-            out.WriteBytes(aesOut, inner.GetLength());
+            std::vector<std::uint8_t> aesOut(MSC_STACK_FALLBACK(inner.GetLength(), 1500));
+            crypto.aes_ige_encrypt(inner.GetBuffer(), aesOut.data(), inner.GetLength(), key, iv);
+            out.WriteBytes(aesOut.data(), inner.GetLength());
         }
     }
     //LOGV("Sending %d bytes to %s:%d", out.GetLength(), ep.address.ToString().c_str(), ep.port);
@@ -3500,22 +3559,26 @@ void VoIPController::SendPacket(std::uint8_t* data, std::size_t len, Endpoint& e
 			ep.port,
 			ep.type==Endpoint::Type::TCP_RELAY ? NetworkProtocol::TCP : NetworkProtocol::UDP
 		}, ep);*/
-    m_rawSendQueue.Put(RawPendingOutgoingPacket {
-        NetworkPacket {
+    m_rawSendQueue.Put(RawPendingOutgoingPacket
+    {
+        NetworkPacket
+        {
             Buffer(std::move(out)),
             ep.GetAddress(),
             ep.port,
-            ep.type == Endpoint::Type::TCP_RELAY ? NetworkProtocol::TCP : NetworkProtocol::UDP},
-        ep.type == Endpoint::Type::TCP_RELAY ? ep.m_socket : nullptr});
+            ep.type == Endpoint::Type::TCP_RELAY ? NetworkProtocol::TCP : NetworkProtocol::UDP
+        },
+        ep.type == Endpoint::Type::TCP_RELAY ? ep.m_socket : nullptr
+    });
 }
 
 void VoIPController::ActuallySendPacket(NetworkPacket pkt, Endpoint& ep)
 {
     //LOGI("Sending packet of %d bytes", pkt.length);
     if (IS_MOBILE_NETWORK(m_networkType))
-        m_stats.bytesSentMobile += (std::uint64_t)pkt.data.Length();
+        m_stats.bytesSentMobile += static_cast<std::uint64_t>(pkt.data.Length());
     else
-        m_stats.bytesSentWifi += (std::uint64_t)pkt.data.Length();
+        m_stats.bytesSentWifi += static_cast<std::uint64_t>(pkt.data.Length());
     if (ep.type == Endpoint::Type::TCP_RELAY)
     {
         if (ep.m_socket && !ep.m_socket->IsFailed())
@@ -3611,7 +3674,7 @@ void VoIPController::AddIPv6Relays()
             {
                 m_didAddIPv6Relays = true;
                 e.address = NetworkAddress::Empty();
-                e.id = e.id ^ ((std::int64_t)(FOURCC('I', 'P', 'v', '6')) << 32);
+                e.id = e.id ^ (static_cast<std::int64_t>(FOURCC('I', 'P', 'v', '6')) << 32);
                 e.m_averageRTT = 0;
                 e.m_lastPingSeq = 0;
                 e.m_lastPingTime = 0;
@@ -3650,7 +3713,7 @@ void VoIPController::AddTCPRelays()
             tcpRelay.m_lastPingTime = 0;
             tcpRelay.m_rtts.Reset();
             tcpRelay.m_udpPongCount = 0;
-            tcpRelay.id = tcpRelay.id ^ ((std::int64_t)(FOURCC('T', 'C', 'P', 0)) << 32);
+            tcpRelay.id = tcpRelay.id ^ (static_cast<std::int64_t>(FOURCC('T', 'C', 'P', 0)) << 32);
             if (m_setCurrentEndpointToTCP && m_endpoints.at(m_currentEndpoint).type != Endpoint::Type::TCP_RELAY)
             {
                 LOGV("Setting current endpoint to TCP");
@@ -3685,7 +3748,7 @@ double VoIPController::GetCurrentTime()
 #if defined(__linux__)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+    return ts.tv_sec + ts.tv_nsec / 1000000000.0;
 #elif defined(__APPLE__)
     static pthread_once_t token = PTHREAD_ONCE_INIT;
     pthread_once(&token, &initMachTimestart);
@@ -4094,13 +4157,13 @@ void VoIPController::EvaluateUdpPingResults()
         {
             if (e.m_udpPongCount > 0)
             {
-                avgPongs += (double)e.m_udpPongCount;
+                avgPongs += e.m_udpPongCount;
                 count++;
             }
         }
     }
     if (count > 0)
-        avgPongs /= (double)count;
+        avgPongs /= count;
     else
         avgPongs = 0.0;
     LOGI("UDP ping reply count: %.2f", avgPongs);
@@ -4207,8 +4270,8 @@ void VoIPController::SendRelayPings()
         }
         if (_currentEndpoint->type == Endpoint::Type::UDP_RELAY && m_useUDP)
         {
-            constexpr std::int64_t p2pID = (std::int64_t)(FOURCC('P', '2', 'P', '4')) << 32;
-            constexpr std::int64_t lanID = (std::int64_t)(FOURCC('L', 'A', 'N', '4')) << 32;
+            constexpr std::int64_t p2pID = static_cast<std::int64_t>(FOURCC('P', '2', 'P', '4')) << 32;
+            constexpr std::int64_t lanID = static_cast<std::int64_t>(FOURCC('L', 'A', 'N', '4')) << 32;
 
             if (m_endpoints.find(p2pID) != m_endpoints.end())
             {
@@ -4257,8 +4320,8 @@ void VoIPController::UpdateRTT()
         if ((*stm)->jitterBuffer)
         {
             int lostCount = (*stm)->jitterBuffer->GetAndResetLostPacketCount();
-            if (lostCount > 0 || (lostCount < 0 && m_recvLossCount > ((std::uint32_t)-lostCount)))
-                m_recvLossCount += lostCount;
+            if (lostCount > 0 || (lostCount < 0 && m_recvLossCount > static_cast<std::uint32_t>(-lostCount)))
+                m_recvLossCount += static_cast<std::uint32_t>(lostCount);
         }
     }
 }
@@ -4270,7 +4333,7 @@ void VoIPController::UpdateCongestion()
         std::uint32_t sendLossCount = m_conctl->GetSendLossCount();
         m_sendLossCountHistory.Add(sendLossCount - m_prevSendLossCount);
         m_prevSendLossCount = sendLossCount;
-        double packetsPerSec = 1000 / (double)m_outgoingStreams[0]->frameDuration;
+        double packetsPerSec = 1000.0 / m_outgoingStreams[0]->frameDuration;
         double avgSendLossCount = m_sendLossCountHistory.Average() / packetsPerSec;
         //LOGV("avg send loss: %.3f%%", avgSendLossCount*100);
 
@@ -4314,7 +4377,7 @@ void VoIPController::UpdateCongestion()
         {
             m_extraEcLevel = 0;
         }
-        m_encoder->SetPacketLoss((int)(avgSendLossCount * 100.0));
+        m_encoder->SetPacketLoss(static_cast<int>(avgSendLossCount * 100));
         if (avgSendLossCount > m_rateMaxAcceptableSendLoss)
             m_needRate = true;
 
@@ -4429,7 +4492,7 @@ void VoIPController::UpdateAudioBitrate()
 void VoIPController::UpdateSignalBars()
 {
     int prevSignalBarCount = GetSignalBarsCount();
-    double packetsPerSec = 1000 / (double)m_outgoingStreams[0]->frameDuration;
+    double packetsPerSec = 1000.0 / m_outgoingStreams[0]->frameDuration;
     double avgSendLossCount = m_sendLossCountHistory.Average() / packetsPerSec;
 
     int signalBarCount = 4;
@@ -4584,7 +4647,7 @@ void VoIPController::TickJitterBufferAndCongestionControl()
         {
             pkt.lost = true;
             m_sendLosses++;
-            LOGW("Outgoing packet lost: seq=%u, type=%s, size=%u", pkt.seq, GetPacketTypeString(pkt.type).c_str(), (unsigned int)pkt.size);
+            LOGW("Outgoing packet lost: seq=%u, type=%s, size=%u", pkt.seq, GetPacketTypeString(pkt.type).c_str(), static_cast<unsigned int>(pkt.size));
             if (pkt.sender)
             {
                 pkt.sender->PacketLost(pkt.seq, pkt.type, pkt.size);
@@ -4648,12 +4711,12 @@ Endpoint::Endpoint()
 
 const NetworkAddress& Endpoint::GetAddress() const
 {
-    return IsIPv6Only() ? (NetworkAddress&)v6address : (NetworkAddress&)address;
+    return IsIPv6Only() ? v6address : address;
 }
 
 NetworkAddress& Endpoint::GetAddress()
 {
-    return IsIPv6Only() ? (NetworkAddress&)v6address : (NetworkAddress&)address;
+    return IsIPv6Only() ? v6address : address;
 }
 
 bool Endpoint::IsIPv6Only() const
@@ -4666,11 +4729,11 @@ std::int64_t Endpoint::CleanID() const
     std::int64_t _id = id;
     if (type == Type::TCP_RELAY)
     {
-        _id = _id ^ ((std::int64_t)FOURCC('T', 'C', 'P', ' ') << 32);
+        _id = _id ^ (static_cast<std::int64_t>(FOURCC('T', 'C', 'P', ' ')) << 32);
     }
     if (IsIPv6Only())
     {
-        _id = _id ^ ((std::int64_t)FOURCC('I', 'P', 'v', '6') << 32);
+        _id = _id ^ (static_cast<std::int64_t>(FOURCC('I', 'P', 'v', '6')) << 32);
     }
     return _id;
 }
@@ -4686,43 +4749,48 @@ Endpoint::~Endpoint()
 #pragma mark - AudioInputTester
 
 AudioInputTester::AudioInputTester(std::string deviceID)
-    : deviceID(std::move(deviceID))
+    : m_deviceID(std::move(deviceID))
 {
-    io = audio::AudioIO::Create(deviceID, "default");
-    if (io->Failed())
+    m_io = audio::AudioIO::Create(deviceID, "default");
+    if (m_io->Failed())
     {
         LOGE("Audio IO failed");
         return;
     }
-    input = io->GetInput();
-    input->SetCallback([](std::uint8_t* data, std::size_t size, void* ctx) -> std::size_t
+    m_input = m_io->GetInput();
+    m_input->SetCallback([](std::uint8_t* data, std::size_t size, void* ctx) -> std::size_t
         {
             reinterpret_cast<AudioInputTester*>(ctx)->Update(reinterpret_cast<std::int16_t*>(data), size / 2);
             return 0;
         },
         this);
-    input->Start();
+    m_input->Start();
 }
 
 AudioInputTester::~AudioInputTester()
 {
-    input->Stop();
-    delete io;
+    m_input->Stop();
+    delete m_io;
 }
 
 void AudioInputTester::Update(std::int16_t* samples, std::size_t count)
 {
     for (std::size_t i = 0; i < count; i++)
     {
-        std::int16_t s = std::abs(samples[i]);
-        if (s > maxSample)
-            maxSample = s;
+        std::int16_t s = static_cast<std::int16_t>(std::abs(samples[i]));
+        if (s > m_maxSample)
+            m_maxSample = s;
     }
 }
 
 float AudioInputTester::GetAndResetLevel()
 {
-    float s = maxSample;
-    maxSample = 0;
+    float s = m_maxSample;
+    m_maxSample = 0;
     return s / std::numeric_limits<std::int16_t>::max();
+}
+
+bool AudioInputTester::Failed() const
+{
+    return (m_io != nullptr) && m_io->Failed();
 }

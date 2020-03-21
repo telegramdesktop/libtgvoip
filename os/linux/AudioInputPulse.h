@@ -15,41 +15,43 @@
 
 namespace tgvoip
 {
+
 namespace audio
 {
 
-    class AudioInputPulse : public AudioInput
-    {
-    public:
-        AudioInputPulse(pa_context* context, pa_threaded_mainloop* mainloop, std::string devID);
-        virtual ~AudioInputPulse();
-        virtual void Start();
-        virtual void Stop();
-        virtual bool IsRecording();
-        virtual void SetCurrentDevice(std::string devID);
-        static bool EnumerateDevices(std::vector<AudioInputDevice>& devs);
+class AudioInputPulse : public AudioInput
+{
+public:
+    AudioInputPulse(pa_context* context, pa_threaded_mainloop* mainloop, std::string devID);
+    virtual ~AudioInputPulse();
+    virtual void Start();
+    virtual void Stop();
+    virtual bool IsRecording();
+    virtual void SetCurrentDevice(std::string devID);
+    static bool EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
-    private:
-        static void StreamStateCallback(pa_stream* s, void* arg);
-        static void StreamReadCallback(pa_stream* stream, std::size_t requested_bytes, void* userdata);
-        void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes);
-        pa_stream* CreateAndInitStream();
+private:
+    static void StreamStateCallback(pa_stream* s, void* arg);
+    static void StreamReadCallback(pa_stream* stream, std::size_t requested_bytes, void* userdata);
+    void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes);
+    pa_stream* CreateAndInitStream();
 
-        pa_threaded_mainloop* mainloop;
-        pa_context* context;
-        pa_stream* stream;
+    pa_threaded_mainloop* mainloop;
+    pa_context* context;
+    pa_stream* stream;
 
-        bool isRecording;
-        bool isConnected;
-        bool didStart;
-        bool isLocked;
-        std::uint8_t remainingData[960 * 8 * 2];
-        std::size_t remainingDataSize;
-    };
+    bool isRecording;
+    bool isConnected;
+    bool didStart;
+    bool isLocked;
+    std::uint8_t remainingData[960 * 8 * 2];
+    std::size_t remainingDataSize;
+};
 
-}
-}
+} // namespace audio
+
+} // namespace tgvoip
 
 #undef DECLARE_DL_FUNCTION
 
-#endif //LIBTGVOIP_AUDIOINPUTPULSE_H
+#endif // LIBTGVOIP_AUDIOINPUTPULSE_H

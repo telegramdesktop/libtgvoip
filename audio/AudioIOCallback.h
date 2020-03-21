@@ -15,56 +15,60 @@
 
 namespace tgvoip
 {
+
 namespace audio
 {
-    class AudioInputCallback : public AudioInput
-    {
-    public:
-        AudioInputCallback();
-        virtual ~AudioInputCallback();
-        virtual void Start() override;
-        virtual void Stop() override;
-        void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
 
-    private:
-        void RunThread();
-        std::atomic<bool> running {false};
-        bool recording = false;
-        Thread* thread;
-        std::function<void(std::int16_t*, std::size_t)> dataCallback;
-    };
+class AudioInputCallback : public AudioInput
+{
+public:
+    AudioInputCallback();
+    ~AudioInputCallback() override;
+    void Start() override;
+    void Stop() override;
+    void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
 
-    class AudioOutputCallback : public AudioOutput
-    {
-    public:
-        AudioOutputCallback();
-        virtual ~AudioOutputCallback();
-        virtual void Start() override;
-        virtual void Stop() override;
-        virtual bool IsPlaying() override;
-        void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
+private:
+    void RunThread();
+    std::atomic<bool> running{false};
+    bool recording = false;
+    Thread* thread;
+    std::function<void(std::int16_t*, std::size_t)> dataCallback;
+};
 
-    private:
-        void RunThread();
-        std::atomic<bool> running {false};
-        bool playing = false;
-        Thread* thread;
-        std::function<void(std::int16_t*, std::size_t)> dataCallback;
-    };
+class AudioOutputCallback : public AudioOutput
+{
+public:
+    AudioOutputCallback();
+    ~AudioOutputCallback() override;
+    void Start() override;
+    void Stop() override;
+    bool IsPlaying() override;
+    void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
 
-    class AudioIOCallback : public AudioIO
-    {
-    public:
-        AudioIOCallback();
-        virtual ~AudioIOCallback();
-        virtual AudioInput* GetInput() override;
-        virtual AudioOutput* GetOutput() override;
+private:
+    void RunThread();
+    std::atomic<bool> m_running {false};
+    bool m_playing = false;
+    Thread* m_thread;
+    std::function<void(std::int16_t*, std::size_t)> m_dataCallback;
+};
 
-    private:
-        AudioInputCallback* input;
-        AudioOutputCallback* output;
-    };
-}
-}
+class AudioIOCallback : public AudioIO
+{
+public:
+    AudioIOCallback();
+    ~AudioIOCallback() override;
+    AudioInput* GetInput() override;
+    AudioOutput* GetOutput() override;
 
-#endif /* LIBTGVOIP_AUDIO_IO_CALLBACK */
+private:
+    AudioInputCallback* m_input;
+    AudioOutputCallback* m_output;
+};
+
+} // namespace audio
+
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_AUDIO_IO_CALLBACK

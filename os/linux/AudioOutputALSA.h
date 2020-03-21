@@ -13,37 +13,39 @@
 
 namespace tgvoip
 {
+
 namespace audio
 {
 
-    class AudioOutputALSA : public AudioOutput
-    {
-    public:
-        AudioOutputALSA(std::string devID);
-        virtual ~AudioOutputALSA();
-        virtual void Start();
-        virtual void Stop();
-        virtual bool IsPlaying();
-        virtual void SetCurrentDevice(std::string devID);
-        static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
+class AudioOutputALSA : public AudioOutput
+{
+public:
+    AudioOutputALSA(std::string devID);
+    virtual ~AudioOutputALSA();
+    virtual void Start();
+    virtual void Stop();
+    virtual bool IsPlaying();
+    virtual void SetCurrentDevice(std::string devID);
+    static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
 
-    private:
-        void RunThread();
+private:
+    void RunThread();
 
-        int (*_snd_pcm_open)(snd_pcm_t** pcm, const char* name, snd_pcm_stream_t stream, int mode);
-        int (*_snd_pcm_set_params)(snd_pcm_t* pcm, snd_pcm_format_t format, snd_pcm_access_t access, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
-        int (*_snd_pcm_close)(snd_pcm_t* pcm);
-        snd_pcm_sframes_t (*_snd_pcm_writei)(snd_pcm_t* pcm, const void* buffer, snd_pcm_uframes_t size);
-        int (*_snd_pcm_recover)(snd_pcm_t* pcm, int err, int silent);
-        const char* (*_snd_strerror)(int errnum);
-        void* lib;
+    int (*m_snd_pcm_open)(snd_pcm_t** pcm, const char* name, snd_pcm_stream_t stream, int mode);
+    int (*m_snd_pcm_set_params)(snd_pcm_t* pcm, snd_pcm_format_t format, snd_pcm_access_t access, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency);
+    int (*m_snd_pcm_close)(snd_pcm_t* pcm);
+    snd_pcm_sframes_t (*m_snd_pcm_writei)(snd_pcm_t* pcm, const void* buffer, snd_pcm_uframes_t size);
+    int (*m_snd_pcm_recover)(snd_pcm_t* pcm, int err, int silent);
+    const char* (*m_snd_strerror)(int errnum);
+    void* m_lib;
 
-        snd_pcm_t* handle;
-        Thread* thread;
-        bool isPlaying;
-    };
+    snd_pcm_t* m_handle;
+    Thread* m_thread;
+    bool m_isPlaying;
+};
 
-}
-}
+} // namespace audio
 
-#endif //LIBTGVOIP_AUDIOOUTPUTALSA_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_AUDIOOUTPUTALSA_H

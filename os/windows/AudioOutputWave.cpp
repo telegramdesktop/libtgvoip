@@ -120,7 +120,7 @@ void AudioOutputWave::EnumerateDevices(std::vector<tgvoip::AudioOutputDevice>& d
 
 void AudioOutputWave::SetCurrentDevice(std::string deviceID)
 {
-    currentDevice = deviceID;
+    m_currentDevice = deviceID;
 
     bool wasPlaying = isPlaying;
     isPlaying = false;

@@ -332,7 +332,7 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
 
     LOGD("Switched playback device, new sample rate %d", hardwareSampleRate);
 
-    this->currentDevice = deviceID;
+    this->m_currentDevice = deviceID;
     sysDevID = outputDevice;
 
     AudioObjectPropertyAddress propertyAddress = {
@@ -344,8 +344,8 @@ void AudioOutputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
     status = AudioObjectGetPropertyData(outputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
     if (status == noErr)
     {
-        estimatedDelay = bufferFrameSize / 48;
-        LOGD("CoreAudio buffer size for output device is %u frames (%u ms)", bufferFrameSize, estimatedDelay);
+        m_estimatedDelay = bufferFrameSize / 48;
+        LOGD("CoreAudio buffer size for output device is %u frames (%u ms)", bufferFrameSize, m_estimatedDelay);
     }
 
     if (isMacBookPro)
@@ -379,9 +379,9 @@ OSStatus AudioOutputAudioUnitLegacy::DefaultDeviceChangedCallback(AudioObjectID 
     if (inAddresses[0].mSelector == kAudioHardwarePropertyDefaultOutputDevice)
     {
         LOGV("System default input device changed");
-        if (self->currentDevice == "default")
+        if (self->m_currentDevice == "default")
         {
-            self->SetCurrentDevice(self->currentDevice);
+            self->SetCurrentDevice(self->m_currentDevice);
         }
     }
     else if (inAddresses[0].mSelector == kAudioDevicePropertyDataSource)

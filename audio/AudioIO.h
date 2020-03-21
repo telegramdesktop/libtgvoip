@@ -15,62 +15,66 @@
 
 namespace tgvoip
 {
+
 namespace audio
 {
-    class AudioIO
+
+class AudioIO
+{
+public:
+    AudioIO();
+    virtual ~AudioIO();
+    TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioIO);
+    static AudioIO* Create(std::string inputDevice, std::string outputDevice);
+    virtual AudioInput* GetInput() = 0;
+    virtual AudioOutput* GetOutput() = 0;
+    bool Failed();
+    std::string GetErrorDescription();
+
+protected:
+    std::string m_error;
+    bool m_failed = false;
+};
+
+template <class I, class O>
+class ContextlessAudioIO : public AudioIO
+{
+public:
+    ContextlessAudioIO()
     {
-    public:
-        AudioIO() {};
-        virtual ~AudioIO() {};
-        TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioIO);
-        static AudioIO* Create(std::string inputDevice, std::string outputDevice);
-        virtual AudioInput* GetInput() = 0;
-        virtual AudioOutput* GetOutput() = 0;
-        bool Failed();
-        std::string GetErrorDescription();
+        m_input = new I();
+        m_output = new O();
+    }
 
-    protected:
-        bool failed = false;
-        std::string error;
-    };
-
-    template <class I, class O>
-    class ContextlessAudioIO : public AudioIO
+    ContextlessAudioIO(std::string inputDeviceID, std::string outputDeviceID)
     {
-    public:
-        ContextlessAudioIO()
-        {
-            input = new I();
-            output = new O();
-        }
+        m_input = new I(std::move(inputDeviceID));
+        m_output = new O(std::move(outputDeviceID));
+    }
 
-        ContextlessAudioIO(std::string inputDeviceID, std::string outputDeviceID)
-        {
-            input = new I(inputDeviceID);
-            output = new O(outputDeviceID);
-        }
+    virtual ~ContextlessAudioIO()
+    {
+        delete m_input;
+        delete m_output;
+    }
 
-        virtual ~ContextlessAudioIO()
-        {
-            delete input;
-            delete output;
-        }
+    virtual AudioInput* GetInput()
+    {
+        return m_input;
+    }
 
-        virtual AudioInput* GetInput()
-        {
-            return input;
-        }
+    virtual AudioOutput* GetOutput()
+    {
+        return m_output;
+    }
 
-        virtual AudioOutput* GetOutput()
-        {
-            return output;
-        }
+private:
+    I* m_input;
+    O* m_output;
+};
 
-    private:
-        I* input;
-        O* output;
-    };
-}
-}
+} // namespace audio
 
-#endif //LIBTGVOIP_AUDIOIO_H
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_AUDIOIO_H

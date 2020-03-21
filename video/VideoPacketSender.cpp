@@ -118,7 +118,7 @@ void VideoPacketSender::SetSource(VideoSource* source)
     std::uint32_t bitrate = m_videoCongestionControl.GetBitrate();
     m_currentVideoBitrate = bitrate;
     source->SetBitrate(bitrate);
-    source->Reset(m_stm->codec, m_stm->resolution = GetVideoResolutionForCurrentBitrate());
+    source->Reset(m_stm->codec, m_stm->resolution = static_cast<int>(GetVideoResolutionForCurrentBitrate()));
     source->Start();
     source->SetCallback(std::bind(&VideoPacketSender::SendFrame, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     source->SetStreamStateCallback([this](bool paused)
@@ -150,12 +150,13 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             LOGD("Setting video bitrate to %u", bitrate);
             m_source->SetBitrate(bitrate);
         }
-        int resolutionFromBitrate = GetVideoResolutionForCurrentBitrate();
+        int resolutionFromBitrate = static_cast<int>(GetVideoResolutionForCurrentBitrate());
         if (resolutionFromBitrate != m_stm->resolution && currentTime - m_lastVideoResolutionChangeTime > 3.0 && currentTime - m_sourceChangeTime > 10.0)
         {
             LOGI("Changing video resolution: %d -> %d", m_stm->resolution, resolutionFromBitrate);
             m_stm->resolution = resolutionFromBitrate;
-            GetMessageThread().Post([this, resolutionFromBitrate] {
+            GetMessageThread().Post([this, resolutionFromBitrate]
+            {
                 m_source->Reset(m_stm->codec, resolutionFromBitrate);
                 m_stm->csdIsValid = false;
             });
@@ -311,7 +312,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
 
             m_packetsForFEC.clear();
             m_fecFrameCount = 0;
-            LOGV("FEC packet length: %u", (unsigned int)fecPacket.Length());
+            LOGV("FEC packet length: %u", static_cast<unsigned int>(fecPacket.Length()));
             BufferOutputStream out(1500);
             out.WriteUInt8(m_stm->id);
             out.WriteUInt8(static_cast<std::uint8_t>(m_frameSeq));

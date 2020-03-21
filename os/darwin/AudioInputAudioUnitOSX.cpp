@@ -307,7 +307,7 @@ void AudioInputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
 
     LOGD("Switched capture device, new sample rate %d", hardwareSampleRate);
 
-    this->currentDevice = deviceID;
+    this->m_currentDevice = deviceID;
 
     AudioObjectPropertyAddress propertyAddress = {
         kAudioDevicePropertyBufferFrameSize,
@@ -318,8 +318,8 @@ void AudioInputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
     status = AudioObjectGetPropertyData(inputDevice, &propertyAddress, 0, nullptr, &size, &bufferFrameSize);
     if (status == noErr)
     {
-        estimatedDelay = bufferFrameSize / 48;
-        LOGD("CoreAudio buffer size for output device is %u frames (%u ms)", bufferFrameSize, estimatedDelay);
+        m_estimatedDelay = bufferFrameSize / 48;
+        LOGD("CoreAudio buffer size for output device is %u frames (%u ms)", bufferFrameSize, m_estimatedDelay);
     }
 }
 
@@ -327,9 +327,9 @@ OSStatus AudioInputAudioUnitLegacy::DefaultDeviceChangedCallback(AudioObjectID i
 {
     LOGV("System default input device changed");
     AudioInputAudioUnitLegacy* self = (AudioInputAudioUnitLegacy*)inClientData;
-    if (self->currentDevice == "default")
+    if (self->m_currentDevice == "default")
     {
-        self->SetCurrentDevice(self->currentDevice);
+        self->SetCurrentDevice(self->m_currentDevice);
     }
     return noErr;
 }

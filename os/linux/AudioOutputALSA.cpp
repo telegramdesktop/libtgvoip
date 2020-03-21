@@ -35,78 +35,78 @@ using namespace tgvoip::audio;
 
 AudioOutputALSA::AudioOutputALSA(std::string devID)
 {
-    isPlaying = false;
-    handle = nullptr;
+    m_isPlaying = false;
+    m_handle = nullptr;
 
-    lib = dlopen("libasound.so.2", RTLD_LAZY);
-    if (!lib)
-        lib = dlopen("libasound.so", RTLD_LAZY);
-    if (!lib)
+    m_lib = dlopen("libasound.so.2", RTLD_LAZY);
+    if (!m_lib)
+        m_lib = dlopen("libasound.so", RTLD_LAZY);
+    if (!m_lib)
     {
         LOGE("Error loading libasound: %s", dlerror());
-        failed = true;
+        m_failed = true;
         return;
     }
 
-    LOAD_FUNCTION(lib, "snd_pcm_open", _snd_pcm_open);
-    LOAD_FUNCTION(lib, "snd_pcm_set_params", _snd_pcm_set_params);
-    LOAD_FUNCTION(lib, "snd_pcm_close", _snd_pcm_close);
-    LOAD_FUNCTION(lib, "snd_pcm_writei", _snd_pcm_writei);
-    LOAD_FUNCTION(lib, "snd_pcm_recover", _snd_pcm_recover);
-    LOAD_FUNCTION(lib, "snd_strerror", _snd_strerror);
+    LOAD_FUNCTION(m_lib, "snd_pcm_open", m_snd_pcm_open);
+    LOAD_FUNCTION(m_lib, "snd_pcm_set_params", m_snd_pcm_set_params);
+    LOAD_FUNCTION(m_lib, "snd_pcm_close", m_snd_pcm_close);
+    LOAD_FUNCTION(m_lib, "snd_pcm_writei", m_snd_pcm_writei);
+    LOAD_FUNCTION(m_lib, "snd_pcm_recover", m_snd_pcm_recover);
+    LOAD_FUNCTION(m_lib, "snd_strerror", m_snd_strerror);
 
     SetCurrentDevice(devID);
 }
 
 AudioOutputALSA::~AudioOutputALSA()
 {
-    if (handle)
-        _snd_pcm_close(handle);
-    if (lib)
-        dlclose(lib);
+    if (m_handle)
+        m_snd_pcm_close(m_handle);
+    if (m_lib)
+        dlclose(m_lib);
 }
 
 void AudioOutputALSA::Start()
 {
-    if (failed || isPlaying)
+    if (m_failed || m_isPlaying)
         return;
 
-    isPlaying = true;
-    thread = new Thread(std::bind(&AudioOutputALSA::RunThread, this));
-    thread->SetName("AudioOutputALSA");
-    thread->Start();
+    m_isPlaying = true;
+    m_thread = new Thread(std::bind(&AudioOutputALSA::RunThread, this));
+    m_thread->SetName("AudioOutputALSA");
+    m_thread->Start();
 }
 
 void AudioOutputALSA::Stop()
 {
-    if (!isPlaying)
+    if (!m_isPlaying)
         return;
 
-    isPlaying = false;
-    thread->Join();
-    delete thread;
-    thread = nullptr;
+    m_isPlaying = false;
+    m_thread->Join();
+    delete m_thread;
+    m_thread = nullptr;
 }
 
 bool AudioOutputALSA::IsPlaying()
 {
-    return isPlaying;
+    return m_isPlaying;
 }
 void AudioOutputALSA::RunThread()
 {
     std::uint8_t buffer[BUFFER_SIZE * 2];
     snd_pcm_sframes_t frames;
-    while (isPlaying)
+    while (m_isPlaying)
     {
         InvokeCallback(buffer, sizeof(buffer));
-        frames = _snd_pcm_writei(handle, buffer, BUFFER_SIZE);
+        frames = m_snd_pcm_writei(m_handle, buffer, BUFFER_SIZE);
         if (frames < 0)
         {
-            frames = _snd_pcm_recover(handle, frames, 0);
+            frames = m_snd_pcm_recover(m_handle, frames, 0);
         }
         if (frames < 0)
         {
-            LOGE("snd_pcm_writei failed: %s\n", _snd_strerror(frames));
+            LOGE("snd_pcm_writei failed: %s\n", m_snd_strerror(frames));
             break;
         }
     }
@@ -114,27 +114,27 @@ void AudioOutputALSA::RunThread()
 
 void AudioOutputALSA::SetCurrentDevice(std::string devID)
 {
-    bool wasPlaying = isPlaying;
-    isPlaying = false;
-    if (handle)
+    bool wasPlaying = m_isPlaying;
+    m_isPlaying = false;
+    if (m_handle)
     {
-        thread->Join();
-        _snd_pcm_close(handle);
+        m_thread->Join();
+        m_snd_pcm_close(m_handle);
     }
-    currentDevice = devID;
+    m_currentDevice = devID;
 
-    int res = _snd_pcm_open(&handle, devID.c_str(), SND_PCM_STREAM_PLAYBACK, 0);
+    int res = m_snd_pcm_open(&m_handle, devID.c_str(), SND_PCM_STREAM_PLAYBACK, 0);
     if (res < 0)
-        res = _snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
+        res = m_snd_pcm_open(&m_handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
     CHECK_ERROR(res, "snd_pcm_open failed");
 
-    res = _snd_pcm_set_params(handle, SND_PCM_FORMAT_S16, SND_PCM_ACCESS_RW_INTERLEAVED, 1, 48000, 1, 100000);
+    res = m_snd_pcm_set_params(m_handle, SND_PCM_FORMAT_S16, SND_PCM_ACCESS_RW_INTERLEAVED, 1, 48000, 1, 100000);
     CHECK_ERROR(res, "snd_pcm_set_params failed");
 
     if (wasPlaying)
     {
-        isPlaying = true;
-        thread->Start();
+        m_isPlaying = true;
+        m_thread->Start();
     }
 }
 

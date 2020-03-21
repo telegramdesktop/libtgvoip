@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 
 using namespace tgvoip;
 using namespace tgvoip::test;
@@ -30,11 +31,12 @@ MockReflector::MockReflector(std::string bindAddress, std::uint16_t bindPort)
 {
     sfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     assert(sfd != -1);
-    sockaddr_in bindAddr = {0};
+    sockaddr_in bindAddr;
+    std::memset(&bindAddr, 0, sizeof(bindAddr));
     bindAddr.sin_family = AF_INET;
     bindAddr.sin_port = htons(bindPort);
     inet_aton(bindAddress.c_str(), &bindAddr.sin_addr);
-    int res = bind(sfd, (struct sockaddr*)&bindAddr, sizeof(bindAddr));
+    int res = bind(sfd, reinterpret_cast<struct sockaddr*>(&bindAddr), sizeof(bindAddr));
     assert(res == 0);
 }
 
@@ -45,9 +47,9 @@ MockReflector::~MockReflector()
 std::array<std::array<std::uint8_t, 16>, 2> MockReflector::GeneratePeerTags()
 {
     std::array<std::uint8_t, 16> tag1;
-    for (int i = 0; i < 16; i++)
+    for (std::size_t i = 0; i < 16; ++i)
     {
-        tag1[i] = (std::uint8_t)rand();
+        tag1[i] = static_cast<std::uint8_t>(rand());
     }
     tag1[15] &= 0xFE;
     std::array<std::array<std::uint8_t, 16>, 2> res;
@@ -57,13 +59,20 @@ std::array<std::array<std::uint8_t, 16>, 2> MockReflector::GeneratePeerTags()
     return res;
 }
 
+MockReflector::ClientPair::ClientPair()
+{
+    std::memset(&addr0, 0, sizeof(addr0));
+    std::memset(&addr1, 0, sizeof(addr1));
+}
+
 void MockReflector::Start()
 {
     if (running)
         return;
     running = true;
     pthread_create(
-        &thread, nullptr, [](void* arg) -> void* {
+        &thread, nullptr, [](void* arg) -> void*
+        {
             reinterpret_cast<MockReflector*>(arg)->RunThread();
             return nullptr;
         },
@@ -90,7 +99,7 @@ void MockReflector::RunThread()
         std::array<std::uint8_t, 1500> buf;
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
-        ssize_t len = recvfrom(sfd, buf.data(), sizeof(buf), 0, (struct sockaddr*)&addr, &addrlen);
+        ssize_t len = recvfrom(sfd, buf.data(), sizeof(buf), 0, reinterpret_cast<struct sockaddr*>(&addr), &addrlen);
         if (len <= 0)
             return;
         if (len >= 32)
@@ -124,13 +133,13 @@ void MockReflector::RunThread()
                 {
                     UdpReflectorSelfInfo response;
                     std::memcpy(response.peerTag, peerTag.data(), 16);
-                    response.date = (std::int32_t)time(nullptr);
+                    response.date = static_cast<std::int32_t>(time(nullptr));
                     response.query_id = *reinterpret_cast<std::uint64_t*>(buf.data() + 32);
                     response.my_ip_padding1 = 0;
                     response.my_ip_padding2 = 0xFFFF0000;
-                    response.my_ip = (std::uint32_t)addr.sin_addr.s_addr;
+                    response.my_ip = static_cast<std::uint32_t>(addr.sin_addr.s_addr);
                     response.my_port = ntohs(addr.sin_port);
-                    sendto(sfd, &response, sizeof(response), 0, (struct sockaddr*)&addr, sizeof(addr));
+                    sendto(sfd, &response, sizeof(response), 0, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
                     continue;
                 }
             }
@@ -142,7 +151,7 @@ void MockReflector::RunThread()
                 else
                     buf[15] |= 1;
 
-                sendto(sfd, buf.data(), len, 0, (struct sockaddr*)dest, sizeof(sockaddr_in));
+                sendto(sfd, buf.data(), static_cast<std::size_t>(len), 0, reinterpret_cast<struct sockaddr*>(dest), sizeof(sockaddr_in));
             }
         }
     }

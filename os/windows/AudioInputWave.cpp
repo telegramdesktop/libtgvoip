@@ -122,7 +122,7 @@ void AudioInputWave::EnumerateDevices(std::vector<tgvoip::AudioInputDevice>& dev
 
 void AudioInputWave::SetCurrentDevice(std::string deviceID)
 {
-    currentDevice = deviceID;
+    m_currentDevice = deviceID;
 
     bool wasRecording = isRecording;
     isRecording = false;

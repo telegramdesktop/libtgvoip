@@ -234,7 +234,7 @@ void AudioInputWASAPI::SetCurrentDevice(std::string deviceID)
 
 void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
 {
-    currentDevice = deviceID;
+    m_currentDevice = deviceID;
     HRESULT res;
 
     if (audioClient)
@@ -303,7 +303,7 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     if (!device)
     {
         LOGE("Didn't find capture device; failing");
-        failed = true;
+        m_failed = true;
         return;
     }
 
@@ -360,13 +360,13 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     CHECK_RES(res, "audioClient->GetBufferSize");
 
     LOGV("buffer size: %u", bufSize);
-    estimatedDelay = 0;
+    m_estimatedDelay = 0;
     REFERENCE_TIME latency, devicePeriod;
     if (SUCCEEDED(audioClient->GetStreamLatency(&latency)))
     {
         if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, nullptr)))
         {
-            estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
+            m_estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
         }
     }
 
@@ -399,7 +399,7 @@ DWORD WINAPI AudioInputWASAPI::StartThread(void* arg)
 
 void AudioInputWASAPI::RunThread()
 {
-    if (failed)
+    if (m_failed)
         return;
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 

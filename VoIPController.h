@@ -125,14 +125,12 @@ struct CellularCarrierInfo
 // API compatibility
 struct IPv4Address
 {
-    IPv4Address(std::string addr)
-        : addr(addr) {}
+    IPv4Address(std::string addr);
     std::string addr;
 };
 struct IPv6Address
 {
-    IPv6Address(std::string addr)
-        : addr(addr) {}
+    IPv6Address(std::string addr);
     std::string addr;
 };
 
@@ -195,28 +193,27 @@ class AudioInputDevice : public AudioDevice
 class AudioInputTester
 {
 public:
-    AudioInputTester(const std::string deviceID);
+    AudioInputTester(const std::string m_deviceID);
     ~AudioInputTester();
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioInputTester);
     float GetAndResetLevel();
-    bool Failed()
-    {
-        return io && io->Failed();
-    }
+    bool Failed() const;
 
 private:
     void Update(std::int16_t* samples, std::size_t count);
-    audio::AudioIO* io = nullptr;
-    audio::AudioInput* input = nullptr;
-    std::int16_t maxSample = 0;
-    std::string deviceID;
+    audio::AudioIO* m_io = nullptr;
+    audio::AudioInput* m_input = nullptr;
+    std::int16_t m_maxSample = 0;
+    std::string m_deviceID;
 };
 
 class PacketSender;
 
 namespace video
 {
-    class VideoPacketSender;
+
+class VideoPacketSender;
+
 } // namespace video
 
 class VoIPController
@@ -229,16 +226,7 @@ public:
     struct Config
     {
         Config(double initTimeout = 30.0, double recvTimeout = 20.0, DataSaving dataSaving = DataSaving::NEVER,
-               bool enableAEC = false, bool enableNS = false, bool enableAGC = false, bool enableCallUpgrade = false)
-        {
-            this->initTimeout = initTimeout;
-            this->recvTimeout = recvTimeout;
-            this->dataSaving = dataSaving;
-            this->enableAEC = enableAEC;
-            this->enableNS = enableNS;
-            this->enableAGC = enableAGC;
-            this->enableCallUpgrade = enableCallUpgrade;
-        }
+               bool enableAEC = false, bool enableNS = false, bool enableAGC = false, bool enableCallUpgrade = false);
 
         double initTimeout;
         double recvTimeout;
@@ -274,35 +262,11 @@ public:
 
     struct PendingOutgoingPacket
     {
-        PendingOutgoingPacket(std::uint32_t seq, std::uint8_t type, std::size_t len, Buffer&& data, std::int64_t endpoint)
-        {
-            this->seq = seq;
-            this->type = type;
-            this->len = len;
-            this->data = std::move(data);
-            this->endpoint = endpoint;
-        }
-        PendingOutgoingPacket(PendingOutgoingPacket&& other)
-        {
-            seq = other.seq;
-            type = other.type;
-            len = other.len;
-            data = std::move(other.data);
-            endpoint = other.endpoint;
-        }
-        PendingOutgoingPacket& operator=(PendingOutgoingPacket&& other)
-        {
-            if (this != &other)
-            {
-                seq = other.seq;
-                type = other.type;
-                len = other.len;
-                data = std::move(other.data);
-                endpoint = other.endpoint;
-            }
-            return *this;
-        }
+        PendingOutgoingPacket(std::uint32_t seq, std::uint8_t type, std::size_t len, Buffer&& data, std::int64_t endpoint);
+        PendingOutgoingPacket(PendingOutgoingPacket&& other);
+        PendingOutgoingPacket& operator=(PendingOutgoingPacket&& other);
         TGVOIP_DISALLOW_COPY_AND_ASSIGN(PendingOutgoingPacket);
+
         std::uint32_t seq;
         std::uint8_t type;
         std::size_t len;
@@ -481,7 +445,7 @@ public:
     /**
      * Load the persistable state. Call this before starting the call.
      */
-    void SetPersistentState(std::vector<std::uint8_t> m_state);
+    void SetPersistentState(const std::vector<std::uint8_t>& m_state);
 
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
     void SetAudioDataCallbacks(std::function<void(std::int16_t*, std::size_t)> input, std::function<void(std::int16_t*, std::size_t)> output, std::function<void(std::int16_t*, std::size_t)> preprocessed);
@@ -499,10 +463,8 @@ public:
     };
     void SetCallbacks(Callbacks m_callbacks);
 
-    float GetOutputLevel()
-    {
-        return 0.0f;
-    }
+    float GetOutputLevel() const;
+
     void SetVideoSource(video::VideoSource* source);
     void SetVideoRenderer(video::VideoRenderer* renderer);
 

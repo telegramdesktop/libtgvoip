@@ -58,18 +58,20 @@ AudioOutputPulse::~AudioOutputPulse()
 
 pa_stream* AudioOutputPulse::CreateAndInitStream()
 {
-    pa_sample_spec sampleSpec {
+    pa_sample_spec sampleSpec
+    {
         .format = PA_SAMPLE_S16LE,
         .rate = 48000,
-        .channels = 1};
+        .channels = 1
+    };
     pa_proplist* proplist = pa_proplist_new();
     pa_proplist_sets(proplist, PA_PROP_FILTER_APPLY, ""); // according to PA sources, this disables any possible filters
     pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip playback", &sampleSpec, nullptr, proplist);
     pa_proplist_free(proplist);
-    if (!stream)
+    if (stream == nullptr)
     {
         LOGE("Error initializing PulseAudio (pa_stream_new)");
-        failed = true;
+        m_failed = true;
         return nullptr;
     }
     pa_stream_set_state_callback(stream, AudioOutputPulse::StreamStateCallback, this);
@@ -79,7 +81,7 @@ pa_stream* AudioOutputPulse::CreateAndInitStream()
 
 void AudioOutputPulse::Start()
 {
-    if (failed || isPlaying)
+    if (m_failed || isPlaying)
         return;
 
     isPlaying = true;
@@ -107,7 +109,7 @@ bool AudioOutputPulse::IsPlaying()
 void AudioOutputPulse::SetCurrentDevice(std::string devID)
 {
     pa_threaded_mainloop_lock(mainloop);
-    currentDevice = devID;
+    m_currentDevice = std::move(devID);
     if (isPlaying && isConnected)
     {
         pa_stream_disconnect(stream);
@@ -116,15 +118,17 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
         stream = CreateAndInitStream();
     }
 
-    pa_buffer_attr bufferAttr = {
-        .maxlength = (std::uint32_t)-1,
+    pa_buffer_attr bufferAttr =
+    {
+        .maxlength = std::numeric_limits<std::uint32_t>::max(),
         .tlength = 960 * 2,
-        .prebuf = (std::uint32_t)-1,
-        .minreq = (std::uint32_t)-1,
-        .fragsize = (std::uint32_t)-1};
+        .prebuf = std::numeric_limits<std::uint32_t>::max(),
+        .minreq = std::numeric_limits<std::uint32_t>::max(),
+        .fragsize = std::numeric_limits<std::uint32_t>::max()
+    };
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
-    int err = pa_stream_connect_playback(stream, devID == "default" ? nullptr : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags, nullptr, nullptr);
+    int err = pa_stream_connect_playback(stream, devID == "default" ? nullptr : devID.c_str(), &bufferAttr, static_cast<pa_stream_flags_t>(streamFlags), nullptr, nullptr);
     if (err != 0 && devID != "default")
     {
         SetCurrentDevice("default");
@@ -138,7 +142,7 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
         if (!PA_STREAM_IS_GOOD(streamState))
         {
             LOGE("Error connecting to audio device '%s'", devID.c_str());
-            failed = true;
+            m_failed = true;
             return;
         }
         if (streamState == PA_STREAM_READY)
@@ -157,12 +161,14 @@ void AudioOutputPulse::SetCurrentDevice(std::string devID)
 
 bool AudioOutputPulse::EnumerateDevices(std::vector<AudioOutputDevice>& devs)
 {
-    return AudioPulse::DoOneOperation([&](pa_context* ctx) {
+    return AudioPulse::DoOneOperation([&](pa_context* ctx)
+    {
         return pa_context_get_sink_info_list(
-            ctx, [](pa_context* ctx, const pa_sink_info* info, int eol, void* userdata) {
+            ctx, [](pa_context* ctx, const pa_sink_info* info, int eol, void* userdata)
+            {
                 if (eol > 0)
                     return;
-                std::vector<AudioOutputDevice>* devs = (std::vector<AudioOutputDevice>*)userdata;
+                std::vector<AudioOutputDevice>* devs = reinterpret_cast<std::vector<AudioOutputDevice>*>(userdata);
                 AudioOutputDevice dev;
                 dev.id = std::string(info->name);
                 dev.displayName = std::string(info->description);
@@ -174,13 +180,13 @@ bool AudioOutputPulse::EnumerateDevices(std::vector<AudioOutputDevice>& devs)
 
 void AudioOutputPulse::StreamStateCallback(pa_stream* s, void* arg)
 {
-    AudioOutputPulse* self = (AudioOutputPulse*)arg;
+    AudioOutputPulse* self = reinterpret_cast<AudioOutputPulse*>(arg);
     pa_threaded_mainloop_signal(self->mainloop, 0);
 }
 
 void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t requestedBytes, void* userdata)
 {
-    ((AudioOutputPulse*)userdata)->StreamWriteCallback(stream, requestedBytes);
+    (reinterpret_cast<AudioOutputPulse*>(userdata))->StreamWriteCallback(stream, requestedBytes);
 }
 
 void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t requestedBytes)
@@ -193,7 +199,7 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t reques
     pa_usec_t latency;
     if (pa_stream_get_latency(stream, &latency, nullptr) == 0)
     {
-        estimatedDelay = (std::int32_t)(latency / 100);
+        m_estimatedDelay = static_cast<std::int32_t>(latency / 100);
     }
     while (requestedBytes > remainingDataSize)
     {

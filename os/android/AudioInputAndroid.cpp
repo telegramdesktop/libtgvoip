@@ -50,7 +50,7 @@ void AudioInputAndroid::Start()
 {
     MutexGuard guard(mutex);
     jni::DoWithJNI([this](JNIEnv* env) {
-        failed = !env->CallBooleanMethod(javaObject, startMethod);
+        m_failed = !env->CallBooleanMethod(javaObject, startMethod);
     });
     running = true;
 }

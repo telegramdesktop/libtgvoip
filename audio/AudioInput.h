@@ -20,26 +20,29 @@ class AudioOutputDevice;
 
 namespace audio
 {
-    class AudioInput : public MediaStreamItf
-    {
-    public:
-        AudioInput();
-        AudioInput(std::string deviceID);
-        virtual ~AudioInput();
 
-        bool IsInitialized();
-        virtual std::string GetCurrentDevice();
-        virtual void SetCurrentDevice(std::string deviceID);
-        //static AudioInput* Create(std::string deviceID, void* platformSpecific);
-        static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
-        static std::int32_t GetEstimatedDelay();
+class AudioInput : public MediaStreamItf
+{
+public:
+    AudioInput();
+    AudioInput(std::string deviceID);
+    virtual ~AudioInput();
 
-    protected:
-        std::string currentDevice;
-        bool failed;
-        static std::int32_t estimatedDelay;
-    };
-}
-}
+    bool IsInitialized();
+    virtual std::string GetCurrentDevice() const;
+    virtual void SetCurrentDevice(std::string deviceID);
+    //static AudioInput* Create(std::string deviceID, void* platformSpecific);
+    static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
+    static std::int32_t GetEstimatedDelay();
 
-#endif //LIBTGVOIP_AUDIOINPUT_H
+protected:
+    std::string m_currentDevice;
+    bool m_failed;
+    static std::int32_t m_estimatedDelay;
+};
+
+} // namespace audio
+
+} // namespace tgvoip
+
+#endif // LIBTGVOIP_AUDIOINPUT_H

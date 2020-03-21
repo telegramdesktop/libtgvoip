@@ -16,11 +16,11 @@ using namespace tgvoip;
 using namespace std;
 
 VoIPGroupController::VoIPGroupController(std::int32_t timeDifference)
+    : m_userSelfID(0)
+    , m_audioMixer(new AudioMixer())
+    , m_timeDifference(timeDifference)
 {
-    m_audioMixer = new AudioMixer();
     std::memset(&m_callbacks, 0, sizeof(m_callbacks));
-    m_userSelfID = 0;
-    this->m_timeDifference = timeDifference;
     LOGV("Created VoIPGroupController; timeDifference=%d", timeDifference);
 }
 
@@ -61,7 +61,7 @@ void VoIPGroupController::SetGroupCallInfo(std::uint8_t* encryptionKey, std::uin
     std::memcpy(this->m_reflectorSelfSecret, reflectorSelfSecret, 16);
     std::memcpy(this->m_reflectorSelfTagHash, reflectorSelfTagHash, 16);
     std::uint8_t sha256[SHA256_LENGTH];
-    crypto.sha256((std::uint8_t*)encryptionKey, 256, sha256);
+    crypto.sha256(encryptionKey, 256, sha256);
     std::memcpy(m_callID, sha256 + (SHA256_LENGTH - 16), 16);
     std::memcpy(m_keyFingerprint, sha256 + (SHA256_LENGTH - 16), 8);
     this->m_userSelfID = selfUserID;
@@ -87,8 +87,7 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint
         if (p->userID == userID)
         {
             LOGE("user %d already added", userID);
-            abort();
-            break;
+            std::abort();
         }
     }
 
@@ -111,11 +110,11 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint
             audioStreamID = s->id;
             s->jitterBuffer = make_shared<JitterBuffer>(nullptr, s->frameDuration);
             if (s->frameDuration > 50)
-                s->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_60", 2));
+                s->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_60", 2)));
             else if (s->frameDuration > 30)
-                s->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_40", 4));
+                s->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_40", 4)));
             else
-                s->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_20", 6));
+                s->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_20", 6)));
             s->callbackWrapper = make_shared<CallbackWrapper>();
             s->decoder = make_shared<OpusDecoder>(s->callbackWrapper, false, false);
             s->decoder->SetJitterBuffer(s->jitterBuffer);
@@ -673,9 +672,9 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
         out.WriteBytes(msgKey, 16);
         //LOGV("<- MSG KEY: %08x %08x %08x %08x, hashed %u", *reinterpret_cast<std::int32_t*>(msgKey), *reinterpret_cast<std::int32_t*>(msgKey+4), *reinterpret_cast<std::int32_t*>(msgKey+8), *reinterpret_cast<std::int32_t*>(msgKey+12), inner.GetLength()-4);
 
-        std::uint8_t aesOut[MSC_STACK_FALLBACK(inner.GetLength(), 1500)];
-        crypto.aes_ige_encrypt(inner.GetBuffer(), aesOut, inner.GetLength(), key, iv);
-        out.WriteBytes(aesOut, inner.GetLength());
+        std::vector<std::uint8_t> aesOut(MSC_STACK_FALLBACK(inner.GetLength(), 1500));
+        crypto.aes_ige_encrypt(inner.GetBuffer(), aesOut.data(), inner.GetLength(), key, iv);
+        out.WriteBytes(aesOut.data(), inner.GetLength());
     }
 
     // relay signature
@@ -697,9 +696,9 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
     m_lastSentSeq = srcPacket.seq;
 
     if (IS_MOBILE_NETWORK(m_networkType))
-        m_stats.bytesSentMobile += (std::uint64_t)out.GetLength();
+        m_stats.bytesSentMobile += static_cast<std::uint64_t>(out.GetLength());
     else
-        m_stats.bytesSentWifi += (std::uint64_t)out.GetLength();
+        m_stats.bytesSentWifi += static_cast<std::uint64_t>(out.GetLength());
 
     /*NetworkPacket pkt={0};
 	pkt.address=(NetworkAddress*)&ep.address;
@@ -718,7 +717,7 @@ void VoIPGroupController::SetCallbacks(VoIPGroupController::Callbacks callbacks)
 
 std::int32_t VoIPGroupController::GetCurrentUnixtime()
 {
-    return time(nullptr) + m_timeDifference;
+    return static_cast<std::int32_t>(time(nullptr)) + m_timeDifference;
 }
 
 float VoIPGroupController::GetParticipantAudioLevel(std::int32_t userID)
@@ -835,7 +834,8 @@ std::string VoIPGroupController::GetDebugString()
             type = "UNKNOWN";
             break;
         }
-        snprintf(buffer, sizeof(buffer), "%s:%u %dms [%s%s]\n", endpoint.address.ToString().c_str(), endpoint.port, (int)(endpoint.m_averageRTT * 1000), type, m_currentEndpoint == endpoint.id ? ", IN_USE" : "");
+        snprintf(buffer, sizeof(buffer), "%s:%u %dms [%s%s]\n", endpoint.address.ToString().c_str(), endpoint.port,
+                 static_cast<int>(endpoint.m_averageRTT * 1000), type, m_currentEndpoint == endpoint.id ? ", IN_USE" : "");
         r += buffer;
     }
     double avgLate[3];
@@ -844,7 +844,9 @@ std::string VoIPGroupController::GetDebugString()
         jitterBuffer->GetAverageLateCount(avgLate);
     else
         std::memset(avgLate, 0, 3 * sizeof(double));
-    snprintf(buffer, sizeof(buffer),
+    snprintf(
+        buffer,
+        sizeof(buffer),
         "RTT avg/min: %d/%d\n"
         "Congestion window: %d/%d bytes\n"
         "Key fingerprint: %02hhX%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX\n"
@@ -852,14 +854,26 @@ std::string VoIPGroupController::GetDebugString()
         "Send/recv losses: %u/%u (%d%%)\n"
         "Audio bitrate: %d kbit\n"
         "Bytes sent/recvd: %llu/%llu\n\n",
-        (int)(m_conctl->GetAverageRTT() * 1000), (int)(m_conctl->GetMinimumRTT() * 1000),
-        int(m_conctl->GetInflightDataSize()), int(m_conctl->GetCongestionWindow()),
-        m_keyFingerprint[0], m_keyFingerprint[1], m_keyFingerprint[2], m_keyFingerprint[3], m_keyFingerprint[4], m_keyFingerprint[5], m_keyFingerprint[6], m_keyFingerprint[7],
-        m_lastSentSeq, m_lastRemoteAckSeq,
-        m_conctl->GetSendLossCount(), m_recvLossCount, m_encoder ? m_encoder->GetPacketLoss() : 0,
+        static_cast<int>(m_conctl->GetAverageRTT() * 1000),
+        static_cast<int>(m_conctl->GetMinimumRTT() * 1000),
+        static_cast<int>(m_conctl->GetInflightDataSize()),
+        static_cast<int>(m_conctl->GetCongestionWindow()),
+        m_keyFingerprint[0],
+        m_keyFingerprint[1],
+        m_keyFingerprint[2],
+        m_keyFingerprint[3],
+        m_keyFingerprint[4],
+        m_keyFingerprint[5],
+        m_keyFingerprint[6],
+        m_keyFingerprint[7],
+        m_lastSentSeq,
+        m_lastRemoteAckSeq,
+        m_conctl->GetSendLossCount(),
+        m_recvLossCount,
+        m_encoder ? m_encoder->GetPacketLoss() : 0,
         m_encoder ? (m_encoder->GetBitrate() / 1000) : 0,
-        (long long unsigned int)(m_stats.bytesSentMobile + m_stats.bytesSentWifi),
-        (long long unsigned int)(m_stats.bytesRecvdMobile + m_stats.bytesRecvdWifi));
+        static_cast<unsigned long long>(m_stats.bytesSentMobile + m_stats.bytesSentWifi),
+        static_cast<unsigned long long>(m_stats.bytesRecvdMobile + m_stats.bytesRecvdWifi));
 
     MutexGuard m(m_participantsMutex);
     for (vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)

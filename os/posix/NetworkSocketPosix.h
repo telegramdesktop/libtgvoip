@@ -77,6 +77,6 @@ private:
     static int GetDescriptorFromSocket(NetworkSocket* socket);
 };
 
-}
+} // namespace tgvoip
 
-#endif //LIBTGVOIP_NETWORKSOCKETPOSIX_H
+#endif // LIBTGVOIP_NETWORKSOCKETPOSIX_H

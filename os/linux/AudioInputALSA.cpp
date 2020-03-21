@@ -37,73 +37,73 @@ using namespace tgvoip::audio;
 
 AudioInputALSA::AudioInputALSA(std::string devID)
 {
-    isRecording = false;
-    handle = nullptr;
+    m_isRecording = false;
+    m_handle = nullptr;
 
-    lib = dlopen("libasound.so.2", RTLD_LAZY);
-    if (!lib)
-        lib = dlopen("libasound.so", RTLD_LAZY);
-    if (!lib)
+    m_lib = dlopen("libasound.so.2", RTLD_LAZY);
+    if (!m_lib)
+        m_lib = dlopen("libasound.so", RTLD_LAZY);
+    if (!m_lib)
     {
         LOGE("Error loading libasound: %s", dlerror());
-        failed = true;
+        m_failed = true;
         return;
     }
 
-    LOAD_FUNCTION(lib, "snd_pcm_open", _snd_pcm_open);
-    LOAD_FUNCTION(lib, "snd_pcm_set_params", _snd_pcm_set_params);
-    LOAD_FUNCTION(lib, "snd_pcm_close", _snd_pcm_close);
-    LOAD_FUNCTION(lib, "snd_pcm_readi", _snd_pcm_readi);
-    LOAD_FUNCTION(lib, "snd_pcm_recover", _snd_pcm_recover);
-    LOAD_FUNCTION(lib, "snd_strerror", _snd_strerror);
+    LOAD_FUNCTION(m_lib, "snd_pcm_open", m_snd_pcm_open);
+    LOAD_FUNCTION(m_lib, "snd_pcm_set_params", m_snd_pcm_set_params);
+    LOAD_FUNCTION(m_lib, "snd_pcm_close", m_snd_pcm_close);
+    LOAD_FUNCTION(m_lib, "snd_pcm_readi", m_snd_pcm_readi);
+    LOAD_FUNCTION(m_lib, "snd_pcm_recover", m_snd_pcm_recover);
+    LOAD_FUNCTION(m_lib, "snd_strerror", m_snd_strerror);
 
     SetCurrentDevice(devID);
 }
 
 AudioInputALSA::~AudioInputALSA()
 {
-    if (handle)
-        _snd_pcm_close(handle);
-    if (lib)
-        dlclose(lib);
+    if (m_handle != nullptr)
+        m_snd_pcm_close(m_handle);
+    if (m_lib != nullptr)
+        dlclose(m_lib);
 }
 
 void AudioInputALSA::Start()
 {
-    if (failed || isRecording)
+    if (m_failed || m_isRecording)
         return;
 
-    isRecording = true;
-    thread = new Thread(std::bind(&AudioInputALSA::RunThread, this));
-    thread->SetName("AudioInputALSA");
-    thread->Start();
+    m_isRecording = true;
+    m_thread = new Thread(std::bind(&AudioInputALSA::RunThread, this));
+    m_thread->SetName("AudioInputALSA");
+    m_thread->Start();
 }
 
 void AudioInputALSA::Stop()
 {
-    if (!isRecording)
+    if (!m_isRecording)
         return;
 
-    isRecording = false;
-    thread->Join();
-    delete thread;
-    thread = nullptr;
+    m_isRecording = false;
+    m_thread->Join();
+    delete m_thread;
+    m_thread = nullptr;
 }
 
 void AudioInputALSA::RunThread()
 {
     std::uint8_t buffer[BUFFER_SIZE * 2];
     snd_pcm_sframes_t frames;
-    while (isRecording)
+    while (m_isRecording)
     {
-        frames = _snd_pcm_readi(handle, buffer, BUFFER_SIZE);
+        frames = m_snd_pcm_readi(m_handle, buffer, BUFFER_SIZE);
         if (frames < 0)
         {
-            frames = _snd_pcm_recover(handle, frames, 0);
+            frames = m_snd_pcm_recover(m_handle, static_cast<int>(frames), 0);
         }
         if (frames < 0)
         {
-            LOGE("snd_pcm_readi failed: %s\n", _snd_strerror(frames));
+            LOGE("snd_pcm_readi failed: %s\n", m_snd_strerror(static_cast<int>(frames)));
             break;
         }
         InvokeCallback(buffer, sizeof(buffer));
@@ -112,27 +112,27 @@ void AudioInputALSA::RunThread()
 
 void AudioInputALSA::SetCurrentDevice(std::string devID)
 {
-    bool wasRecording = isRecording;
-    isRecording = false;
-    if (handle)
+    bool wasRecording = m_isRecording;
+    m_isRecording = false;
+    if (m_handle)
     {
-        thread->Join();
-        _snd_pcm_close(handle);
+        m_thread->Join();
+        m_snd_pcm_close(m_handle);
     }
-    currentDevice = devID;
+    m_currentDevice = devID;
 
-    int res = _snd_pcm_open(&handle, devID.c_str(), SND_PCM_STREAM_CAPTURE, 0);
+    int res = m_snd_pcm_open(&m_handle, devID.c_str(), SND_PCM_STREAM_CAPTURE, 0);
     if (res < 0)
-        res = _snd_pcm_open(&handle, "default", SND_PCM_STREAM_CAPTURE, 0);
+        res = m_snd_pcm_open(&m_handle, "default", SND_PCM_STREAM_CAPTURE, 0);
     CHECK_ERROR(res, "snd_pcm_open failed");
 
-    res = _snd_pcm_set_params(handle, SND_PCM_FORMAT_S16, SND_PCM_ACCESS_RW_INTERLEAVED, 1, 48000, 1, 100000);
+    res = m_snd_pcm_set_params(m_handle, SND_PCM_FORMAT_S16, SND_PCM_ACCESS_RW_INTERLEAVED, 1, 48000, 1, 100000);
     CHECK_ERROR(res, "snd_pcm_set_params failed");
 
     if (wasRecording)
     {
-        isRecording = true;
-        thread->Start();
+        m_isRecording = true;
+        m_thread->Start();
     }
 }
 
@@ -142,14 +142,14 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
     char* (*_snd_device_name_get_hint)(const void* hint, const char* id);
     int (*_snd_device_name_free_hint)(void** hinst);
     void* lib = dlopen("libasound.so.2", RTLD_LAZY);
-    if (!lib)
+    if (lib == nullptr)
         dlopen("libasound.so", RTLD_LAZY);
-    if (!lib)
+    if (lib == nullptr)
         return;
 
-    _snd_device_name_hint = (typeof(_snd_device_name_hint))dlsym(lib, "snd_device_name_hint");
-    _snd_device_name_get_hint = (typeof(_snd_device_name_get_hint))dlsym(lib, "snd_device_name_get_hint");
-    _snd_device_name_free_hint = (typeof(_snd_device_name_free_hint))dlsym(lib, "snd_device_name_free_hint");
+    _snd_device_name_hint = reinterpret_cast<decltype(_snd_device_name_hint)>(dlsym(lib, "snd_device_name_hint"));
+    _snd_device_name_get_hint = reinterpret_cast<decltype(_snd_device_name_get_hint)>(dlsym(lib, "snd_device_name_get_hint"));
+    _snd_device_name_free_hint = reinterpret_cast<decltype(_snd_device_name_free_hint)>(dlsym(lib, "snd_device_name_free_hint"));
 
     if (!_snd_device_name_hint || !_snd_device_name_get_hint || !_snd_device_name_free_hint)
     {
@@ -158,7 +158,7 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
     }
 
     char** hints;
-    int err = _snd_device_name_hint(-1, "pcm", (void***)&hints);
+    int err = _snd_device_name_hint(-1, "pcm", reinterpret_cast<void***>(&hints));
     if (err != 0)
     {
         dlclose(lib);

@@ -229,7 +229,7 @@ void AudioOutputWASAPI::SetCurrentDevice(std::string deviceID)
 
 void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
 {
-    currentDevice = deviceID;
+    m_currentDevice = deviceID;
     HRESULT res;
 
     if (audioClient)
@@ -297,7 +297,7 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     if (!device)
     {
         LOGE("Didn't find playback device; failing");
-        failed = true;
+        m_failed = true;
         return;
     }
 
@@ -353,13 +353,13 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID)
     CHECK_RES(res, "audioClient->GetBufferSize");
 
     LOGV("buffer size: %u", bufSize);
-    estimatedDelay = 0;
+    m_estimatedDelay = 0;
     REFERENCE_TIME latency, devicePeriod;
     if (SUCCEEDED(audioClient->GetStreamLatency(&latency)))
     {
         if (SUCCEEDED(audioClient->GetDevicePeriod(&devicePeriod, nullptr)))
         {
-            estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
+            m_estimatedDelay = (std::int32_t)(latency / 10000 + devicePeriod / 10000);
         }
     }
 

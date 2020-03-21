@@ -191,7 +191,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             }
         }
     }
-    else if ((std::size_t)res != packet.data.Length() && packet.protocol == NetworkProtocol::TCP)
+    else if (static_cast<std::size_t>(res) != packet.data.Length() && packet.protocol == NetworkProtocol::TCP)
     {
         if (!m_pendingOutgoingPacket.IsEmpty())
         {
@@ -380,8 +380,10 @@ void NetworkSocketPosix::Close()
 
 void NetworkSocketPosix::Connect(const NetworkAddress address, std::uint16_t port)
 {
-    struct sockaddr_in v4 = {0};
-    struct sockaddr_in6 v6 = {0};
+    struct sockaddr_in v4;
+    std::memset(&v4, 0, sizeof(v4));
+    struct sockaddr_in6 v6;
+    std::memset(&v6, 0, sizeof(v6));
     struct sockaddr* addr = nullptr;
     std::size_t addrLen = 0;
     if (!address.isIPv6)

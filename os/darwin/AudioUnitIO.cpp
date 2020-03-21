@@ -48,7 +48,7 @@ AudioUnitIO::AudioUnitIO(std::string inputDeviceID, std::string outputDeviceID)
     output = nullptr;
     inputEnabled = false;
     outputEnabled = false;
-    failed = false;
+    m_failed = false;
     started = false;
     inBufferList.mBuffers[0].mData = std::malloc(INPUT_BUFFER_SIZE);
     inBufferList.mBuffers[0].mDataByteSize = INPUT_BUFFER_SIZE;

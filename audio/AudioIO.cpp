@@ -84,12 +84,20 @@ AudioIO* AudioIO::Create(std::string inputDevice, std::string outputDevice)
 #endif
 }
 
+AudioIO::AudioIO()
+{
+}
+
+AudioIO::~AudioIO()
+{
+}
+
 bool AudioIO::Failed()
 {
-    return failed;
+    return m_failed;
 }
 
 std::string AudioIO::GetErrorDescription()
 {
-    return error;
+    return m_error;
 }

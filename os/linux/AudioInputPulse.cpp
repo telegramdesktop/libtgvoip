@@ -28,32 +28,30 @@
 using namespace tgvoip::audio;
 
 AudioInputPulse::AudioInputPulse(pa_context* context, pa_threaded_mainloop* mainloop, std::string devID)
+    : mainloop(mainloop)
+    , context(context)
+    , stream(nullptr)
+    , isRecording(false)
+    , isConnected(false)
+    , didStart(false)
+    , remainingDataSize(0)
 {
-    isRecording = false;
-    isConnected = false;
-    didStart = false;
-
-    this->mainloop = mainloop;
-    this->context = context;
-    stream = nullptr;
-    remainingDataSize = 0;
-
     pa_threaded_mainloop_lock(mainloop);
 
     stream = CreateAndInitStream();
     pa_threaded_mainloop_unlock(mainloop);
     isLocked = false;
-    if (!stream)
+    if (stream == nullptr)
     {
         return;
     }
 
-    SetCurrentDevice(devID);
+    SetCurrentDevice(std::move(devID));
 }
 
 AudioInputPulse::~AudioInputPulse()
 {
-    if (stream)
+    if (stream != nullptr)
     {
         pa_stream_disconnect(stream);
         pa_stream_unref(stream);
@@ -62,10 +60,12 @@ AudioInputPulse::~AudioInputPulse()
 
 pa_stream* AudioInputPulse::CreateAndInitStream()
 {
-    pa_sample_spec sampleSpec {
+    pa_sample_spec sampleSpec
+    {
         .format = PA_SAMPLE_S16LE,
         .rate = 48000,
-        .channels = 1};
+        .channels = 1
+    };
     pa_proplist* proplist = pa_proplist_new();
     pa_proplist_sets(proplist, PA_PROP_FILTER_APPLY, ""); // according to PA sources, this disables any possible filters
     pa_stream* stream = pa_stream_new_with_proplist(context, "libtgvoip capture", &sampleSpec, nullptr, proplist);
@@ -73,7 +73,7 @@ pa_stream* AudioInputPulse::CreateAndInitStream()
     if (!stream)
     {
         LOGE("Error initializing PulseAudio (pa_stream_new)");
-        failed = true;
+        m_failed = true;
         return nullptr;
     }
     pa_stream_set_state_callback(stream, AudioInputPulse::StreamStateCallback, this);
@@ -83,7 +83,7 @@ pa_stream* AudioInputPulse::CreateAndInitStream()
 
 void AudioInputPulse::Start()
 {
-    if (failed || isRecording)
+    if (m_failed || isRecording)
         return;
 
     pa_threaded_mainloop_lock(mainloop);
@@ -111,7 +111,7 @@ bool AudioInputPulse::IsRecording()
 void AudioInputPulse::SetCurrentDevice(std::string devID)
 {
     pa_threaded_mainloop_lock(mainloop);
-    currentDevice = devID;
+    m_currentDevice = std::move(devID);
     if (isRecording && isConnected)
     {
         pa_stream_disconnect(stream);
@@ -120,15 +120,17 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
         stream = CreateAndInitStream();
     }
 
-    pa_buffer_attr bufferAttr = {
+    pa_buffer_attr bufferAttr =
+    {
         .maxlength = (std::uint32_t)-1,
         .tlength = (std::uint32_t)-1,
         .prebuf = (std::uint32_t)-1,
         .minreq = (std::uint32_t)-1,
-        .fragsize = 960 * 2};
+        .fragsize = 960 * 2
+    };
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
 
-    int err = pa_stream_connect_record(stream, devID == "default" ? nullptr : devID.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags);
+    int err = pa_stream_connect_record(stream, m_currentDevice == "default" ? nullptr : m_currentDevice.c_str(), &bufferAttr, (pa_stream_flags_t)streamFlags);
     if (err != 0)
     {
         pa_threaded_mainloop_unlock(mainloop);
@@ -144,9 +146,9 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
         pa_stream_state_t streamState = pa_stream_get_state(stream);
         if (!PA_STREAM_IS_GOOD(streamState))
         {
-            LOGE("Error connecting to audio device '%s'", devID.c_str());
+            LOGE("Error connecting to audio device '%s'", m_currentDevice.c_str());
             pa_threaded_mainloop_unlock(mainloop);
-            failed = true;
+            m_failed = true;
             return;
         }
         if (streamState == PA_STREAM_READY)
@@ -165,12 +167,14 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
 
 bool AudioInputPulse::EnumerateDevices(std::vector<AudioInputDevice>& devs)
 {
-    return AudioPulse::DoOneOperation([&](pa_context* ctx) {
+    return AudioPulse::DoOneOperation([&](pa_context* ctx)
+    {
         return pa_context_get_source_info_list(
-            ctx, [](pa_context* ctx, const pa_source_info* info, int eol, void* userdata) {
+            ctx, [](pa_context* ctx, const pa_source_info* info, int eol, void* userdata)
+            {
                 if (eol > 0)
                     return;
-                std::vector<AudioInputDevice>* devs = (std::vector<AudioInputDevice>*)userdata;
+                std::vector<AudioInputDevice>* devs = reinterpret_cast<std::vector<AudioInputDevice>*>userdata;
                 AudioInputDevice dev;
                 dev.id = std::string(info->name);
                 dev.displayName = std::string(info->description);
@@ -188,7 +192,7 @@ void AudioInputPulse::StreamStateCallback(pa_stream* s, void* arg)
 
 void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requestedBytes, void* userdata)
 {
-    ((AudioInputPulse*)userdata)->StreamReadCallback(stream, requestedBytes);
+    (reinterpret_cast<AudioInputPulse*>(userdata))->StreamReadCallback(stream, requestedBytes);
 }
 
 void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requestedBytes)
@@ -198,7 +202,7 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
     pa_usec_t latency;
     if (pa_stream_get_latency(stream, &latency, nullptr) == 0)
     {
-        estimatedDelay = (std::int32_t)(latency / 100);
+        m_estimatedDelay = (std::int32_t)(latency / 100);
     }
     while (bytesRemaining > 0)
     {
@@ -207,14 +211,14 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
         if (bytesToFill > bytesRemaining)
             bytesToFill = bytesRemaining;
 
-        int err = pa_stream_peek(stream, (const void**)&buffer, &bytesToFill);
+        int err = pa_stream_peek(stream, reinterpret_cast<void**>(&buffer), &bytesToFill);
         CHECK_ERROR(err, "pa_stream_peek");
 
         if (isRecording)
         {
             if (remainingDataSize + bytesToFill > sizeof(remainingData))
             {
-                LOGE("Capture buffer is too big (%d)", (int)bytesToFill);
+                LOGE("Capture buffer is too big (%d)", static_cast<int>(bytesToFill));
             }
             std::memcpy(remainingData + remainingDataSize, buffer, bytesToFill);
             remainingDataSize += bytesToFill;
