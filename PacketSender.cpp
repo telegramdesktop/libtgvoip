@@ -11,7 +11,7 @@ PacketSender::~PacketSender()
 {
 }
 
-void PacketSender::SendExtra(Buffer& data, std::uint8_t type) const
+void PacketSender::SendExtra(Buffer& data, ExtraType type) const
 {
     m_controller->SendExtra(data, type);
 }

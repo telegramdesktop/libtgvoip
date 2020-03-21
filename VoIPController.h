@@ -100,6 +100,17 @@ enum class PktType : std::uint8_t
     STREAM_EC,
 };
 
+enum class ExtraType : std::uint8_t
+{
+    STREAM_FLAGS = 1,
+    STREAM_CSD,
+    LAN_ENDPOINT,
+    NETWORK_CHANGED,
+    GROUP_CALL_KEY,
+    REQUEST_GROUP,
+    IPV6_ENDPOINT,
+};
+
 enum class StreamType : std::uint8_t
 {
     AUDIO = 1,
@@ -542,7 +553,7 @@ protected:
     virtual void SendUdpPing(Endpoint& endpoint);
     virtual void SendRelayPings();
     virtual void OnAudioOutputReady();
-    virtual void SendExtra(Buffer& data, std::uint8_t type);
+    virtual void SendExtra(Buffer& data, ExtraType type);
     void SendStreamFlags(Stream& stream);
     void InitializeTimers();
     void ResetEndpointPingStats();
@@ -560,7 +571,7 @@ private:
 
     struct UnacknowledgedExtraData
     {
-        std::uint8_t type;
+        ExtraType type;
         Buffer data;
         std::uint32_t firstContainingSeq;
     };
@@ -757,7 +768,7 @@ private:
     bool m_setCurrentEndpointToTCP;
 
     std::vector<UnacknowledgedExtraData> m_currentExtras;
-    std::unordered_map<std::uint8_t, std::uint64_t> m_lastReceivedExtrasByType;
+    std::unordered_map<ExtraType, std::uint64_t> m_lastReceivedExtrasByType;
 
     bool m_useIPv6;
     bool m_peerIPv6Available;

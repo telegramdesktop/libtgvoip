@@ -23,7 +23,7 @@ public:
 protected:
     VoIPController* m_controller;
 
-    void SendExtra(Buffer& data, std::uint8_t type) const;
+    void SendExtra(Buffer& data, ExtraType type) const;
     void IncrementUnsentStreamPackets();
     std::uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt);
     double GetConnectionInitTime() const;

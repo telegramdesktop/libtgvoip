@@ -531,7 +531,7 @@ void VoIPController::SetNetworkType(NetType type)
             else
             {
                 Buffer buf(std::move(s));
-                SendExtra(buf, EXTRA_TYPE_NETWORK_CHANGED);
+                SendExtra(buf, ExtraType::NETWORK_CHANGED);
             }
             m_needReInitUdpProxy = true;
             m_selectCanceller->CancelSelect();
@@ -993,7 +993,7 @@ void VoIPController::SendGroupCallKey(std::uint8_t* key)
             return;
         }
         m_didSendGroupCallKey = true;
-        SendExtra(*keyPtr, EXTRA_TYPE_GROUP_CALL_KEY);
+        SendExtra(*keyPtr, ExtraType::GROUP_CALL_KEY);
     });
 }
 
@@ -1017,7 +1017,7 @@ void VoIPController::RequestCallUpgrade()
         }
         m_didSendUpgradeRequest = true;
         Buffer empty(0);
-        SendExtra(empty, EXTRA_TYPE_REQUEST_GROUP);
+        SendExtra(empty, ExtraType::REQUEST_GROUP);
     });
 }
 
@@ -1273,7 +1273,7 @@ void VoIPController::SendStreamFlags(Stream& stream)
     s.WriteInt32(flags);
     LOGV("My stream state: id %u flags %u", stream.id, flags);
     Buffer buf(std::move(s));
-    SendExtra(buf, EXTRA_TYPE_STREAM_FLAGS);
+    SendExtra(buf, ExtraType::STREAM_FLAGS);
 }
 
 std::shared_ptr<VoIPController::Stream> VoIPController::GetStreamByType(StreamType type, bool outgoing)
@@ -1659,10 +1659,10 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
             s->WriteUInt8(static_cast<std::uint8_t>(m_currentExtras.size()));
             for (std::vector<UnacknowledgedExtraData>::iterator x = m_currentExtras.begin(); x != m_currentExtras.end(); ++x)
             {
-                LOGV("Writing extra into header: type %u, length %d", x->type, static_cast<int>(x->data.Length()));
+                LOGV("Writing extra into header: type %u, length %d", static_cast<std::uint8_t>(x->type), static_cast<int>(x->data.Length()));
                 assert(x->data.Length() <= 254);
                 s->WriteUInt8(static_cast<std::uint8_t>(x->data.Length() + 1));
-                s->WriteUInt8(x->type);
+                s->WriteUInt8(static_cast<std::uint8_t>(x->type));
                 s->WriteBytes(*x->data, x->data.Length());
                 if (x->firstContainingSeq == 0)
                     x->firstContainingSeq = pseq;
@@ -1764,10 +1764,10 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
                     s->WriteUInt8(static_cast<std::uint8_t>(m_currentExtras.size()));
                     for (std::vector<UnacknowledgedExtraData>::iterator x = m_currentExtras.begin(); x != m_currentExtras.end(); ++x)
                     {
-                        LOGV("Writing extra into header: type %u, length %d", x->type, static_cast<int>(x->data.Length()));
+                        LOGV("Writing extra into header: type %u, length %d", static_cast<std::uint8_t>(x->type), static_cast<int>(x->data.Length()));
                         assert(x->data.Length() <= 254);
                         s->WriteUInt8(static_cast<std::uint8_t>(x->data.Length() + 1));
-                        s->WriteUInt8(x->type);
+                        s->WriteUInt8(static_cast<std::uint8_t>(x->type));
                         s->WriteBytes(*x->data, x->data.Length());
                         if (x->firstContainingSeq == 0)
                             x->firstContainingSeq = pseq;
@@ -2245,7 +2245,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                             o.WriteBytes(myIP, 16);
                             o.WriteUInt16(m_udpSocket->GetLocalPort());
                             Buffer b(std::move(o));
-                            SendExtra(b, EXTRA_TYPE_IPV6_ENDPOINT);
+                            SendExtra(b, ExtraType::IPV6_ENDPOINT);
                         }
                     }
                 }
@@ -2297,7 +2297,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                         else
                         {
                             Buffer buf(std::move(pkt));
-                            SendExtra(buf, EXTRA_TYPE_LAN_ENDPOINT);
+                            SendExtra(buf, ExtraType::LAN_ENDPOINT);
                         }
                     }
                     m_waitingForRelayPeerInfo = false;
@@ -2663,7 +2663,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             {
                 if (x->firstContainingSeq != 0 && (m_lastRemoteAckSeq == x->firstContainingSeq || seqgt(m_lastRemoteAckSeq, x->firstContainingSeq)))
                 {
-                    LOGV("Peer acknowledged extra type %u length %u", x->type, static_cast<unsigned int>(x->data.Length()));
+                    LOGV("Peer acknowledged extra type %u length %u", static_cast<std::uint8_t>(x->type), static_cast<unsigned int>(x->data.Length()));
                     ProcessAcknowledgedOutgoingExtra(*x);
                     x = m_currentExtras.erase(x);
                     continue;
@@ -3210,7 +3210,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
 void VoIPController::ProcessExtraData(Buffer& data)
 {
     BufferInputStream in(*data, data.Length());
-    std::uint8_t type = in.ReadUInt8();
+    ExtraType type = static_cast<ExtraType>(in.ReadUInt8());
     std::uint8_t fullHash[SHA1_LENGTH];
     crypto.sha1(*data, data.Length(), fullHash);
     std::uint64_t hash = *reinterpret_cast<std::uint64_t*>(fullHash);
@@ -3220,7 +3220,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
     }
     LOGE("ProcessExtraData");
     m_lastReceivedExtrasByType[type] = hash;
-    if (type == EXTRA_TYPE_STREAM_FLAGS)
+    switch (type)
+    {
+    case ExtraType::STREAM_FLAGS:
     {
         std::uint8_t id = in.ReadUInt8();
         std::uint32_t flags = in.ReadUInt32();
@@ -3259,8 +3261,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
                 break;
             }
         }
+        break;
     }
-    else if (type == EXTRA_TYPE_STREAM_CSD)
+    case ExtraType::STREAM_CSD:
     {
         LOGI("Received codec specific data");
         /*
@@ -3272,7 +3275,7 @@ void VoIPController::ProcessExtraData(Buffer& data)
 			os.WriteBytes(b);
 		}
 		Buffer buf(move(os));
-		SendExtra(buf, EXTRA_TYPE_STREAM_CSD);
+        SendExtra(buf, ExtraType::STREAM_CSD);
 		 */
         std::uint8_t streamID = in.ReadUInt8();
         for (std::shared_ptr<Stream>& stm : m_incomingStreams)
@@ -3294,8 +3297,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
                 break;
             }
         }
+        break;
     }
-    else if (type == EXTRA_TYPE_LAN_ENDPOINT)
+    case ExtraType::LAN_ENDPOINT:
     {
         if (!m_allowP2p)
             return;
@@ -3310,8 +3314,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
         Endpoint lan(lanID, peerPort, NetworkAddress::IPv4(peerAddr), NetworkAddress::Empty(), Endpoint::Type::UDP_P2P_LAN, peerTag);
         MutexGuard m(m_endpointsMutex);
         m_endpoints[lanID] = lan;
+        break;
     }
-    else if (type == EXTRA_TYPE_NETWORK_CHANGED)
+    case ExtraType::NETWORK_CHANGED:
     {
         LOGI("Peer network changed");
         m_wasNetworkHandover = true;
@@ -3325,8 +3330,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
         UpdateDataSavingState();
         UpdateAudioBitrateLimit();
         ResetEndpointPingStats();
+        break;
     }
-    else if (type == EXTRA_TYPE_GROUP_CALL_KEY)
+    case ExtraType::GROUP_CALL_KEY:
     {
         if (!m_didReceiveGroupCallKey && !m_didSendGroupCallKey)
         {
@@ -3338,8 +3344,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
             });
             m_didReceiveGroupCallKey = true;
         }
+        break;
     }
-    else if (type == EXTRA_TYPE_REQUEST_GROUP)
+    case ExtraType::REQUEST_GROUP:
     {
         if (!m_didInvokeUpgradeCallback)
         {
@@ -3349,8 +3356,9 @@ void VoIPController::ProcessExtraData(Buffer& data)
             });
             m_didInvokeUpgradeCallback = true;
         }
+        break;
     }
-    else if (type == EXTRA_TYPE_IPV6_ENDPOINT)
+    case ExtraType::IPV6_ENDPOINT:
     {
         if (!m_allowP2p)
             return;
@@ -3371,12 +3379,14 @@ void VoIPController::ProcessExtraData(Buffer& data)
         m_endpoints[p2pID] = ep;
         if (!m_myIPv6.IsEmpty())
             m_currentEndpoint = p2pID;
+        break;
+    }
     }
 }
 
 void VoIPController::ProcessAcknowledgedOutgoingExtra(UnacknowledgedExtraData& extra)
 {
-    if (extra.type == EXTRA_TYPE_GROUP_CALL_KEY)
+    if (extra.type == ExtraType::GROUP_CALL_KEY)
     {
         if (!m_didReceiveGroupCallKeyAck)
         {
@@ -3893,11 +3903,11 @@ void VoIPController::SendPacketReliably(PktType type, std::uint8_t* data, std::s
     }
 }
 
-void VoIPController::SendExtra(Buffer& data, std::uint8_t type)
+void VoIPController::SendExtra(Buffer& data, ExtraType type)
 {
     ENFORCE_MSG_THREAD;
 
-    LOGV("Sending extra type %u length %u", type, static_cast<unsigned int>(data.Length()));
+    LOGV("Sending extra type %u length %u", static_cast<std::uint8_t>(type), static_cast<unsigned int>(data.Length()));
     for (std::vector<UnacknowledgedExtraData>::iterator x = m_currentExtras.begin(); x != m_currentExtras.end(); ++x)
     {
         if (x->type == type)
@@ -4486,7 +4496,7 @@ void VoIPController::UpdateAudioBitrate()
                     else
                     {
                         Buffer buf(std::move(s));
-                        SendExtra(buf, EXTRA_TYPE_NETWORK_CHANGED);
+                        SendExtra(buf, ExtraType::NETWORK_CHANGED);
                     }
                     m_lastRecvPacketTime = time;
                 }

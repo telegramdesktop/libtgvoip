@@ -19,9 +19,6 @@
 #define STREAM_DATA_XFLAG_FRAGMENTED (1 << 14)
 #define STREAM_DATA_XFLAG_EXTRA_FEC (1 << 13)
 
-//#define StreamType::AUDIO 1
-//#define StreamType::VIDEO 2
-
 #define FOURCC(a, b, c, d) \
     (                                      \
         (static_cast<std::uint32_t>(d) <<  0) | \
@@ -54,14 +51,6 @@
 
 #define XPFLAG_HAS_EXTRA 1
 #define XPFLAG_HAS_RECV_TS 2
-
-#define EXTRA_TYPE_STREAM_FLAGS 1
-#define EXTRA_TYPE_STREAM_CSD 2
-#define EXTRA_TYPE_LAN_ENDPOINT 3
-#define EXTRA_TYPE_NETWORK_CHANGED 4
-#define EXTRA_TYPE_GROUP_CALL_KEY 5
-#define EXTRA_TYPE_REQUEST_GROUP 6
-#define EXTRA_TYPE_IPV6_ENDPOINT 7
 
 #define STREAM_FLAG_ENABLED 1
 #define STREAM_FLAG_DTX 2
