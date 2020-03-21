@@ -140,6 +140,18 @@ enum class DataSaving
     ALWAYS,
 };
 
+enum class InitVideoRes : std::uint8_t
+{
+    NONE = 0,
+    _240,
+    _360,
+    _480,
+    _720,
+    _1080,
+    _1440,
+    _4K,
+};
+
 struct CryptoFunctions
 {
     void (*rand_bytes)(std::uint8_t* buffer, std::size_t length);
@@ -337,7 +349,7 @@ public:
     struct ProtocolInfo
     {
         std::uint32_t version;
-        std::uint32_t maxVideoResolution;
+        InitVideoRes maxVideoResolution;
         std::vector<std::uint32_t> videoDecoders;
         bool videoCaptureSupported;
         bool videoDisplaySupported;
@@ -827,7 +839,7 @@ private:
     ProtocolInfo m_protocolInfo =
     {
         .version = 0,
-        .maxVideoResolution = 0,
+        .maxVideoResolution = InitVideoRes::NONE,
         .videoDecoders = {},
         .videoCaptureSupported = false,
         .videoDisplaySupported = false,

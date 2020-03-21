@@ -2773,7 +2773,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 char* _id = reinterpret_cast<char*>(&id);
                 LOGD("%c%c%c%c", _id[3], _id[2], _id[1], _id[0]);
             }
-            m_protocolInfo.maxVideoResolution = in.ReadUInt8();
+            m_protocolInfo.maxVideoResolution = static_cast<InitVideoRes>(in.ReadUInt8());
 
             SetupOutgoingVideoStream();
         }

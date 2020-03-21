@@ -49,7 +49,7 @@ private:
     };
 
     void SendFrame(const Buffer& frame, std::uint32_t flags, std::uint32_t rotation);
-    std::uint32_t GetVideoResolutionForCurrentBitrate();
+    InitVideoRes GetVideoResolutionForCurrentBitrate();
 
     VideoSource* m_source = nullptr;
     std::shared_ptr<VoIPController::Stream> m_stm;

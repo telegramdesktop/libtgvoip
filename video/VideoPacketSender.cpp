@@ -333,10 +333,10 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
     });
 }
 
-std::uint32_t VideoPacketSender::GetVideoResolutionForCurrentBitrate()
+InitVideoRes VideoPacketSender::GetVideoResolutionForCurrentBitrate()
 {
-    std::uint32_t peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
-    std::uint32_t resolutionFromBitrate = INIT_VIDEO_RES_1080;
+    InitVideoRes peerMaxVideoResolution = GetProtocolInfo().maxVideoResolution;
+    InitVideoRes resolutionFromBitrate = InitVideoRes::_1080;
     if (VoIPController::GetCurrentTime() - m_sourceChangeTime > 10.0)
     {
         // TODO: probably move this to server config
@@ -344,43 +344,44 @@ std::uint32_t VideoPacketSender::GetVideoResolutionForCurrentBitrate()
         {
             if (m_currentVideoBitrate > 400000)
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_720;
+                resolutionFromBitrate = InitVideoRes::_720;
             }
             else if (m_currentVideoBitrate > 250000)
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_480;
+                resolutionFromBitrate = InitVideoRes::_480;
             }
             else
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_360;
+                resolutionFromBitrate = InitVideoRes::_360;
             }
         }
         else if (m_stm->codec == CODEC_HEVC || m_stm->codec == CODEC_VP9)
         {
             if (m_currentVideoBitrate > 400000)
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_1080;
+                resolutionFromBitrate = InitVideoRes::_1080;
             }
             else if (m_currentVideoBitrate > 250000)
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_720;
+                resolutionFromBitrate = InitVideoRes::_720;
             }
             else if (m_currentVideoBitrate > 100000)
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_480;
+                resolutionFromBitrate = InitVideoRes::_480;
             }
             else
             {
-                resolutionFromBitrate = INIT_VIDEO_RES_360;
+                resolutionFromBitrate = InitVideoRes::_360;
             }
         }
     }
     else
     {
         if (m_stm->codec == CODEC_AVC || m_stm->codec == CODEC_VP8)
-            resolutionFromBitrate = INIT_VIDEO_RES_720;
+            resolutionFromBitrate = InitVideoRes::_720;
         else if (m_stm->codec == CODEC_HEVC || m_stm->codec == CODEC_VP9)
-            resolutionFromBitrate = INIT_VIDEO_RES_1080;
+            resolutionFromBitrate = InitVideoRes::_1080;
     }
-    return std::min(peerMaxVideoResolution, resolutionFromBitrate);
+    return static_cast<InitVideoRes>(std::min(static_cast<std::uint8_t>(peerMaxVideoResolution),
+                                              static_cast<std::uint8_t>(resolutionFromBitrate)));
 }
