@@ -5,24 +5,6 @@
 #ifndef TGVOIP_PRIVATEDEFINES_H
 #define TGVOIP_PRIVATEDEFINES_H
 
-#define PKT_INIT 1
-#define PKT_INIT_ACK 2
-#define PKT_STREAM_STATE 3
-#define PKT_STREAM_DATA 4
-#define PKT_UPDATE_STREAMS 5
-#define PKT_PING 6
-#define PKT_PONG 7
-#define PKT_STREAM_DATA_X2 8
-#define PKT_STREAM_DATA_X3 9
-#define PKT_LAN_ENDPOINT 10
-#define PKT_NETWORK_CHANGED 11
-#define PKT_SWITCH_PREF_RELAY 12
-#define PKT_SWITCH_TO_P2P 13
-#define PKT_NOP 14
-//#define PKT_GROUP_CALL_KEY 15		// replaced with 'extra' in 2.1 (protocol v6)
-//#define PKT_REQUEST_GROUP 16
-#define PKT_STREAM_EC 17
-
 #define IS_MOBILE_NETWORK(x) (x == NetType::GPRS || x == NetType::EDGE || x == NetType::THREE_G || x == NetType::HSPA || x == NetType::LTE || x == NetType::OTHER_MOBILE)
 
 #define PROTOCOL_NAME 0x50567247 // "GrVP" in little endian (reversed here)

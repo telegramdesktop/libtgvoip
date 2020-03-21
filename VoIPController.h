@@ -79,6 +79,27 @@ enum class Error
     PROXY,
 };
 
+enum class PktType : std::uint8_t
+{
+    INIT = 1,
+    INIT_ACK,
+    STREAM_STATE,
+    STREAM_DATA,
+    UPDATE_STREAMS,
+    PING,
+    PONG,
+    STREAM_DATA_X2,
+    STREAM_DATA_X3,
+    LAN_ENDPOINT,
+    NETWORK_CHANGED,
+    SWITCH_PREF_RELAY,
+    SWITCH_TO_P2P,
+    NOP,
+//    GROUP_CALL_KEY,		// replaced with 'extra' in 2.1 (protocol v6)
+//    REQUEST_GROUP,
+    STREAM_EC,
+};
+
 enum class NetType
 {
     UNKNOWN = 0,
@@ -262,13 +283,13 @@ public:
 
     struct PendingOutgoingPacket
     {
-        PendingOutgoingPacket(std::uint32_t seq, std::uint8_t type, std::size_t len, Buffer&& data, std::int64_t endpoint);
+        PendingOutgoingPacket(std::uint32_t seq, PktType type, std::size_t len, Buffer&& data, std::int64_t endpoint);
         PendingOutgoingPacket(PendingOutgoingPacket&& other);
         PendingOutgoingPacket& operator=(PendingOutgoingPacket&& other);
         TGVOIP_DISALLOW_COPY_AND_ASSIGN(PendingOutgoingPacket);
 
         std::uint32_t seq;
-        std::uint8_t type;
+        PktType type;
         std::size_t len;
         Buffer data;
         std::int64_t endpoint;
@@ -490,7 +511,7 @@ protected:
         std::uint16_t id; // for group calls only
         double sendTime;
         double ackTime;
-        std::uint8_t type;
+        PktType type;
         std::uint32_t size;
         PacketSender* sender;
         bool lost;
@@ -499,7 +520,7 @@ protected:
     struct QueuedPacket
     {
         Buffer data;
-        std::uint8_t type;
+        PktType type;
         HistoricBuffer<std::uint32_t, 16> seqs;
         double firstSentTime;
         double lastSentTime;
@@ -509,7 +530,7 @@ protected:
 
     virtual void ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcEndpoint);
     virtual void ProcessExtraData(Buffer& data);
-    virtual void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, std::uint8_t type, std::uint32_t length, PacketSender* source);
+    virtual void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, PktType type, std::uint32_t length, PacketSender* source);
     virtual void SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket);
     virtual void SendInit();
     virtual void SendUdpPing(Endpoint& endpoint);
@@ -581,7 +602,7 @@ private:
     void SendPublicEndpointsRequest();
     void SendPublicEndpointsRequest(const Endpoint& relay);
     Endpoint& GetEndpointByType(Endpoint::Type type);
-    void SendPacketReliably(std::uint8_t type, std::uint8_t* data, std::size_t len, double retryInterval, double timeout);
+    void SendPacketReliably(PktType type, std::uint8_t* data, std::size_t len, double retryInterval, double timeout);
     std::uint32_t GenerateOutSeq();
     void ActuallySendPacket(NetworkPacket pkt, Endpoint& ep);
     void InitializeAudio();
@@ -599,7 +620,7 @@ private:
     void SendNopPacket();
     void TickJitterBufferAndCongestionControl();
     void ResetUdpAvailability();
-    std::string GetPacketTypeString(std::uint8_t type);
+    std::string GetPacketTypeString(PktType type);
     void SetupOutgoingVideoStream();
     bool WasOutgoingPacketAcknowledged(std::uint32_t m_seq);
     RecentOutgoingPacket* GetRecentOutgoingPacket(std::uint32_t m_seq);
@@ -862,7 +883,7 @@ protected:
     void SendUdpPing(Endpoint& endpoint) override;
     void SendRelayPings() override;
     void SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket) override;
-    void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, std::uint8_t type,
+    void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, PktType type,
                            std::uint32_t length, PacketSender* sender = nullptr) override;
     void OnAudioOutputReady() override;
 

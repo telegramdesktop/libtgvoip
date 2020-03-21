@@ -445,18 +445,18 @@ void VoIPGroupController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint&
 	unsigned char type=(unsigned char) ((flags >> 24) & 0xFF);
 	lastRecvPacketTime=GetCurrentTime();
 
-	if(type==PKT_STREAM_DATA || type==PKT_STREAM_DATA_X2 || type==PKT_STREAM_DATA_X3){
+	if(type==PktType::STREAM_DATA || type==PktType::STREAM_DATA_X2 || type==PktType::STREAM_DATA_X3){
 		if(state!=State::ESTABLISHED && receivedInitAck)
 			SetState(State::ESTABLISHED);
 		int count;
 		switch(type){
-			case PKT_STREAM_DATA_X2:
+			case PktType::STREAM_DATA_X2:
 				count=2;
 				break;
-			case PKT_STREAM_DATA_X3:
+			case PktType::STREAM_DATA_X3:
 				count=3;
 				break;
-			case PKT_STREAM_DATA:
+			case PktType::STREAM_DATA:
 			default:
 				count=1;
 				break;
@@ -592,7 +592,7 @@ void VoIPGroupController::OnAudioOutputReady()
     m_encoder->SetLevelMeter(&m_selfLevelMeter);
 }
 
-void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, std::uint8_t type, std::uint32_t length, PacketSender* source)
+void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, PktType type, std::uint32_t length, PacketSender* source)
 {
     s->WriteUInt32(TLID_DECRYPTED_AUDIO_BLOCK);
     std::int64_t randomID;
@@ -608,7 +608,7 @@ void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStrea
     pflags |= static_cast<std::uint32_t>(type) << 24;
     s->WriteUInt32(pflags);
 
-    if (type == PKT_STREAM_DATA || type == PKT_STREAM_DATA_X2 || type == PKT_STREAM_DATA_X3)
+    if (type == PktType::STREAM_DATA || type == PktType::STREAM_DATA_X2 || type == PktType::STREAM_DATA_X3)
     {
         m_conctl->PacketSent(seq, length);
     }
@@ -684,7 +684,7 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
     out.Rewind(16);
     out.WriteBytes(sig, 16);
 
-    if (srcPacket.type == PKT_STREAM_DATA || srcPacket.type == PKT_STREAM_DATA_X2 || srcPacket.type == PKT_STREAM_DATA_X3)
+    if (srcPacket.type == PktType::STREAM_DATA || srcPacket.type == PktType::STREAM_DATA_X2 || srcPacket.type == PktType::STREAM_DATA_X3)
     {
         PacketIdMapping mapping = {srcPacket.seq, *reinterpret_cast<std::uint16_t*>(sig + 14), 0};
         MutexGuard m(m_sentPacketsMutex);

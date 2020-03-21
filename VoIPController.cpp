@@ -285,7 +285,7 @@ VoIPController::Config::Config(double initTimeout, double recvTimeout, DataSavin
 {
 }
 
-VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(std::uint32_t seq, std::uint8_t type, std::size_t len, Buffer&& data, std::int64_t endpoint)
+VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(std::uint32_t seq, PktType type, std::size_t len, Buffer&& data, std::int64_t endpoint)
     : seq(seq)
     , type(type)
     , len(len)
@@ -526,7 +526,7 @@ void VoIPController::SetNetworkType(NetType type)
             s.WriteInt32(m_dataSavingMode ? INIT_FLAG_DATA_SAVING_ENABLED : 0);
             if (m_peerVersion < 6)
             {
-                SendPacketReliably(PKT_NETWORK_CHANGED, s.GetBuffer(), s.GetLength(), 1, 20);
+                SendPacketReliably(PktType::NETWORK_CHANGED, s.GetBuffer(), s.GetLength(), 1, 20);
             }
             else
             {
@@ -605,7 +605,7 @@ void VoIPController::SetMicMute(bool mute)
                         std::uint8_t buf[2];
                         buf[0] = s->id;
                         buf[1] = (m_micMuted ? 0 : 1);
-                        SendPacketReliably(PKT_STREAM_STATE, buf, 2, 0.5, 20);
+                        SendPacketReliably(PktType::STREAM_STATE, buf, 2, 0.5, 20);
                     }
                     else
                     {
@@ -1403,7 +1403,7 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
         PendingOutgoingPacket p
         {
             /*.seq=*/GenerateOutSeq(),
-            /*.type=*/PKT_STREAM_DATA,
+            /*.type=*/PktType::STREAM_DATA,
             /*.len=*/pktLength,
             /*.data=*/Buffer(std::move(pkt)),
             /*.endpoint=*/0,
@@ -1434,7 +1434,7 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
             PendingOutgoingPacket p
             {
                 GenerateOutSeq(),
-                PKT_STREAM_EC,
+                PktType::STREAM_EC,
                 pktLength,
                 Buffer(std::move(pkt)),
                 0
@@ -1621,7 +1621,7 @@ std::uint32_t VoIPController::GenerateOutSeq()
     return m_seq++;
 }
 
-void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s, std::uint8_t type, std::uint32_t length, PacketSender* source)
+void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s, PktType type, std::uint32_t length, PacketSender* source)
 {
     std::uint32_t acks = 0;
     for (int i = 0; i < 32; ++i)
@@ -1634,7 +1634,7 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
 
     if (m_peerVersion >= 8 || (!m_peerVersion && m_connectionMaxLayer >= 92))
     {
-        s->WriteUInt8(type);
+        s->WriteUInt8(static_cast<std::uint8_t>(type));
         s->WriteUInt32(m_lastRemoteSeq);
         s->WriteUInt32(pseq);
         s->WriteUInt32(acks);
@@ -1748,7 +1748,7 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
                     s->WriteUInt8(static_cast<std::uint8_t>((lenWithHeader >> 16) & 0xFF));
                 }
             }
-            s->WriteUInt8(type);
+            s->WriteUInt8(static_cast<std::uint8_t>(type));
             s->WriteUInt32(m_lastRemoteSeq);
             s->WriteUInt32(pseq);
             s->WriteUInt32(acks);
@@ -1764,7 +1764,7 @@ void VoIPController::WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s
                     s->WriteUInt8(static_cast<std::uint8_t>(m_currentExtras.size()));
                     for (std::vector<UnacknowledgedExtraData>::iterator x = m_currentExtras.begin(); x != m_currentExtras.end(); ++x)
                     {
-                        LOGV("Writing extra into header: type %u, length %d", x->type, int(x->data.Length()));
+                        LOGV("Writing extra into header: type %u, length %d", x->type, static_cast<int>(x->data.Length()));
                         assert(x->data.Length() <= 254);
                         s->WriteUInt8(static_cast<std::uint8_t>(x->data.Length() + 1));
                         s->WriteUInt8(x->type);
@@ -1850,7 +1850,7 @@ void VoIPController::SendInit()
         std::size_t outLength = out.GetLength();
         SendOrEnqueuePacket(PendingOutgoingPacket {
             /*.seq=*/initSeq,
-            /*.type=*/PKT_INIT,
+            /*.type=*/PktType::INIT,
             /*.len=*/outLength,
             /*.data=*/Buffer(std::move(out)),
             /*.endpoint=*/e.id});
@@ -2292,7 +2292,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                         pkt.WriteUInt16(m_udpSocket->GetLocalPort());
                         if (m_peerVersion < 6)
                         {
-                            SendPacketReliably(PKT_LAN_ENDPOINT, pkt.GetBuffer(), pkt.GetLength(), 0.5, 10);
+                            SendPacketReliably(PktType::LAN_ENDPOINT, pkt.GetBuffer(), pkt.GetLength(), 0.5, 10);
                         }
                         else
                         {
@@ -2446,11 +2446,12 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
 simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedAudioBlock;
 */
     std::uint32_t ackId, pseq, acks;
-    std::uint8_t type, pflags;
+    PktType type;
+    std::uint8_t pflags;
     std::size_t packetInnerLen = 0;
     if (shortFormat)
     {
-        type = in.ReadUInt8();
+        type = static_cast<PktType>(in.ReadUInt8());
         ackId = in.ReadUInt32();
         pseq = in.ReadUInt32();
         acks = in.ReadUInt32();
@@ -2466,7 +2467,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             std::int32_t randLen = in.ReadTlLength();
             in.Seek(in.GetOffset() + static_cast<std::size_t>(randLen + pad4(randLen)));
             std::uint32_t flags = in.ReadUInt32();
-            type = static_cast<std::uint8_t>((flags >> 24) & 0xFF);
+            type = static_cast<PktType>((flags >> 24) & 0xFF);
             if (!(flags & PFLAG_HAS_SEQ && flags & PFLAG_HAS_RECENT_RECV))
             {
                 LOGW("Received packet doesn't have PFLAG_HAS_SEQ, PFLAG_HAS_RECENT_RECV, or both");
@@ -2518,7 +2519,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             int randLen = in.ReadTlLength();
             in.Seek(in.GetOffset() + static_cast<std::size_t>(randLen + pad4(randLen)));
             packetInnerLen = static_cast<std::size_t>(in.ReadTlLength());
-            type = in.ReadUInt8();
+            type = static_cast<PktType>(in.ReadUInt8());
             ackId = in.ReadUInt32();
             pseq = in.ReadUInt32();
             acks = in.ReadUInt32();
@@ -2715,7 +2716,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
     //LOGD("recv: %u -> %.2lf, %.2lf, %.2lf, %.2lf, %.2lf, %.2lf, %.2lf, %.2lf", lastRemoteSeq, recvPacketTimes[0], recvPacketTimes[1], recvPacketTimes[2], recvPacketTimes[3], recvPacketTimes[4], recvPacketTimes[5], recvPacketTimes[6], recvPacketTimes[7]);
     //LOGI("RTT = %.3lf", GetAverageRTT());
     //LOGV("Packet %u type is %d", pseq, type);
-    if (type == PKT_INIT)
+    if (static_cast<PktType>(type) == PktType::INIT)
     {
         LOGD("Received init");
         std::int32_t ver = in.ReadInt32();
@@ -2798,7 +2799,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         std::size_t outLength = out.GetLength();
         SendOrEnqueuePacket(PendingOutgoingPacket {
             /*.seq=*/GenerateOutSeq(),
-            /*.type=*/PKT_INIT_ACK,
+            /*.type=*/PktType::INIT_ACK,
             /*.len=*/outLength,
             /*.data=*/Buffer(std::move(out)),
             /*.endpoint=*/0});
@@ -2818,7 +2819,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             m_audioStarted = true;
         }
     }
-    if (type == PKT_INIT_ACK)
+    if (type == PktType::INIT_ACK)
     {
         LOGD("Received init ack");
 
@@ -2929,7 +2930,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 SendPublicEndpointsRequest();
         }
     }
-    if (type == PKT_STREAM_DATA || type == PKT_STREAM_DATA_X2 || type == PKT_STREAM_DATA_X3)
+    if (type == PktType::STREAM_DATA || type == PktType::STREAM_DATA_X2 || type == PktType::STREAM_DATA_X3)
     {
         if (!m_receivedFirstStreamPacket)
         {
@@ -2946,13 +2947,13 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         int count;
         switch (type)
         {
-        case PKT_STREAM_DATA_X2:
+        case PktType::STREAM_DATA_X2:
             count = 2;
             break;
-        case PKT_STREAM_DATA_X3:
+        case PktType::STREAM_DATA_X3:
             count = 3;
             break;
-        case PKT_STREAM_DATA:
+        case PktType::STREAM_DATA:
         default:
             count = 1;
             break;
@@ -3065,7 +3066,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 in.Seek(in.GetOffset() + sdlen);
         }
     }
-    if (type == PKT_PING)
+    if (type == PktType::PING)
     {
         //LOGD("Received ping from %s:%d", srcEndpoint.address.ToString().c_str(), srcEndpoint.port);
         if (srcEndpoint.type != Endpoint::Type::UDP_RELAY && srcEndpoint.type != Endpoint::Type::TCP_RELAY && !m_allowP2p)
@@ -3078,13 +3079,13 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         std::size_t pktLength = pkt.GetLength();
         SendOrEnqueuePacket(PendingOutgoingPacket {
             /*.seq=*/GenerateOutSeq(),
-            /*.type=*/PKT_PONG,
+            /*.type=*/PktType::PONG,
             /*.len=*/pktLength,
             /*.data=*/Buffer(std::move(pkt)),
             /*.endpoint=*/srcEndpoint.id,
         });
     }
-    if (type == PKT_PONG)
+    if (type == PktType::PONG)
     {
         if (packetInnerLen >= 4)
         {
@@ -3102,7 +3103,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             }
         }
     }
-    if (type == PKT_STREAM_STATE)
+    if (type == PktType::STREAM_STATE)
     {
         std::uint8_t id = in.ReadUInt8();
         std::uint8_t enabled = in.ReadUInt8();
@@ -3117,7 +3118,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             }
         }
     }
-    if (type == PKT_LAN_ENDPOINT)
+    if (type == PktType::LAN_ENDPOINT)
     {
         LOGV("received lan endpoint");
         std::uint32_t peerAddr = in.ReadUInt32();
@@ -3132,7 +3133,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         MutexGuard m(m_endpointsMutex);
         m_endpoints[lanID] = lan;
     }
-    if (type == PKT_NETWORK_CHANGED && _currentEndpoint->type != Endpoint::Type::UDP_RELAY && _currentEndpoint->type != Endpoint::Type::TCP_RELAY)
+    if (type == PktType::NETWORK_CHANGED && _currentEndpoint->type != Endpoint::Type::UDP_RELAY && _currentEndpoint->type != Endpoint::Type::TCP_RELAY)
     {
         m_currentEndpoint = m_preferredRelay;
         if (m_allowP2p)
@@ -3146,7 +3147,7 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
             ResetEndpointPingStats();
         }
     }
-    if (type == PKT_STREAM_EC)
+    if (type == PktType::STREAM_EC)
     {
         std::uint8_t streamID = in.ReadUInt8();
         if (m_peerVersion < 7)
@@ -3463,7 +3464,7 @@ bool VoIPController::SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue
         WritePacketHeader(pkt.seq, &p, pkt.type, static_cast<std::uint32_t>(pkt.len), source);
         p.WriteBytes(pkt.data);
         SendPacket(p.GetBuffer(), p.GetLength(), *endpoint, pkt);
-        if (pkt.type == PKT_STREAM_DATA)
+        if (pkt.type == PktType::STREAM_DATA)
         {
             m_unsentStreamPackets--;
         }
@@ -3623,39 +3624,46 @@ std::string VoIPController::NetworkTypeToString(NetType type)
     }
 }
 
-std::string VoIPController::GetPacketTypeString(std::uint8_t type)
+std::string VoIPController::GetPacketTypeString(PktType type)
 {
     switch (type)
     {
-    case PKT_INIT:
+    case PktType::INIT:
         return "init";
-    case PKT_INIT_ACK:
+    case PktType::INIT_ACK:
         return "init_ack";
-    case PKT_STREAM_STATE:
+    case PktType::STREAM_STATE:
         return "stream_state";
-    case PKT_STREAM_DATA:
+    case PktType::STREAM_DATA:
         return "stream_data";
-    case PKT_PING:
+    case PktType::PING:
         return "ping";
-    case PKT_PONG:
+    case PktType::PONG:
         return "pong";
-    case PKT_LAN_ENDPOINT:
+    case PktType::LAN_ENDPOINT:
         return "lan_endpoint";
-    case PKT_NETWORK_CHANGED:
+    case PktType::NETWORK_CHANGED:
         return "network_changed";
-    case PKT_NOP:
+    case PktType::NOP:
         return "nop";
-    case PKT_STREAM_EC:
+    case PktType::STREAM_EC:
         return "stream_ec";
+    case PktType::UPDATE_STREAMS:
+        return "update_streams";
+    case PktType::STREAM_DATA_X2:
+        return "stream_data_x2";
+    case PktType::STREAM_DATA_X3:
+        return "stream_data_x3";
+    case PktType::SWITCH_PREF_RELAY:
+        return "switch_pref_relay";
+    case PktType::SWITCH_TO_P2P:
+        return "switch_to_p2p";
     }
-    char buf[255];
-    snprintf(buf, sizeof(buf), "unknown(%u)", type);
-    return std::string(buf);
+    return std::string("unknown " + std::to_string(static_cast<std::uint8_t>(type)));
 }
 
 void VoIPController::AddIPv6Relays()
 {
-
     if (!m_myIPv6.IsEmpty() && !m_didAddIPv6Relays)
     {
         std::unordered_map<std::string, std::vector<Endpoint>> endpointsByAddress;
@@ -3856,11 +3864,11 @@ Endpoint& VoIPController::GetEndpointByType(Endpoint::Type type)
     throw std::out_of_range("no endpoint");
 }
 
-void VoIPController::SendPacketReliably(std::uint8_t type, std::uint8_t* data, std::size_t len, double retryInterval, double timeout)
+void VoIPController::SendPacketReliably(PktType type, std::uint8_t* data, std::size_t len, double retryInterval, double timeout)
 {
     ENFORCE_MSG_THREAD;
 
-    LOGD("Send reliably, type=%u, len=%u, retry=%.3f, timeout=%.3f", type, unsigned(len), retryInterval, timeout);
+    LOGD("Send reliably, type=%u, len=%u, retry=%.3f, timeout=%.3f", static_cast<std::uint8_t>(type), unsigned(len), retryInterval, timeout);
     QueuedPacket pkt;
     if (data)
     {
@@ -4241,7 +4249,7 @@ void VoIPController::SendRelayPings()
                 LOGV("Sending ping to %s", endpoint.GetAddress().ToString().c_str());
                 SendOrEnqueuePacket(PendingOutgoingPacket {
                     /*.seq=*/(endpoint.m_lastPingSeq = GenerateOutSeq()),
-                    /*.type=*/PKT_PING,
+                    /*.type=*/PktType::PING,
                     /*.len=*/0,
                     /*.data=*/Buffer(),
                     /*.endpoint=*/endpoint.id});
@@ -4469,7 +4477,7 @@ void VoIPController::UpdateAudioBitrate()
                     s.WriteInt32(m_dataSavingMode ? INIT_FLAG_DATA_SAVING_ENABLED : 0);
                     if (m_peerVersion < 6)
                     {
-                        SendPacketReliably(PKT_NETWORK_CHANGED, s.GetBuffer(), s.GetLength(), 1, 20);
+                        SendPacketReliably(PktType::NETWORK_CHANGED, s.GetBuffer(), s.GetLength(), 1, 20);
                     }
                     else
                     {
@@ -4583,7 +4591,7 @@ void VoIPController::SendNopPacket()
         return;
     SendOrEnqueuePacket(PendingOutgoingPacket {
         /*.seq=*/(m_firstSentPing = GenerateOutSeq()),
-        /*.type=*/PKT_NOP,
+        /*.type=*/PktType::NOP,
         /*.len=*/0,
         /*.data=*/Buffer(),
         /*.endpoint=*/0});
@@ -4652,7 +4660,7 @@ void VoIPController::TickJitterBufferAndCongestionControl()
             {
                 pkt.sender->PacketLost(pkt.seq, pkt.type, pkt.size);
             }
-            else if (pkt.type == PKT_STREAM_DATA)
+            else if (pkt.type == PktType::STREAM_DATA)
             {
                 m_conctl->PacketLost(pkt.seq);
             }

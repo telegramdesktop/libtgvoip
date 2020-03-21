@@ -17,8 +17,8 @@ class PacketSender
 public:
     PacketSender(VoIPController* m_controller);
     virtual ~PacketSender();
-    virtual void PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, std::uint8_t type, std::uint32_t size) = 0;
-    virtual void PacketLost(std::uint32_t seq, std::uint8_t type, std::uint32_t size) = 0;
+    virtual void PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, PktType type, std::uint32_t size) = 0;
+    virtual void PacketLost(std::uint32_t seq, PktType type, std::uint32_t size) = 0;
 
 protected:
     VoIPController* m_controller;

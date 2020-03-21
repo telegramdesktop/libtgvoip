@@ -22,7 +22,7 @@ VideoPacketSender::~VideoPacketSender()
 {
 }
 
-void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, std::uint8_t type, std::uint32_t size)
+void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, PktType type, std::uint32_t size)
 {
     std::uint32_t bytesNewlyAcked = 0;
     //if(!videoKeyframeRequested){
@@ -67,9 +67,9 @@ void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, d
     //videoCongestionControl.GetPacingInterval();
 }
 
-void VideoPacketSender::PacketLost(std::uint32_t seq, std::uint8_t type, std::uint32_t size)
+void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_t size)
 {
-    if (type == PKT_STREAM_EC)
+    if (type == PktType::STREAM_EC)
         return;
     LOGW("VideoPacketSender::PacketLost: %u (size %u)", seq, size);
     //LOGI("frame count %u", (unsigned int)sentVideoFrames.size());
@@ -294,7 +294,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             std::size_t packetDataLength = packetData.Length();
             VoIPController::PendingOutgoingPacket p {
                 /*.seq=*/0,
-                /*.type=*/PKT_STREAM_DATA,
+                /*.type=*/PktType::STREAM_DATA,
                 /*.len=*/packetDataLength,
                 /*.data=*/std::move(packetData),
                 /*.endpoint=*/0,
@@ -323,7 +323,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
 
             VoIPController::PendingOutgoingPacket p {
                 0,
-                PKT_STREAM_EC,
+                PktType::STREAM_EC,
                 out.GetLength(),
                 Buffer(std::move(out)),
                 0};
