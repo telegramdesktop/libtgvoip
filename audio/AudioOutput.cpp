@@ -48,19 +48,15 @@ std::int32_t AudioOutput::m_estimatedDelay = 60;
 
 AudioOutput::AudioOutput()
     : m_currentDevice("default")
-    , m_failed(false)
 {
 }
 
 AudioOutput::AudioOutput(std::string deviceID)
     : m_currentDevice(std::move(deviceID))
-    , m_failed(false)
 {
 }
 
-AudioOutput::~AudioOutput()
-{
-}
+AudioOutput::~AudioOutput() = default;
 
 std::int32_t AudioOutput::GetEstimatedDelay()
 {
@@ -110,7 +106,7 @@ void AudioOutput::SetCurrentDevice(std::string deviceID)
     m_currentDevice = std::move(deviceID);
 }
 
-bool AudioOutput::IsInitialized()
+bool AudioOutput::IsInitialized() const
 {
     return !m_failed;
 }

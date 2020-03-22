@@ -45,8 +45,6 @@ Buffer::Buffer(BufferOutputStream&& stream)
 }
 
 Buffer::Buffer()
-    : m_data(nullptr)
-    , m_length(0)
 {
 }
 
@@ -63,7 +61,7 @@ Buffer::~Buffer()
     m_length = 0;
 }
 
-Buffer& Buffer::operator=(Buffer&& other)
+Buffer& Buffer::operator=(Buffer&& other) noexcept
 {
     if (this != &other)
     {
@@ -358,7 +356,7 @@ BufferOutputStream::BufferOutputStream(std::uint8_t* buffer, std::size_t size)
 {
 }
 
-BufferOutputStream& BufferOutputStream::operator=(BufferOutputStream&& other)
+BufferOutputStream& BufferOutputStream::operator=(BufferOutputStream&& other) noexcept
 {
     if (this != &other)
     {

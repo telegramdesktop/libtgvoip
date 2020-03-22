@@ -168,27 +168,28 @@ void EchoCanceller::ProcessInput(std::int16_t* inOut, std::size_t numSamples, bo
 {
 #ifndef TGVOIP_NO_DSP
     if (!m_isOn || (!m_enableAEC && !m_enableAGC && !m_enableNS))
-    {
         return;
-    }
+
     int delay = audio::AudioInput::GetEstimatedDelay() + audio::AudioOutput::GetEstimatedDelay();
     assert(numSamples == 960);
 
     std::memcpy(m_audioFrame->mutable_data(), inOut, 480 * 2);
     if (m_enableAEC)
         m_apm->set_stream_delay_ms(delay);
+
     m_apm->ProcessStream(m_audioFrame);
+
     if (m_enableVAD)
         hasVoice = m_apm->voice_detection()->stream_has_voice();
     std::memcpy(inOut, m_audioFrame->data(), 480 * 2);
     std::memcpy(m_audioFrame->mutable_data(), inOut + 480, 480 * 2);
     if (m_enableAEC)
         m_apm->set_stream_delay_ms(delay);
+
     m_apm->ProcessStream(m_audioFrame);
+
     if (m_enableVAD)
-    {
         hasVoice = hasVoice || m_apm->voice_detection()->stream_has_voice();
-    }
     std::memcpy(inOut + 480, m_audioFrame->data(), 480 * 2);
 #endif
 }
@@ -217,30 +218,29 @@ void EchoCanceller::SetVoiceDetectionEnabled(bool enabled)
 
 using namespace tgvoip::effects;
 
-AudioEffect::~AudioEffect()
-{
-}
+AudioEffect::~AudioEffect() = default;
 
 void AudioEffect::SetPassThrough(bool passThrough)
 {
     m_passThrough = passThrough;
 }
 
-Volume::Volume()
+bool AudioEffect::GetPassThrough() const
 {
+    return m_passThrough;
 }
 
-Volume::~Volume()
-{
-}
+Volume::Volume() = default;
+
+Volume::~Volume() = default;
 
 void Volume::Process(std::int16_t* inOut, std::size_t numSamples) const
 {
-    if (m_level == 1.0f || m_passThrough)
+    if (m_level == 1.0f || GetPassThrough())
     {
         return;
     }
-    for (std::size_t i = 0; i < numSamples; i++)
+    for (std::size_t i = 0; i < numSamples; ++i)
     {
         float sample = inOut[i] * m_multiplier;
         if (sample > 32767.0f)

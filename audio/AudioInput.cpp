@@ -44,21 +44,17 @@ std::int32_t AudioInput::m_estimatedDelay = 60;
 
 AudioInput::AudioInput()
     : m_currentDevice("default")
-    , m_failed(false)
 {
 }
 
 AudioInput::AudioInput(std::string deviceID)
     : m_currentDevice(std::move(deviceID))
-    , m_failed(false)
 {
 }
 
-AudioInput::~AudioInput()
-{
-}
+AudioInput::~AudioInput() = default;
 
-bool AudioInput::IsInitialized()
+bool AudioInput::IsInitialized() const
 {
     return !m_failed;
 }

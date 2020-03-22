@@ -62,7 +62,7 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(BufferOutputStream);
     BufferOutputStream(std::size_t m_size);
     BufferOutputStream(std::uint8_t* m_buffer, std::size_t m_size);
-    BufferOutputStream& operator=(BufferOutputStream&& other);
+    BufferOutputStream& operator=(BufferOutputStream&& other) noexcept;
     ~BufferOutputStream();
 
     void WriteInt8(std::int8_t byte);
@@ -98,7 +98,7 @@ public:
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(Buffer); // use Buffer::CopyOf to copy contents explicitly
     Buffer();
     Buffer(Buffer&& other) noexcept;
-    Buffer& operator=(Buffer&& other);
+    Buffer& operator=(Buffer&& other) noexcept;
     Buffer(std::size_t capacity);
     Buffer(BufferOutputStream&& stream);
     ~Buffer();
@@ -122,8 +122,8 @@ public:
     static Buffer Wrap(std::uint8_t* data, std::size_t size, std::function<void(void*)> freeFn, std::function<void*(void*, std::size_t)> reallocFn);
 
 private:
-    std::uint8_t* m_data;
-    std::size_t m_length;
+    std::uint8_t* m_data = nullptr;
+    std::size_t m_length = 0;
     std::function<void(void*)> m_freeFn;
     std::function<void*(void*, std::size_t)> m_reallocFn;
 };

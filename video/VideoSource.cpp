@@ -22,14 +22,40 @@ std::shared_ptr<VideoSource> VideoSource::Create()
     return nullptr;
 }
 
-bool VideoSource::Failed()
+void VideoSource::SetCallback(CallbackType callback)
+{
+    m_callback = std::move(callback);
+}
+void VideoSource::SetStreamStateCallback(std::function<void(bool)> callback)
+{
+    m_streamStateCallback = callback;
+}
+
+bool VideoSource::Failed() const
 {
     return m_failed;
 }
 
-std::string VideoSource::GetErrorDescription()
+std::string VideoSource::GetErrorDescription() const
 {
     return m_error;
+}
+
+std::vector<Buffer>& VideoSource::GetCodecSpecificData()
+{
+    return m_csd;
+}
+unsigned int VideoSource::GetFrameWidth() const
+{
+    return m_width;
+}
+unsigned int VideoSource::GetFrameHeight() const
+{
+    return m_height;
+}
+void VideoSource::SetRotation(unsigned int rotation)
+{
+    m_rotation = rotation;
 }
 
 std::vector<std::uint32_t> VideoSource::GetAvailableEncoders()

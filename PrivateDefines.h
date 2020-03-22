@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#define IS_MOBILE_NETWORK(x) (x == NetType::GPRS || x == NetType::EDGE || x == NetType::THREE_G || x == NetType::HSPA || x == NetType::LTE || x == NetType::OTHER_MOBILE)
+#define IS_MOBILE_NETWORK(x) ((x) == NetType::GPRS || (x) == NetType::EDGE || (x) == NetType::THREE_G || (x) == NetType::HSPA || (x) == NetType::LTE || (x) == NetType::OTHER_MOBILE)
 
 #define PROTOCOL_NAME 0x50567247 // "GrVP" in little endian (reversed here)
 #define PROTOCOL_VERSION 9
@@ -28,7 +28,7 @@
         (static_cast<std::uint32_t>(b) << 16) | \
         (static_cast<std::uint32_t>(a) << 24)   \
     )
-#define PRINT_FOURCC(x) static_cast<char>(x >> 24), static_cast<char>(x >> 16), static_cast<char>(x >> 8), static_cast<char>(x)
+#define PRINT_FOURCC(x) static_cast<char>((x) >> 24), static_cast<char>((x) >> 16), static_cast<char>((x) >> 8), static_cast<char>(x)
 
 #define CODEC_OPUS_OLD 1
 #define CODEC_OPUS FOURCC('O', 'P', 'U', 'S')
@@ -77,7 +77,7 @@
 #define TLID_UDP_REFLECTOR_LAST_PACKETS_INFO    std::uint32_t{0x0e107305}
 #define TLID_VECTOR                             std::uint32_t{0x1cb5c415}
 
-#define PAD4(x) (4 - (x + (x <= 253 ? 1 : 0)) % 4)
+#define PAD4(x) (4 - ((x) + ((x) <= 253 ? 1 : 0)) % 4)
 
 #define MAX_RECENT_PACKETS 128
 

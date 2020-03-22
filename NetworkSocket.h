@@ -59,7 +59,7 @@ private:
 
 struct NetworkPacket
 {
-    NetworkPacket(Buffer data, NetworkAddress address, std::uint16_t port, NetworkProtocol protocol);
+    NetworkPacket(Buffer data, const NetworkAddress& address, std::uint16_t port, NetworkProtocol protocol);
     TGVOIP_MOVE_ONLY(NetworkPacket);
 
     Buffer data;
@@ -89,12 +89,12 @@ public:
     NetworkSocket(NetworkProtocol m_protocol);
     virtual ~NetworkSocket();
     virtual void Send(NetworkPacket packet) = 0;
-    virtual NetworkPacket Receive(std::size_t maxLen = 0) = 0;
+    virtual NetworkPacket Receive(std::size_t maxLen) = 0;
     std::size_t Receive(std::uint8_t* buffer, std::size_t len);
     virtual void Open() = 0;
     virtual void Close() = 0;
     virtual std::uint16_t GetLocalPort();
-    virtual void Connect(const NetworkAddress address, std::uint16_t port) = 0;
+    virtual void Connect(const NetworkAddress& address, std::uint16_t port) = 0;
     virtual std::string GetLocalInterfaceInfo(NetworkAddress* inet4addr, NetworkAddress* inet6addr);
     virtual void OnActiveInterfaceChanged();
     virtual NetworkAddress GetConnectedAddress();
@@ -149,7 +149,7 @@ public:
     NetworkPacket Receive(std::size_t maxLen) override;
     void Open() override;
     void Close() override;
-    void Connect(const NetworkAddress address, std::uint16_t port) override;
+    void Connect(const NetworkAddress& address, std::uint16_t port) override;
     bool OnReadyToSend() override;
 
     bool IsFailed() const override;
@@ -171,7 +171,7 @@ public:
     NetworkPacket Receive(std::size_t maxLen) override;
     void Open() override;
     void Close() override;
-    void Connect(const NetworkAddress address, std::uint16_t port) override;
+    void Connect(const NetworkAddress& address, std::uint16_t port) override;
     NetworkSocket* GetWrapped() override;
     void InitConnection() override;
     bool IsFailed() const override;
@@ -201,6 +201,6 @@ private:
     ConnectionState m_state = ConnectionState::Initial;
 };
 
-}
+} // namespace tgvoip
 
-#endif //LIBTGVOIP_NETWORKSOCKET_H
+#endif // LIBTGVOIP_NETWORKSOCKET_H

@@ -30,7 +30,7 @@ namespace test
 class MockReflector
 {
 public:
-    MockReflector(std::string bindAddress, std::uint16_t bindPort);
+    MockReflector(const std::string& bindAddress, std::uint16_t bindPort);
     ~MockReflector();
     void Start();
     void Stop();

@@ -7,9 +7,7 @@ PacketSender::PacketSender(VoIPController* controller)
 {
 }
 
-PacketSender::~PacketSender()
-{
-}
+PacketSender::~PacketSender() = default;
 
 void PacketSender::SendExtra(Buffer& data, ExtraType type) const
 {

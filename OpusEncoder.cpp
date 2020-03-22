@@ -17,6 +17,7 @@
 
 namespace
 {
+
 int serverConfigValueToBandwidth(int config)
 {
     switch (config)
@@ -34,7 +35,8 @@ int serverConfigValueToBandwidth(int config)
         return OPUS_BANDWIDTH_FULLBAND;
     }
 }
-}
+
+} // namespace
 
 tgvoip::OpusEncoder::OpusEncoder(MediaStreamItf* source, bool needSecondary)
     : m_queue(10)
@@ -288,9 +290,9 @@ void tgvoip::OpusEncoder::SetLevelMeter(tgvoip::AudioLevelMeter* levelMeter)
     this->m_levelMeter = levelMeter;
 }
 
-void tgvoip::OpusEncoder::SetCallback(std::function<void(std::uint8_t*, std::size_t, std::uint8_t*, std::size_t)> f)
+void tgvoip::OpusEncoder::SetCallback(std::function<void(std::uint8_t*, std::size_t, std::uint8_t*, std::size_t)> callback)
 {
-    m_callback = f;
+    m_callback = std::move(callback);
 }
 
 void tgvoip::OpusEncoder::InvokeCallback(std::uint8_t* data, std::size_t length, std::uint8_t* secondaryData, std::size_t secondaryLength)

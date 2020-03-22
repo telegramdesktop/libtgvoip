@@ -11,6 +11,7 @@
 #include "threading.h"
 #include <cstdint>
 #include <cstdlib>
+#include <array>
 
 namespace tgvoip
 {
@@ -28,7 +29,6 @@ struct tgvoip_congestionctl_packet_t
     std::size_t size;
     std::uint32_t seq;
 };
-typedef struct tgvoip_congestionctl_packet_t tgvoip_congestionctl_packet_t;
 
 class CongestionControl
 {
@@ -52,16 +52,16 @@ public:
 private:
     HistoricBuffer<double, 100> m_rttHistory;
     HistoricBuffer<std::size_t, 30> m_inflightHistory;
-    tgvoip_congestionctl_packet_t m_inflightPackets[100];
-    double m_tmpRtt;
-    int m_tmpRttCount;
-    std::uint32_t m_lossCount;
-    mutable double m_lastActionTime;
-    double m_lastActionRtt;
-    double m_stateTransitionTime;
-    std::uint32_t m_lastSentSeq;
-    std::uint32_t m_tickCount;
-    std::size_t m_inflightDataSize;
+    std::array<tgvoip_congestionctl_packet_t, 100> m_inflightPackets;
+    double m_tmpRtt = 0;
+    int m_tmpRttCount = 0;
+    std::uint32_t m_lossCount = 0;
+    mutable double m_lastActionTime = 0;
+    double m_lastActionRtt = 0;
+    double m_stateTransitionTime = 0;
+    std::uint32_t m_lastSentSeq = 0;
+    std::uint32_t m_tickCount = 0;
+    std::size_t m_inflightDataSize = 0;
     std::size_t m_cwnd;
 };
 

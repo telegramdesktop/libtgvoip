@@ -22,6 +22,11 @@ VideoPacketSender::~VideoPacketSender()
 {
 }
 
+std::uint32_t VideoPacketSender::GetBitrate() const
+{
+    return m_currentVideoBitrate;
+}
+
 void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, PktType type, std::uint32_t size)
 {
     std::uint32_t bytesNewlyAcked = 0;

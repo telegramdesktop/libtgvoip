@@ -16,13 +16,9 @@
 using namespace tgvoip;
 using namespace tgvoip::video;
 
-PacketReassembler::PacketReassembler()
-{
-}
+PacketReassembler::PacketReassembler() = default;
 
-PacketReassembler::~PacketReassembler()
-{
-}
+PacketReassembler::~PacketReassembler() = default;
 
 void PacketReassembler::Reset()
 {
@@ -165,7 +161,7 @@ void PacketReassembler::AddFEC(Buffer data, std::uint8_t _fseq, unsigned int fra
 
 void PacketReassembler::SetCallback(std::function<void(Buffer packet, std::uint32_t pts, bool keyframe, std::uint16_t rotation)> callback)
 {
-    this->m_callback = callback;
+    m_callback = std::move(callback);
 }
 
 bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)

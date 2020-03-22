@@ -28,7 +28,7 @@ public:
     AudioInput(std::string deviceID);
     virtual ~AudioInput();
 
-    bool IsInitialized();
+    bool IsInitialized() const;
     virtual std::string GetCurrentDevice() const;
     virtual void SetCurrentDevice(std::string deviceID);
     //static AudioInput* Create(std::string deviceID, void* platformSpecific);
@@ -37,7 +37,7 @@ public:
 
 protected:
     std::string m_currentDevice;
-    bool m_failed;
+    bool m_failed = false;
     static std::int32_t m_estimatedDelay;
 };
 

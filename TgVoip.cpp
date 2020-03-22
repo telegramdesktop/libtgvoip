@@ -101,7 +101,7 @@ public:
     ~TgVoipImpl() override;
     void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) override;
     void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) override;
-    void setNetworkType(TgVoipNetworkType networkType) override;
+    void setNetworkType(TgVoipNetworkType networkType) override final;
     void setMuteMicrophone(bool muteMicrophone) override;
     void setAudioOutputGainControlEnabled(bool enabled) override;
     void setEchoCancellationStrength(int strength) override;
@@ -237,9 +237,7 @@ TgVoipImpl::TgVoipImpl(
     m_controller->Connect();
 }
 
-TgVoipImpl::~TgVoipImpl()
-{
-}
+TgVoipImpl::~TgVoipImpl() = default;
 
 void TgVoipImpl::setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated)
 {
@@ -454,7 +452,7 @@ void __tgvoip_call_tglog(const char* format, ...)
 
 void TgVoip::setLoggingFunction(std::function<void(std::string const&)> loggingFunction)
 {
-    globalLoggingFunction = loggingFunction;
+    globalLoggingFunction = std::move(loggingFunction);
 }
 
 void TgVoip::setGlobalServerConfig(const std::string& serverConfig)

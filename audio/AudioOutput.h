@@ -34,11 +34,11 @@ public:
     virtual void SetCurrentDevice(std::string deviceID);
     //static std::unique_ptr<AudioOutput> Create(std::string deviceID, void* platformSpecific);
     static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
-    bool IsInitialized();
+    bool IsInitialized() const;
 
 protected:
     std::string m_currentDevice;
-    bool m_failed;
+    bool m_failed = false;
     static std::int32_t m_estimatedDelay;
 };
 

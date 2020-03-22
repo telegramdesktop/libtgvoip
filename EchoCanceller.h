@@ -68,6 +68,9 @@ public:
     virtual void SetPassThrough(bool m_passThrough);
 
 protected:
+    bool GetPassThrough() const;
+
+private:
     bool m_passThrough = false;
 };
 

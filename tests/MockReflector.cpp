@@ -27,7 +27,7 @@ struct UdpReflectorSelfInfo
     std::uint32_t my_port;
 } __attribute__((packed));
 
-MockReflector::MockReflector(std::string bindAddress, std::uint16_t bindPort)
+MockReflector::MockReflector(const std::string& bindAddress, std::uint16_t bindPort)
 {
     sfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     assert(sfd != -1);
@@ -40,9 +40,7 @@ MockReflector::MockReflector(std::string bindAddress, std::uint16_t bindPort)
     assert(res == 0);
 }
 
-MockReflector::~MockReflector()
-{
-}
+MockReflector::~MockReflector() = default;
 
 std::array<std::array<std::uint8_t, 16>, 2> MockReflector::GeneratePeerTags()
 {

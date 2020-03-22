@@ -222,12 +222,12 @@ bool NetworkSocketPosix::OnReadyToSend()
 NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
-        maxLen = INT32_MAX;
+        maxLen = std::numeric_limits<std::int32_t>::max();
     if (m_failed)
-    {
         return NetworkPacket::Empty();
-    }
-    if (m_protocol == NetworkProtocol::UDP)
+    switch (m_protocol)
+    {
+    case NetworkProtocol::UDP:
     {
         int addrLen = sizeof(sockaddr_in6);
         sockaddr_in6 srcAddr;
@@ -259,14 +259,11 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
                 NetworkProtocol::UDP
             };
         }
-        else
-        {
-            LOGE("error receiving %d / %s", errno, strerror(errno));
-            return NetworkPacket::Empty();
-        }
+        LOGE("error receiving %d / %s", errno, strerror(errno));
+        return NetworkPacket::Empty();
         //LOGV("Received %d bytes from %s:%d at %.5lf", len, inet_ntoa(srcAddr.sin_addr), ntohs(srcAddr.sin_port), GetCurrentTime());
     }
-    else if (m_protocol == NetworkProtocol::TCP)
+    case NetworkProtocol::TCP:
     {
         ssize_t res = recv(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0);
         if (res <= 0)
@@ -275,16 +272,14 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
             m_failed = true;
             return NetworkPacket::Empty();
         }
-        else
+        return NetworkPacket
         {
-            return NetworkPacket
-            {
-                Buffer::CopyOf(m_recvBuffer, 0, static_cast<std::size_t>(res)),
-                m_tcpConnectedAddress,
-                m_tcpConnectedPort,
-                NetworkProtocol::TCP
-            };
-        }
+            Buffer::CopyOf(m_recvBuffer, 0, static_cast<std::size_t>(res)),
+            m_tcpConnectedAddress,
+            m_tcpConnectedPort,
+            NetworkProtocol::TCP
+        };
+    }
     }
     return NetworkPacket::Empty();
 }
@@ -381,7 +376,7 @@ void NetworkSocketPosix::Close()
     }
 }
 
-void NetworkSocketPosix::Connect(const NetworkAddress address, std::uint16_t port)
+void NetworkSocketPosix::Connect(const NetworkAddress& address, std::uint16_t port)
 {
     struct sockaddr_in v4;
     std::memset(&v4, 0, sizeof(v4));
@@ -495,7 +490,7 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
     }
 #else
     struct ifaddrs* interfaces;
-    if (!getifaddrs(&interfaces))
+    if (getifaddrs(&interfaces) == 0)
     {
         struct ifaddrs* interface;
         for (interface = interfaces; interface; interface = interface->ifa_next)
@@ -503,13 +498,13 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
             if (!(interface->ifa_flags & IFF_UP) || !(interface->ifa_flags & IFF_RUNNING) || (interface->ifa_flags & IFF_LOOPBACK))
                 continue;
             const struct sockaddr_in* addr = reinterpret_cast<const struct sockaddr_in*>(interface->ifa_addr);
-            if (addr)
+            if (addr != nullptr)
             {
                 if (addr->sin_family == AF_INET)
                 {
                     if ((ntohl(addr->sin_addr.s_addr) & 0xFFFF0000) == 0xA9FE0000)
                         continue;
-                    if (v4addr)
+                    if (v4addr != nullptr)
                         *v4addr = NetworkAddress::IPv4(addr->sin_addr.s_addr);
                     name = interface->ifa_name;
                 }
@@ -518,7 +513,7 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
                     const struct sockaddr_in6* addr6 = reinterpret_cast<const struct sockaddr_in6*>(addr);
                     if ((addr6->sin6_addr.s6_addr[0] & 0xF0) == 0xF0)
                         continue;
-                    if (v6addr)
+                    if (v6addr != nullptr)
                         *v6addr = NetworkAddress::IPv6(addr6->sin6_addr.s6_addr);
                     name = interface->ifa_name;
                 }
@@ -556,21 +551,21 @@ std::string NetworkSocketPosix::V6AddressToString(const std::uint8_t* address)
     return std::string(buf);
 }
 
-std::uint32_t NetworkSocketPosix::StringToV4Address(std::string address)
+std::uint32_t NetworkSocketPosix::StringToV4Address(const std::string& address)
 {
     in_addr addr;
     inet_pton(AF_INET, address.c_str(), &addr);
     return addr.s_addr;
 }
 
-void NetworkSocketPosix::StringToV6Address(std::string address, std::uint8_t* out)
+void NetworkSocketPosix::StringToV6Address(const std::string& address, std::uint8_t* out)
 {
     in6_addr addr;
     inet_pton(AF_INET6, address.c_str(), &addr);
     std::memcpy(out, addr.s6_addr, 16);
 }
 
-NetworkAddress NetworkSocketPosix::ResolveDomainName(std::string name)
+NetworkAddress NetworkSocketPosix::ResolveDomainName(const std::string& name)
 {
     addrinfo* addr0;
     NetworkAddress ret = NetworkAddress::Empty();

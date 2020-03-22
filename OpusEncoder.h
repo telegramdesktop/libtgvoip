@@ -32,7 +32,7 @@ public:
     virtual void Stop();
 
     using CallbackType = std::function<void(std::uint8_t* data, std::size_t length, std::uint8_t* secondaryData, std::size_t secondaryLength)>;
-    void SetCallback(CallbackType m_callback);
+    void SetCallback(CallbackType callback);
 
     void SetBitrate(std::uint32_t bitrate);
     void SetEchoCanceller(EchoCanceller* aec);

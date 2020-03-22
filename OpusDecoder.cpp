@@ -81,10 +81,8 @@ tgvoip::OpusDecoder::~OpusDecoder()
     if (m_ecDec)
         opus_decoder_destroy(m_ecDec);
     std::free(m_buffer);
-    if (m_decodedQueue)
-        delete m_decodedQueue;
-    if (m_semaphore)
-        delete m_semaphore;
+    delete m_decodedQueue;
+    delete m_semaphore;
 }
 
 void tgvoip::OpusDecoder::SetEchoCanceller(EchoCanceller* canceller)
@@ -198,7 +196,7 @@ void tgvoip::OpusDecoder::RunThread()
     while (m_running)
     {
         int playbackDuration = DecodeNextFrame();
-        for (int i = 0; i < playbackDuration / 20; i++)
+        for (int i = 0; i < playbackDuration / 20; ++i)
         {
             m_semaphore->Acquire();
             if (!m_running)
@@ -256,7 +254,7 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
             // otherwise audible transition between the frames from different decoders. Those are basically an extrapolation
             // of the previous successfully decoded data -- which is exactly what we need here.
             size = opus_decode(m_prevWasEC ? m_ecDec : m_dec, nullptr, 0, reinterpret_cast<opus_int16*>(m_nextBuffer), m_packetsPerFrame * 960, 0);
-            if (size)
+            if (size != 0)
             {
                 std::int16_t* plcSamples = reinterpret_cast<std::int16_t*>(m_nextBuffer);
                 std::int16_t* samples = reinterpret_cast<std::int16_t*>(m_decodeBuffer);
@@ -315,7 +313,7 @@ void tgvoip::OpusDecoder::SetFrameDuration(std::uint32_t duration)
 
 void tgvoip::OpusDecoder::SetJitterBuffer(std::shared_ptr<JitterBuffer> jitterBuffer)
 {
-    this->m_jitterBuffer = jitterBuffer;
+    m_jitterBuffer = std::move(jitterBuffer);
 }
 
 void tgvoip::OpusDecoder::SetDTX(bool enable)
@@ -325,7 +323,7 @@ void tgvoip::OpusDecoder::SetDTX(bool enable)
 
 void tgvoip::OpusDecoder::SetLevelMeter(AudioLevelMeter* levelMeter)
 {
-    this->m_levelMeter = levelMeter;
+    m_levelMeter = levelMeter;
 }
 
 void tgvoip::OpusDecoder::AddAudioEffect(effects::AudioEffect* effect)

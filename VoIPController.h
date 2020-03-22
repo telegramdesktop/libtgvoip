@@ -206,14 +206,17 @@ public:
         TCP_RELAY,
     };
 
-    Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& address, const IPv6Address& v6address, Type type, const std::uint8_t peerTag[16]);
-    Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress address, const NetworkAddress v6address, Type type, const std::uint8_t peerTag[16]);
+    Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& address,
+             const IPv6Address& v6address, Type type, const std::uint8_t peerTag[16]);
+    Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress& address,
+             const NetworkAddress& v6address, Type type, const std::uint8_t peerTag[16]);
     Endpoint();
     ~Endpoint();
     const NetworkAddress& GetAddress() const;
     NetworkAddress& GetAddress();
     bool IsIPv6Only() const;
     std::int64_t CleanID() const;
+
     std::int64_t id;
     std::uint16_t port;
     NetworkAddress address;
@@ -222,14 +225,14 @@ public:
     std::uint8_t peerTag[16];
 
 private:
-    double m_lastPingTime;
-    std::uint32_t m_lastPingSeq;
+    double m_lastPingTime = 0;
+    std::uint32_t m_lastPingSeq = 0;
     HistoricBuffer<double, 6> m_rtts;
     HistoricBuffer<double, 4> m_selfRtts;
     std::map<std::int64_t, double> m_udpPingTimes;
-    double m_averageRTT;
-    std::shared_ptr<NetworkSocket> m_socket;
-    int m_udpPongCount;
+    double m_averageRTT = 0;
+    std::shared_ptr<NetworkSocket> m_socket = nullptr;
+    int m_udpPongCount = 0;
     int m_totalUdpPings = 0;
     int m_totalUdpPingReplies = 0;
 };
@@ -251,7 +254,7 @@ class AudioInputDevice : public AudioDevice
 class AudioInputTester
 {
 public:
-    AudioInputTester(const std::string m_deviceID);
+    AudioInputTester(std::string deviceID);
     ~AudioInputTester();
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioInputTester);
     float GetAndResetLevel();
@@ -438,8 +441,8 @@ public:
     void SetCurrentAudioInput(std::string id);
     void SetCurrentAudioOutput(std::string id);
 
-    std::string GetCurrentAudioInputID();
-    std::string GetCurrentAudioOutputID();
+    std::string GetCurrentAudioInputID() const;
+    std::string GetCurrentAudioOutputID() const;
 
     /**
      * Set the proxy server to route the data through. Call this before connecting.
@@ -663,166 +666,106 @@ private:
     void NetworkPacketReceived(std::shared_ptr<NetworkPacket> packet);
     void TrySendQueuedPackets();
 
-    State m_state;
-    NetType m_networkType;
+    TrafficStats m_stats =
+    {
+        .bytesSentWifi = 0,
+        .bytesRecvdWifi = 0,
+        .bytesSentMobile = 0,
+        .bytesRecvdMobile = 0
+    };
+    Config m_config;
 
-    std::map<std::int64_t, Endpoint> m_endpoints;
-    std::int64_t m_currentEndpoint = 0;
-    // Locked whenever the endpoints vector is modified (but not endpoints themselves) and whenever iterated outside of messageThread.
-    // After the call is started, only messageThread is allowed to modify the endpoints vector.
-    Mutex m_endpointsMutex;
+    State m_state = State::WAIT_INIT;
+    NetType m_networkType = NetType::UNKNOWN;
+
+    MessageThread m_messageThread;
 
     std::int64_t m_preferredRelay = 0;
     std::int64_t m_peerPreferredRelay = 0;
 
-    std::atomic<bool> m_runReceiver;
+    tgvoip::audio::AudioIO* m_audioIO = nullptr;
+    tgvoip::audio::AudioInput* m_audioInput = nullptr;
+    tgvoip::audio::AudioOutput* m_audioOutput = nullptr;
+    std::string m_currentAudioInput = "default";
+    std::string m_currentAudioOutput = "default";
+    std::uint32_t m_audioTimestampIn = 0;
+    std::uint32_t m_audioTimestampOut = 0;
 
-    std::atomic<std::uint32_t> m_seq;
-    std::uint32_t m_lastRemoteSeq;
-    std::uint32_t m_lastRemoteAckSeq;
-    std::uint32_t m_lastSentSeq;
+    OpusEncoder* m_encoder = nullptr;
+    EchoCanceller* m_echoCanceller = nullptr;
+
+    Thread* m_recvThread = nullptr;
+    Thread* m_sendThread = nullptr;
+
+    double m_stateChangeTime;
+    double m_publicEndpointsReqTime = 0;
+    double m_connectionInitTime = 0;
+    double m_lastRecvPacketTime = 0;
+    double m_lastUdpPingTime = 0;
+
+    CongestionControl* m_conctl;
+
+    NetworkSocket* m_udpSocket;
+    NetworkSocket* m_realUdpSocket;
+    UdpState m_udpConnectivityState = UdpState::UNKNOWN;
+    int m_udpPingCount = 0;
+    SocketSelectCanceller* m_selectCanceller;
+
+    FILE* m_statsDump = nullptr;
+
+    video::VideoSource* m_videoSource = nullptr;
+    video::VideoRenderer* m_videoRenderer = nullptr;
+    video::VideoPacketSender* m_videoPacketSender = nullptr;
+    std::vector<std::uint32_t> m_peerVideoDecoders;
+
+    double m_relaySwitchThreshold;
+    double m_p2pToRelaySwitchThreshold;
+    double m_relayToP2pSwitchThreshold;
+    double m_reconnectingTimeout;
+    double m_rateMaxAcceptableRTT;
+    double m_rateMaxAcceptableSendLoss;
+    double m_packetLossToEnableExtraEC;
+
+    HistoricBuffer<std::uint8_t, 4, int> m_signalBarsHistory;
 
     std::vector<RecentOutgoingPacket> m_recentOutgoingPackets;
     std::vector<std::uint32_t> m_recentIncomingPackets;
 
-    HistoricBuffer<std::uint32_t, 10, double> m_sendLossCountHistory;
-
-    std::uint32_t m_audioTimestampIn;
-    std::uint32_t m_audioTimestampOut;
-
-    tgvoip::audio::AudioIO* m_audioIO = nullptr;
-    tgvoip::audio::AudioInput* m_audioInput = nullptr;
-    tgvoip::audio::AudioOutput* m_audioOutput = nullptr;
-
-    OpusEncoder* m_encoder;
-
-    std::vector<PendingOutgoingPacket> m_sendQueue;
-
-    EchoCanceller* m_echoCanceller;
-    int m_echoCancellationStrength;
-
-    std::atomic<bool> m_stopping;
-    bool m_audioOutStarted;
-
-    Thread* m_recvThread;
-    Thread* m_sendThread;
-
-    std::uint32_t m_packetsReceived;
-    std::uint32_t m_recvLossCount;
-    std::uint32_t m_prevSendLossCount;
+    std::uint32_t m_packetsReceived = 0;
+    std::uint32_t m_recvLossCount = 0;
+    std::uint32_t m_prevSendLossCount = 0;
     std::uint32_t m_firstSentPing;
 
+    std::vector<PendingOutgoingPacket> m_sendQueue;
+    BlockingQueue<RawPendingOutgoingPacket> m_rawSendQueue;
+    std::vector<QueuedPacket> m_queuedPackets;
+    std::vector<UnacknowledgedExtraData> m_currentExtras;
+
+    HistoricBuffer<std::uint32_t, 5> m_unsentStreamPacketsHistory;
+    HistoricBuffer<std::uint32_t, 10, double> m_sendLossCountHistory;
     HistoricBuffer<double, 32> m_RTTHistory;
+    std::unordered_map<ExtraType, std::uint64_t> m_lastReceivedExtrasByType;
 
-    bool m_waitingForAcks;
-
-    int m_dontSendPackets;
-    Error m_lastError;
-    bool m_micMuted;
-    std::uint32_t m_maxBitrate;
+    BufferPool<1024, 32> m_outgoingAudioBufferPool;
 
     std::vector<std::shared_ptr<Stream>> m_outgoingStreams;
     std::vector<std::shared_ptr<Stream>> m_incomingStreams;
 
-    std::uint8_t m_encryptionKey[256];
-    std::uint8_t m_keyFingerprint[8];
-    std::uint8_t m_callID[16];
-
-    double m_stateChangeTime;
-    bool m_waitingForRelayPeerInfo;
-    bool m_allowP2p;
-    bool m_dataSavingMode;
-    bool m_dataSavingRequestedByPeer;
-    std::string m_activeNetItfName;
-    double m_publicEndpointsReqTime;
-    std::vector<QueuedPacket> m_queuedPackets;
-    double m_connectionInitTime;
-    double m_lastRecvPacketTime;
-    std::int32_t m_peerVersion;
-    CongestionControl* m_conctl;
-
-    bool m_receivedInit;
-    bool m_receivedInitAck;
-    bool m_isOutgoing;
-
-    NetworkSocket* m_udpSocket;
-    NetworkSocket* m_realUdpSocket;
-
-    Config m_config;
-    TrafficStats m_stats;
-    FILE* m_statsDump;
-
-    std::string m_currentAudioInput;
-    std::string m_currentAudioOutput;
-
-    bool m_useTCP;
-    bool m_useUDP;
-    bool m_didAddTcpRelays;
-
-    SocketSelectCanceller* m_selectCanceller;
-    HistoricBuffer<std::uint8_t, 4, int> m_signalBarsHistory;
-    bool m_audioStarted = false;
-
-    UdpState m_udpConnectivityState;
-    double m_lastUdpPingTime;
-    int m_udpPingCount;
-
-    Proxy m_proxyProtocol;
-    std::string m_proxyAddress;
-    std::uint16_t m_proxyPort;
-    std::string m_proxyUsername;
-    std::string m_proxyPassword;
-    NetworkAddress m_resolvedProxyAddress = NetworkAddress::Empty();
-
-    std::uint32_t m_peerCapabilities;
-    Callbacks m_callbacks;
-    bool m_didReceiveGroupCallKey;
-    bool m_didReceiveGroupCallKeyAck;
-    bool m_didSendGroupCallKey;
-    bool m_didSendUpgradeRequest;
-    bool m_didInvokeUpgradeCallback;
-
-    std::int32_t m_connectionMaxLayer;
-    bool m_useMTProto2;
-    bool m_setCurrentEndpointToTCP;
-
-    std::vector<UnacknowledgedExtraData> m_currentExtras;
-    std::unordered_map<ExtraType, std::uint64_t> m_lastReceivedExtrasByType;
-
-    bool m_useIPv6;
-    bool m_peerIPv6Available;
-    bool m_didAddIPv6Relays;
-    bool m_didSendIPv6Endpoint;
-    NetworkAddress m_myIPv6 = NetworkAddress::Empty();
-
-    bool m_shittyInternetMode;
-    int m_extraEcLevel = 0;
     std::vector<Buffer> m_ecAudioPackets;
-
-    int m_publicEndpointsReqCount = 0;
-    bool m_wasEstablished = false;
-    bool m_receivedFirstStreamPacket = false;
-    std::atomic<std::uint32_t> m_unsentStreamPackets;
-    HistoricBuffer<std::uint32_t, 5> m_unsentStreamPacketsHistory;
-    bool m_needReInitUdpProxy = true;
-    bool m_needRate = false;
     std::vector<DebugLoggedPacket> m_debugLoggedPackets;
-    BufferPool<1024, 32> m_outgoingAudioBufferPool;
-    BlockingQueue<RawPendingOutgoingPacket> m_rawSendQueue;
-
-    std::uint32_t m_initTimeoutID = MessageThread::INVALID_ID;
-    std::uint32_t m_udpPingTimeoutID = MessageThread::INVALID_ID;
 
     effects::Volume m_outputVolume;
     effects::Volume m_inputVolume;
 
-    std::vector<std::uint32_t> m_peerVideoDecoders;
+    std::string m_activeNetItfName = "";
 
-    MessageThread m_messageThread;
-
-
-    // Locked while audio i/o is being initialized and deinitialized so as to allow it to fully initialize before deinitialization begins.
-    Mutex m_audioIOMutex;
+    std::string m_proxyAddress = "";
+    std::uint16_t m_proxyPort = 0;
+    std::string m_proxyUsername = "";
+    std::string m_proxyPassword = "";
+    std::string m_lastTestedProxyServer = "";
+    NetworkAddress m_resolvedProxyAddress = NetworkAddress::Empty();
+    NetworkAddress m_myIPv6 = NetworkAddress::Empty();
 
 #if defined(TGVOIP_USE_CALLBACK_AUDIO_IO)
     std::function<void(std::int16_t*, std::size_t)> m_audioInputDataCallback;
@@ -831,17 +774,22 @@ private:
     ::OpusDecoder* m_preprocDecoder = nullptr;
     std::int16_t m_preprocBuffer[4096];
 #endif
-#if defined(__APPLE__) && defined(TARGET_OS_OSX)
-    bool macAudioDuckingEnabled = true;
-#endif
 
-    video::VideoSource* m_videoSource = nullptr;
-    video::VideoRenderer* m_videoRenderer = nullptr;
-    std::uint32_t m_lastReceivedVideoFrameNumber = std::numeric_limits<std::uint32_t>::max();
+    Callbacks m_callbacks =
+    {
+        .connectionStateChanged = nullptr,
+        .signalBarCountChanged = nullptr,
+        .groupCallKeySent = nullptr,
+        .groupCallKeyReceived = nullptr,
+        .upgradeToGroupCallRequested = nullptr
+    };
 
-    video::VideoPacketSender* m_videoPacketSender = nullptr;
-    std::uint32_t m_sendLosses = 0;
-    std::uint32_t m_unacknowledgedIncomingPacketCount = 0;
+    // Locked whenever the endpoints vector is modified (but not endpoints themselves) and whenever iterated outside of messageThread.
+    // After the call is started, only messageThread is allowed to modify the endpoints vector.
+    Mutex m_endpointsMutex;
+
+    // Locked while audio i/o is being initialized and deinitialized so as to allow it to fully initialize before deinitialization begins.
+    Mutex m_audioIOMutex;
 
     ProtocolInfo m_protocolInfo =
     {
@@ -853,16 +801,33 @@ private:
         .callUpgradeSupported = false
     };
 
-    /*** debug report problems ***/
-    bool m_wasReconnecting = false;
-    bool m_wasExtraEC = false;
-    bool m_wasEncoderLaggy = false;
-    bool m_wasNetworkHandover = false;
+    std::map<std::int64_t, Endpoint> m_endpoints;
+    std::int64_t m_currentEndpoint = 0;
 
-    /*** persistable state values ***/
-    bool m_proxySupportsUDP = true;
-    bool m_proxySupportsTCP = true;
-    std::string m_lastTestedProxyServer = "";
+    std::atomic<std::uint32_t> m_seq{1};
+    std::uint32_t m_lastRemoteSeq = 0;
+    std::uint32_t m_lastRemoteAckSeq = 0;
+    std::uint32_t m_lastSentSeq = 0;
+
+    int m_dontSendPackets = 0;
+    Error m_lastError;
+    std::uint32_t m_maxBitrate;
+    std::int32_t m_peerVersion = 0;
+    std::uint32_t m_peerCapabilities = 0;
+    Proxy m_proxyProtocol = Proxy::NONE;
+    std::int32_t m_connectionMaxLayer = 0;
+    std::atomic<std::uint32_t> m_unsentStreamPackets;
+
+    int m_echoCancellationStrength = 1;
+    int m_extraEcLevel = 0;
+    int m_publicEndpointsReqCount = 0;
+
+    std::uint32_t m_initTimeoutID = MessageThread::INVALID_ID;
+    std::uint32_t m_udpPingTimeoutID = MessageThread::INVALID_ID;
+
+    std::uint32_t m_lastReceivedVideoFrameNumber = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t m_sendLosses = 0;
+    std::uint32_t m_unacknowledgedIncomingPacketCount = 0;
 
     /*** server config values ***/
     std::uint32_t m_maxAudioBitrate;
@@ -876,16 +841,62 @@ private:
     std::uint32_t m_minAudioBitrate;
     std::uint32_t m_audioBitrateStepIncr;
     std::uint32_t m_audioBitrateStepDecr;
-    double m_relaySwitchThreshold;
-    double m_p2pToRelaySwitchThreshold;
-    double m_relayToP2pSwitchThreshold;
-    double m_reconnectingTimeout;
-    std::uint32_t m_needRateFlags;
-    double m_rateMaxAcceptableRTT;
-    double m_rateMaxAcceptableSendLoss;
-    double m_packetLossToEnableExtraEC;
+
     std::uint32_t m_maxUnsentStreamPackets;
     std::uint32_t m_unackNopThreshold;
+
+    std::uint32_t m_needRateFlags;
+
+    std::uint8_t m_encryptionKey[256];
+    std::uint8_t m_keyFingerprint[8];
+    std::uint8_t m_callID[16];
+
+    std::atomic<bool> m_runReceiver{false};
+    std::atomic<bool> m_stopping{false};
+    bool m_audioOutStarted = false;
+    bool m_waitingForAcks = false;
+    bool m_micMuted = false;
+    bool m_waitingForRelayPeerInfo = false;
+    bool m_allowP2p = true;
+    bool m_dataSavingMode = false;
+    bool m_dataSavingRequestedByPeer = false;
+    bool m_receivedInit = false;
+    bool m_receivedInitAck = false;
+    bool m_isOutgoing;
+    bool m_useTCP = false;
+    bool m_useUDP = true;
+    bool m_didAddTcpRelays = false;
+    bool m_audioStarted = false;
+    bool m_didReceiveGroupCallKey = false;
+    bool m_didReceiveGroupCallKeyAck = false;
+    bool m_didSendGroupCallKey = false;
+    bool m_didSendUpgradeRequest = false;
+    bool m_didInvokeUpgradeCallback = false;
+    bool m_useMTProto2 = false;
+    bool m_setCurrentEndpointToTCP = false;
+    bool m_useIPv6 = false;
+    bool m_peerIPv6Available = false;
+    bool m_didAddIPv6Relays = false;
+    bool m_didSendIPv6Endpoint = false;
+    bool m_shittyInternetMode = false;
+    bool m_wasEstablished = false;
+    bool m_receivedFirstStreamPacket = false;
+    bool m_needReInitUdpProxy = true;
+    bool m_needRate = false;
+
+#if defined(__APPLE__) && defined(TARGET_OS_OSX)
+    bool macAudioDuckingEnabled = true;
+#endif
+
+    /*** debug report problems ***/
+    bool m_wasReconnecting = false;
+    bool m_wasExtraEC = false;
+    bool m_wasEncoderLaggy = false;
+    bool m_wasNetworkHandover = false;
+
+    /*** persistable state values ***/
+    bool m_proxySupportsUDP = true;
+    bool m_proxySupportsTCP = true;
 };
 
 class VoIPGroupController : public VoIPController
