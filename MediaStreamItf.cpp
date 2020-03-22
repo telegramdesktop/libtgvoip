@@ -25,7 +25,7 @@ void MediaStreamItf::SetCallback(std::function<std::size_t(std::uint8_t*, std::s
 std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t length)
 {
     std::lock_guard<std::mutex> lock(m_mutexCallback);
-    if (m_callback)
+    if (m_callback != nullptr)
         return m_callback(data, length, m_callbackParam);
     return 0;
 }
@@ -189,9 +189,9 @@ void AudioMixer::RunThread()
                 m_echoCanceller->SpeakerOutCallback(*data, 960 * 2);
             m_processedQueue.Put(std::move(data));
         }
-        catch (const std::bad_alloc&)
+        catch (const std::bad_alloc& exception)
         {
-            LOGE("AudioMixer: no buffers left");
+            LOGE("AudioMixer: no buffers left.\nwhat():\n%s", exception.what());
             continue;
         }
     }

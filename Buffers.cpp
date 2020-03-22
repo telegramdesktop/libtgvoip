@@ -87,14 +87,14 @@ Buffer& Buffer::operator=(Buffer&& other)
 std::uint8_t& Buffer::operator[](std::size_t i)
 {
     if (i >= m_length)
-        throw std::out_of_range("");
+        throw std::out_of_range("Buffer operator[] invalid index " + std::to_string(i) + ", length is " + std::to_string(m_length));
     return m_data[i];
 }
 
 const std::uint8_t& Buffer::operator[](std::size_t i) const
 {
     if (i >= m_length)
-        throw std::out_of_range("");
+        throw std::out_of_range("Buffer operator[] invalid index " + std::to_string(i) + ", length is " + std::to_string(m_length));
     return m_data[i];
 }
 
@@ -111,7 +111,7 @@ const std::uint8_t* Buffer::operator*() const
 void Buffer::CopyFrom(const Buffer& other, std::size_t count, std::size_t srcOffset, std::size_t dstOffset)
 {
     if (other.m_data == nullptr)
-        throw std::invalid_argument("CopyFrom can't copy from nullptr");
+        throw std::invalid_argument("Buffer::CopyFrom can't copy from nullptr");
     if (other.m_length < srcOffset + count || m_length < dstOffset + count)
         throw std::out_of_range("Out of offset+count bounds of either buffer");
     std::memcpy(m_data + dstOffset, other.m_data + srcOffset, count);

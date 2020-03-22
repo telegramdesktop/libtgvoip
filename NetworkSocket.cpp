@@ -810,9 +810,9 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
                 m_readyToSend = true;
                 LOGV("socks5: udp associate successful, given endpoint %s:%d", m_connectedAddress.ToString().c_str(), m_connectedPort);
             }
-            catch (const std::out_of_range&)
+            catch (const std::out_of_range& exception)
             {
-                LOGW("socks5: udp associate response parse failed");
+                LOGW("socks5: udp associate response parse failed.\nwhat():\n%s", exception.what());
                 m_failed = true;
             }
         }

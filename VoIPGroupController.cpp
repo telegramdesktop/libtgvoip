@@ -188,9 +188,9 @@ vector<shared_ptr<VoIPController::Stream>> VoIPGroupController::DeserializeStrea
             res.push_back(s);
         }
     }
-    catch (const out_of_range& x)
+    catch (const out_of_range& exception)
     {
-        LOGW("Error deserializing streams: %s", x.what());
+        LOGW("Error deserializing streams.\nwhat():\n%s", exception.what());
     }
     return res;
 }

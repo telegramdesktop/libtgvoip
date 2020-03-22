@@ -224,9 +224,9 @@ void tgvoip::OpusDecoder::RunThread()
                 }
                 m_decodedQueue->Put(std::move(buf));
             }
-            catch (const std::bad_alloc&)
+            catch (const std::bad_alloc& exception)
             {
-                LOGW("decoder: no buffers left!");
+                LOGW("decoder: no buffers left!\nwhat():\n%s", exception.what());
             }
         }
     }

@@ -1348,7 +1348,6 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
     }
     std::shared_ptr<Buffer> dataBufPtr = std::make_shared<Buffer>(std::move(dataBuf));
     std::shared_ptr<Buffer> secondaryDataBufPtr = std::make_shared<Buffer>(std::move(secondaryDataBuf));
-
     m_messageThread.Post([this, dataBufPtr, secondaryDataBufPtr, len, secondaryLen]() {
         m_unsentStreamPacketsHistory.Add(static_cast<unsigned int>(m_unsentStreamPackets));
         if (m_unsentStreamPacketsHistory.Average() >= m_maxUnsentStreamPackets && !m_videoPacketSender)
@@ -1489,7 +1488,7 @@ void VoIPController::InitializeAudio()
     LOGI("AEC: %d NS: %d AGC: %d", m_config.enableAEC, m_config.enableNS, m_config.enableAGC);
     m_echoCanceller = new EchoCanceller(m_config.enableAEC, m_config.enableNS, m_config.enableAGC);
     m_encoder = new OpusEncoder(m_audioInput, true);
-    m_encoder->SetCallback(bind(&VoIPController::HandleAudioInput, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+    m_encoder->SetCallback(std::bind(&VoIPController::HandleAudioInput, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
     m_encoder->SetOutputFrameDuration(outgoingAudioStream->frameDuration);
     m_encoder->SetEchoCanceller(m_echoCanceller);
     m_encoder->SetSecondaryEncoderEnabled(false);
@@ -2144,8 +2143,9 @@ void VoIPController::NetworkPacketReceived(std::shared_ptr<NetworkPacket> _packe
                     srcEndpointID = p2p.id;
                 }
             }
-            catch (const std::out_of_range&)
+            catch (const std::out_of_range& exception)
             {
+                LOGW("No endpoint with type UDP_P2P_INET\nwhat():\n%s", exception.what());
             }
         }
     }
@@ -2182,9 +2182,9 @@ void VoIPController::NetworkPacketReceived(std::shared_ptr<NetworkPacket> _packe
     {
         ProcessIncomingPacket(packet, m_endpoints.at(srcEndpointID));
     }
-    catch (const std::out_of_range& x)
+    catch (const std::out_of_range& exception)
     {
-        LOGW("Error parsing packet: %s", x.what());
+        LOGW("Error while parsing packet.\nwhat():\n%s", exception.what());
     }
 }
 
@@ -3418,9 +3418,9 @@ Endpoint* VoIPController::GetEndpointForPacket(const PendingOutgoingPacket& pkt)
         {
             endpoint = &m_endpoints.at(pkt.endpoint);
         }
-        catch (const std::out_of_range& x)
+        catch (const std::out_of_range& exception)
         {
-            LOGW("Unable to send packet via nonexistent endpoint %" PRIu64 "\ne.what(): %s", pkt.endpoint, x.what());
+            LOGW("Unable to send packet via nonexistent endpoint %" PRIu64 "\nwhat():\n%s", pkt.endpoint, exception.what());
             return nullptr;
         }
     }
@@ -3876,10 +3876,9 @@ Endpoint& VoIPController::GetEndpointByType(Endpoint::Type type)
     if (type == Endpoint::Type::UDP_RELAY && m_preferredRelay)
         return m_endpoints.at(m_preferredRelay);
     for (std::pair<const std::int64_t, Endpoint>& e : m_endpoints)
-    {
         if (e.second.type == type)
             return e.second;
-    }
+
     throw std::out_of_range("no endpoint");
 }
 

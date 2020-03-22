@@ -156,9 +156,9 @@ std::size_t tgvoip::OpusEncoder::Callback(std::uint8_t* data, std::size_t len, v
         buf.CopyFrom(data, 0, 960 * 2);
         e->m_queue.Put(std::move(buf));
     }
-    catch (const std::bad_alloc&)
+    catch (const std::bad_alloc& exception)
     {
-        LOGW("opus_encoder: no buffer slots left");
+        LOGW("opus_encoder: no buffer slots left.\nwhat():\n%s", exception.what());
         if (e->m_complexity > 1)
         {
             --e->m_complexity;

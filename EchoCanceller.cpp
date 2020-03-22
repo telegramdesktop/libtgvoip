@@ -127,9 +127,9 @@ void EchoCanceller::SpeakerOutCallback(std::uint8_t* data, std::size_t len)
         buf.CopyFrom(data, 0, 960 * 2);
         m_farendQueue->Put(std::move(buf));
     }
-    catch (const std::bad_alloc&)
+    catch (const std::bad_alloc& exception)
     {
-        LOGW("Echo canceller can't keep up with real time");
+        LOGW("Echo canceller can't keep up with real time.\nwhat():\n%s", exception.what());
     }
 #endif
 }
