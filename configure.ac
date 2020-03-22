@@ -3,8 +3,8 @@
 
 # Define version information
 m4_define([libtgvoip_major_version], 2)
-m4_define([libtgvoip_minor_version], 4)
-m4_define([libtgvoip_patch_version], 4)
+m4_define([libtgvoip_minor_version], 6)
+m4_define([libtgvoip_patch_version], 1)
 m4_define([libtgvoip_version],[libtgvoip_major_version.libtgvoip_minor_version.libtgvoip_patch_version])
 
 AC_PREREQ([2.69])
