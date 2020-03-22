@@ -10,6 +10,7 @@
 #include <atomic>
 #include <functional>
 #include <vector>
+#include <mutex>
 
 namespace tgvoip
 {
@@ -43,7 +44,9 @@ private:
     std::vector<Message> m_queue;
     mutable Mutex m_queueMutex;
     mutable Mutex m_queueAccessMutex;
+
     std::uint32_t m_lastMessageID = 1;
+    mutable std::mutex m_mutexLastMessageID;
     bool m_cancelCurrent = false;
 
 #ifdef _WIN32

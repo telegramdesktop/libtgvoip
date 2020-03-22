@@ -147,8 +147,12 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
 {
     assert(delay >= 0);
     //LOGI("MessageThread post [function] delay %f", delay);
+    Message m;
     double currentTime = VoIPController::GetCurrentTime();
-    Message m {m_lastMessageID++, delay == 0.0 ? 0.0 : (currentTime + delay), interval, func};
+    {
+        std::lock_guard<std::mutex> lock(m_mutexLastMessageID);
+        m = { m_lastMessageID++, delay == 0.0 ? 0.0 : (currentTime + delay), interval, func };
+    }
     InsertMessageInternal(m);
     if (!IsCurrent())
     {

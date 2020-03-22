@@ -28,17 +28,17 @@ public:
     JitterBuffer(MediaStreamItf* out, std::uint32_t m_step);
     ~JitterBuffer();
     void SetMinPacketCount(std::uint32_t count);
-    int GetMinPacketCount();
-    unsigned int GetCurrentDelay();
-    double GetAverageDelay();
+    int GetMinPacketCount() const;
+    unsigned int GetCurrentDelay() const;
+    double GetAverageDelay() const;
     void Reset();
     void HandleInput(std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC);
     std::size_t HandleOutput(std::uint8_t* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC);
     void Tick();
-    void GetAverageLateCount(double* out);
+    void GetAverageLateCount(double* out) const;
     int GetAndResetLostPacketCount();
-    double GetLastMeasuredJitter();
-    double GetLastMeasuredDelay();
+    double GetLastMeasuredJitter() const;
+    double GetLastMeasuredDelay() const;
 
 private:
     struct jitter_packet_t
@@ -62,13 +62,16 @@ private:
     void PutInternal(jitter_packet_t* pkt, bool overwriteExisting);
     Status GetInternal(jitter_packet_t* pkt, int offset, bool advance);
     void Advance();
+    int GetMinPacketCountNonBlocking() const;
+    unsigned int GetCurrentDelayNonBlocking() const;
+    void ResetNonBlocking();
 
     BufferPool<JITTER_SLOT_SIZE, JITTER_SLOT_COUNT> m_bufferPool;
     mutable Mutex m_mutex;
     jitter_packet_t m_slots[JITTER_SLOT_COUNT];
     std::int64_t m_nextTimestamp = 0;
     std::uint32_t m_step;
-    std::atomic<double> m_minDelay{6};
+    double m_minDelay = 6;
     std::uint32_t m_minMinDelay;
     std::uint32_t m_maxMinDelay;
     std::uint32_t m_maxUsedSlots;

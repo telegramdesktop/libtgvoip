@@ -158,7 +158,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         addr.sin6_port = htons(packet.port);
         std::lock_guard<std::mutex> lock(m_mutexFd);
         res = static_cast<int>(sendto(m_fd, *packet.data, packet.data.Length(), 0,
-            reinterpret_cast<sockaddr*>(&addr), sizeof(addr)));
+                               reinterpret_cast<sockaddr*>(&addr), sizeof(addr)));
     }
     else
     {
@@ -231,7 +231,9 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
     {
         int addrLen = sizeof(sockaddr_in6);
         sockaddr_in6 srcAddr;
-        ssize_t len = recvfrom(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0, reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
+        ssize_t len;
+        len = recvfrom(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0,
+                       reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
         if (len > 0)
         {
             if (!m_isV4Available && IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr))
@@ -370,6 +372,7 @@ void NetworkSocketPosix::Close()
     m_closing = true;
     m_failed = true;
 
+    std::lock_guard<std::mutex> lock(m_mutexFd);
     if (m_fd >= 0)
     {
         shutdown(m_fd, SHUT_RDWR);

@@ -49,7 +49,7 @@ JitterBuffer::JitterBuffer(MediaStreamItf* out, std::uint32_t step)
     tgvoip_log_file_write_header(dump);
     fprintf(dump, "PTS\tRTS\tNumInBuf\tAJitter\tADelay\tTDelay\n");
 #endif
-    Reset();
+    ResetNonBlocking();
 }
 
 JitterBuffer::~JitterBuffer()
@@ -60,12 +60,19 @@ JitterBuffer::~JitterBuffer()
 void JitterBuffer::SetMinPacketCount(std::uint32_t count)
 {
     LOGI("jitter: set min packet count %u", count);
+    MutexGuard m(m_mutex);
     m_minDelay = count;
     m_minMinDelay = count;
     //Reset();
 }
 
-int JitterBuffer::GetMinPacketCount()
+int JitterBuffer::GetMinPacketCount() const
+{
+    MutexGuard m(m_mutex);
+    return JitterBuffer::GetMinPacketCountNonBlocking();
+}
+
+int JitterBuffer::GetMinPacketCountNonBlocking() const
 {
     return static_cast<int>(m_minDelay);
 }
@@ -94,7 +101,7 @@ void JitterBuffer::HandleInput(std::uint8_t* data, std::size_t len, std::uint32_
     //LOGV("in, ts=%d, ec=%d", timestamp, isEC);
 }
 
-void JitterBuffer::Reset()
+void JitterBuffer::ResetNonBlocking()
 {
     m_wasReset = true;
     m_needBuffering = true;
@@ -117,6 +124,12 @@ void JitterBuffer::Reset()
     m_dontChangeDelay = 0;
 }
 
+void JitterBuffer::Reset()
+{
+    MutexGuard m(m_mutex);
+    ResetNonBlocking();
+}
+
 std::size_t JitterBuffer::HandleOutput(std::uint8_t* buffer, std::size_t len, int offsetInSteps, bool advance, int& playbackScaledDuration, bool& isEC)
 {
     jitter_packet_t pkt;
@@ -127,14 +140,14 @@ std::size_t JitterBuffer::HandleOutput(std::uint8_t* buffer, std::size_t len, in
     if (m_first)
     {
         m_first = false;
-        unsigned int delay = GetCurrentDelay();
-        if (GetCurrentDelay() > 5)
+        unsigned int delay = GetCurrentDelayNonBlocking();
+        if (delay > 5)
         {
             LOGW("jitter: delay too big upon start (%u), dropping packets", delay);
-            while (static_cast<int>(delay) > GetMinPacketCount())
+            while (static_cast<int>(delay) > GetMinPacketCountNonBlocking())
             {
-                assert(GetMinPacketCount() >= 0);
-                for (int i = 0; i < JITTER_SLOT_COUNT; i++)
+                assert(GetMinPacketCountNonBlocking() >= 0);
+                for (int i = 0; i < JITTER_SLOT_COUNT; ++i)
                 {
                     if (m_slots[i].timestamp == m_nextTimestamp)
                     {
@@ -165,7 +178,7 @@ std::size_t JitterBuffer::HandleOutput(std::uint8_t* buffer, std::size_t len, in
         }
         //LOGV("outstanding delay change: %d", outstandingDelayChange);
     }
-    else if (advance && GetCurrentDelay() == 0)
+    else if (advance && GetCurrentDelayNonBlocking() == 0)
     {
         //LOGV("stretching packet because the next one is late");
         playbackScaledDuration = 80;
@@ -249,10 +262,11 @@ JitterBuffer::Status JitterBuffer::GetInternal(jitter_packet_t* pkt, int offset,
             //minDelay++;
             m_dontIncMinDelay = 16;
             m_dontDecMinDelay += 128;
-            if (GetCurrentDelay() < m_minDelay)
-                m_nextTimestamp -= static_cast<std::int64_t>(m_minDelay - GetCurrentDelay());
+            double currentDelay = static_cast<double>(GetCurrentDelayNonBlocking());
+            if (currentDelay < m_minDelay)
+                m_nextTimestamp -= static_cast<std::int64_t>(m_minDelay - currentDelay);
             m_lostCount = 0;
-            Reset();
+            ResetNonBlocking();
         }
 
         return Status::MISSING;
@@ -282,7 +296,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
             return;
         }
     }
-    m_gotSinceReset++;
+    ++m_gotSinceReset;
     if (m_wasReset)
     {
         m_wasReset = false;
@@ -347,7 +361,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
             if (m_slots[i].buffer.IsEmpty())
                 break;
         }
-        if (i == JITTER_SLOT_COUNT || GetCurrentDelay() >= m_maxUsedSlots)
+        if (i == JITTER_SLOT_COUNT || GetCurrentDelayNonBlocking() >= m_maxUsedSlots)
         {
             int toRemove = JITTER_SLOT_COUNT;
             std::uint32_t bestTimestamp = 0xFFFFFFFF;
@@ -381,14 +395,18 @@ void JitterBuffer::Advance()
     m_nextTimestamp += m_step;
 }
 
-unsigned int JitterBuffer::GetCurrentDelay()
+unsigned int JitterBuffer::GetCurrentDelay() const
+{
+    MutexGuard m(m_mutex);
+    return GetCurrentDelayNonBlocking();
+}
+
+unsigned int JitterBuffer::GetCurrentDelayNonBlocking() const
 {
     unsigned int delay = 0;
     for (int i = 0; i < JITTER_SLOT_COUNT; ++i)
-    {
         if (!m_slots[i].buffer.IsEmpty())
-            delay++;
-    }
+            ++delay;
     return delay;
 }
 
@@ -408,13 +426,10 @@ void JitterBuffer::Tick()
         m_wasReset = true;
     }
 
-    if (absolutelyNoLatePackets)
-    {
-        if (m_dontDecMinDelay > 0)
-            m_dontDecMinDelay--;
-    }
+    if (absolutelyNoLatePackets && m_dontDecMinDelay > 0)
+        --m_dontDecMinDelay;
 
-    m_delayHistory.Add(static_cast<int>(GetCurrentDelay()));
+    m_delayHistory.Add(static_cast<int>(GetCurrentDelayNonBlocking()));
     m_avgDelay = m_delayHistory.Average(32);
 
     double stddev = 0;
@@ -442,7 +457,7 @@ void JitterBuffer::Tick()
         if ((diff > 0 && m_dontIncMinDelay == 0) || (diff < 0 && m_dontDecMinDelay == 0))
         {
             //nextTimestamp+=diff*(std::int32_t)step;
-            m_minDelay.store(m_minDelay + diff);
+            m_minDelay = m_minDelay + diff;
             m_outstandingDelayChange += diff * 60;
             m_dontChangeDelay += 32;
             //LOGD("new delay from stddev %f", minDelay);
@@ -495,9 +510,15 @@ void JitterBuffer::Tick()
     ++m_tickCount;
 }
 
-void JitterBuffer::GetAverageLateCount(double* out)
+void JitterBuffer::GetAverageLateCount(double* out) const
 {
-    double avgLate64 = m_lateHistory.Average(), avgLate32 = m_lateHistory.Average(32), avgLate16 = m_lateHistory.Average(16);
+    double avgLate64, avgLate32, avgLate16;
+    {
+        MutexGuard m(m_mutex);
+        avgLate64 = m_lateHistory.Average();
+        avgLate32 = m_lateHistory.Average(32);
+        avgLate16 = m_lateHistory.Average(16);
+    }
     out[0] = avgLate16;
     out[1] = avgLate32;
     out[2] = avgLate64;
@@ -511,17 +532,20 @@ int JitterBuffer::GetAndResetLostPacketCount()
     return r;
 }
 
-double JitterBuffer::GetLastMeasuredJitter()
+double JitterBuffer::GetLastMeasuredJitter() const
 {
+    MutexGuard m(m_mutex);
     return m_lastMeasuredJitter;
 }
 
-double JitterBuffer::GetLastMeasuredDelay()
+double JitterBuffer::GetLastMeasuredDelay() const
 {
+    MutexGuard m(m_mutex);
     return m_lastMeasuredDelay;
 }
 
-double JitterBuffer::GetAverageDelay()
+double JitterBuffer::GetAverageDelay() const
 {
+    MutexGuard m(m_mutex);
     return m_avgDelay;
 }
