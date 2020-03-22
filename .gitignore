@@ -34,3 +34,9 @@ autom4te.cache/
 *.includes
 *.creator.user
 
+# PVS Studio files
+PVS-Studio.log
+add_comments.log
+compile_commands.json
+pvs-report/
+remove_comments.log
