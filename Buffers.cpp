@@ -124,12 +124,24 @@ void Buffer::CopyFrom(const void* ptr, std::size_t dstOffset, std::size_t count)
 
 void Buffer::Resize(std::size_t newSize)
 {
+    std::uint8_t* newData;
+
     if (m_reallocFn)
-        m_data = reinterpret_cast<std::uint8_t*>(m_reallocFn(m_data, newSize));
+        newData = reinterpret_cast<std::uint8_t*>(m_reallocFn(m_data, newSize));
     else
-        m_data = reinterpret_cast<std::uint8_t*>(std::realloc(m_data, newSize));
-    if (m_data == nullptr)
+        newData = reinterpret_cast<std::uint8_t*>(std::realloc(m_data, newSize));
+
+    if (newData == nullptr)
+    {
+        if (m_freeFn)
+            m_freeFn(m_data);
+        else
+            std::free(m_data);
+
         throw std::bad_alloc();
+    }
+
+    m_data = newData;
     m_length = newSize;
 }
 
