@@ -581,8 +581,8 @@ protected:
     void ResetEndpointPingStats();
     void SendVideoFrame(const Buffer& frame, std::uint32_t flags, std::uint32_t rotation);
     void ProcessIncomingVideoFrame(Buffer frame, std::uint32_t pts, bool keyframe, std::uint16_t rotation);
-    std::shared_ptr<Stream> GetStreamByType(StreamType, bool outgoing);
-    std::shared_ptr<Stream> GetStreamByID(std::uint8_t id, bool outgoing);
+    std::shared_ptr<Stream> GetStreamByType(StreamType, bool outgoing) const;
+    std::shared_ptr<Stream> GetStreamByID(std::uint8_t id, bool outgoing) const;
     Endpoint* GetEndpointForPacket(const PendingOutgoingPacket& pkt);
     bool SendOrEnqueuePacket(PendingOutgoingPacket pkt, bool enqueue = true, PacketSender* source = nullptr);
     static std::string NetworkTypeToString(NetType type);

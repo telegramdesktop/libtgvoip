@@ -323,8 +323,7 @@ NetworkSocketTCPObfuscated::NetworkSocketTCPObfuscated(NetworkSocket* wrapped)
 
 NetworkSocketTCPObfuscated::~NetworkSocketTCPObfuscated()
 {
-    if (m_wrapped != nullptr)
-        delete m_wrapped;
+    delete m_wrapped;
 }
 
 NetworkSocket* NetworkSocketTCPObfuscated::GetWrapped()

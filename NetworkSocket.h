@@ -197,7 +197,7 @@ private:
     std::string m_username;
     std::string m_password;
     NetworkAddress m_connectedAddress = NetworkAddress::Empty();
-    std::uint16_t m_connectedPort;
+    std::uint16_t m_connectedPort = 0;
     ConnectionState m_state = ConnectionState::Initial;
 };
 

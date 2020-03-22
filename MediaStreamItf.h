@@ -37,7 +37,7 @@ public:
 private:
     std::function<std::size_t(std::uint8_t*, std::size_t, void*)> m_callback = nullptr;
     std::mutex m_mutexCallback;
-    void* m_callbackParam;
+    void* m_callbackParam = nullptr;
 };
 
 class AudioMixer : public MediaStreamItf
@@ -61,11 +61,11 @@ private:
     };
     mutable Mutex m_inputsMutex;
     std::vector<MixerInput> m_inputs;
-    Thread* m_thread;
+    Thread* m_thread = nullptr;
     BufferPool<960 * 2, 16> m_bufferPool;
     BlockingQueue<Buffer> m_processedQueue;
     Semaphore m_semaphore;
-    EchoCanceller* m_echoCanceller;
+    EchoCanceller* m_echoCanceller = nullptr;
     bool m_running;
 
     void RunThread();

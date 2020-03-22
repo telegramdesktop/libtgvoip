@@ -440,7 +440,7 @@ void __tgvoip_call_tglog(const char* format, ...)
     const int length = std::vsnprintf(nullptr, 0, format, vaCopy);
     va_end(vaCopy);
 
-    std::vector<char> zc(static_cast<std::size_t>(length + 1));
+    std::vector<char> zc(static_cast<std::size_t>(length) + 1);
     std::vsnprintf(zc.data(), zc.size(), format, vaArgs);
     va_end(vaArgs);
 

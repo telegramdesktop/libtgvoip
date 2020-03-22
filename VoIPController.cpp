@@ -1197,26 +1197,20 @@ void VoIPController::SendStreamFlags(Stream& stream)
     SendExtra(buf, ExtraType::STREAM_FLAGS);
 }
 
-std::shared_ptr<VoIPController::Stream> VoIPController::GetStreamByType(StreamType type, bool outgoing)
+std::shared_ptr<VoIPController::Stream> VoIPController::GetStreamByType(StreamType type, bool outgoing) const
 {
-    std::shared_ptr<Stream> s;
-    for (std::shared_ptr<Stream>& ss : (outgoing ? m_outgoingStreams : m_incomingStreams))
-    {
+    for (const std::shared_ptr<Stream>& ss : (outgoing ? m_outgoingStreams : m_incomingStreams))
         if (ss->type == type)
             return ss;
-    }
-    return s;
+    return std::shared_ptr<Stream>();
 }
 
-std::shared_ptr<VoIPController::Stream> VoIPController::GetStreamByID(std::uint8_t id, bool outgoing)
+std::shared_ptr<VoIPController::Stream> VoIPController::GetStreamByID(std::uint8_t id, bool outgoing) const
 {
-    std::shared_ptr<Stream> s;
-    for (std::shared_ptr<Stream>& ss : (outgoing ? m_outgoingStreams : m_incomingStreams))
-    {
+    for (const std::shared_ptr<Stream>& ss : (outgoing ? m_outgoingStreams : m_incomingStreams))
         if (ss->id == id)
             return ss;
-    }
-    return s;
+    return std::shared_ptr<Stream>();
 }
 
 CellularCarrierInfo VoIPController::GetCarrierInfo()
@@ -3140,7 +3134,7 @@ void VoIPController::ProcessExtraData(Buffer& data)
 {
     BufferInputStream in(*data, data.Length());
     ExtraType type = static_cast<ExtraType>(in.ReadUInt8());
-    std::uint8_t fullHash[SHA1_LENGTH];
+    alignas(8) std::uint8_t fullHash[SHA1_LENGTH];
     crypto.sha1(*data, data.Length(), fullHash);
     std::uint64_t hash = *reinterpret_cast<std::uint64_t*>(fullHash);
     if (m_lastReceivedExtrasByType[type] == hash)

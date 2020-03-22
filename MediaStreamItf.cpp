@@ -184,7 +184,7 @@ void AudioMixer::RunThread()
             {
                 std::memset(*data, 0, SIZE * 2);
             }
-            if (m_echoCanceller)
+            if (m_echoCanceller != nullptr)
                 m_echoCanceller->SpeakerOutCallback(*data, SIZE * 2);
             m_processedQueue.Put(std::move(data));
         }
