@@ -8,6 +8,8 @@
 #include "../VoIPController.h"
 #include "../logging.h"
 
+#include <sstream>
+
 using namespace tgvoip;
 using namespace tgvoip::audio;
 
@@ -39,45 +41,45 @@ AudioOutput* AudioIOCallback::GetOutput()
 
 AudioInputCallback::AudioInputCallback()
 {
-    thread = new Thread(std::bind(&AudioInputCallback::RunThread, this));
-    thread->SetName("AudioInputCallback");
+    m_thread = new Thread(std::bind(&AudioInputCallback::RunThread, this));
+    m_thread->SetName("AudioInputCallback");
 }
 
 AudioInputCallback::~AudioInputCallback()
 {
-    running = false;
-    thread->Join();
-    delete thread;
+    m_running = false;
+    m_thread->Join();
+    delete m_thread;
 }
 
 void AudioInputCallback::Start()
 {
-    if (!running)
+    if (!m_running)
     {
-        running = true;
-        thread->Start();
+        m_running = true;
+        m_thread->Start();
     }
-    recording = true;
+    m_recording = true;
 }
 
 void AudioInputCallback::Stop()
 {
-    recording = false;
+    m_recording = false;
 }
 
 void AudioInputCallback::SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c)
 {
-    dataCallback = c;
+    m_dataCallback = c;
 }
 
 void AudioInputCallback::RunThread()
 {
     std::int16_t buf[960];
-    while (running)
+    while (m_running)
     {
         double t = VoIPController::GetCurrentTime();
         std::memset(buf, 0, sizeof(buf));
-        dataCallback(buf, 960);
+        m_dataCallback(buf, 960);
         InvokeCallback(reinterpret_cast<std::uint8_t*>(buf), 960 * 2);
         double sl = 0.02 - (VoIPController::GetCurrentTime() - t);
         if (sl > 0)

@@ -30,10 +30,10 @@ public:
 
 private:
     void RunThread();
-    std::atomic<bool> running{false};
-    bool recording = false;
-    Thread* thread;
-    std::function<void(std::int16_t*, std::size_t)> dataCallback;
+    std::atomic<bool> m_running{false};
+    bool m_recording = false;
+    Thread* m_thread;
+    std::function<void(std::int16_t*, std::size_t)> m_dataCallback;
 };
 
 class AudioOutputCallback : public AudioOutput
@@ -48,7 +48,7 @@ public:
 
 private:
     void RunThread();
-    std::atomic<bool> m_running {false};
+    std::atomic<bool> m_running{false};
     bool m_playing = false;
     Thread* m_thread;
     std::function<void(std::int16_t*, std::size_t)> m_dataCallback;
