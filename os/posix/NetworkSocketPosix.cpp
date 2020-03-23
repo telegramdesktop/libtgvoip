@@ -89,7 +89,9 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         return;
     }
     int res;
-    if (m_protocol == NetworkProtocol::UDP)
+    switch (m_protocol)
+    {
+    case NetworkProtocol::UDP:
     {
         sockaddr_in6 addr;
         if (!packet.address.isIPv6)
@@ -159,11 +161,14 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         std::lock_guard<std::mutex> lock(m_mutexFd);
         res = static_cast<int>(sendto(m_fd, *packet.data, packet.data.Length(), 0,
                                reinterpret_cast<sockaddr*>(&addr), sizeof(addr)));
+        break;
     }
-    else
+    case NetworkProtocol::TCP:
     {
         std::lock_guard<std::mutex> lock(m_mutexFd);
         res = static_cast<int>(send(m_fd, *packet.data, packet.data.Length(), 0));
+        break;
+    }
     }
     if (res <= 0)
     {
