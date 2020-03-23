@@ -629,6 +629,12 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
     std::uint8_t buf[1024];
     switch (m_state)
     {
+    case ConnectionState::Initial:
+        LOGE("NetworkSocketSOCKS5Proxy: connection state Initial");
+        break;
+    case ConnectionState::Connected:
+        LOGE("NetworkSocketSOCKS5Proxy: connection state Connected");
+        break;
     case ConnectionState::WaitingForAuthMethod:
     {
         std::size_t l = m_tcp->Receive(buf, sizeof(buf));
