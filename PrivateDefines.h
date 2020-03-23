@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#define STD_ARRAY_SIZEOF(arrayName) ((sizeof(decltype(arrayName)::value_type)) * (arrayName).size())
+
 #define IS_MOBILE_NETWORK(x) ((x) == NetType::GPRS || (x) == NetType::EDGE || (x) == NetType::THREE_G || (x) == NetType::HSPA || (x) == NetType::LTE || (x) == NetType::OTHER_MOBILE)
 
 #define PROTOCOL_NAME 0x50567247 // "GrVP" in little endian (reversed here)

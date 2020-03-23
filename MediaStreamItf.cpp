@@ -4,6 +4,7 @@
 // you should have received with this source code distribution.
 //
 
+#include "PrivateDefines.h"
 #include "MediaStreamItf.h"
 #include "EchoCanceller.h"
 #include "logging.h"
@@ -138,34 +139,26 @@ void AudioMixer::RunThread()
             //LOGV("Audio mixer processing a frame");
             MutexGuard m(m_inputsMutex);
             std::int16_t* buf = reinterpret_cast<std::int16_t*>(*data);
+
             constexpr std::size_t SIZE = 960;
+            constexpr std::size_t INT16_SIZE = sizeof(std::int16_t);
+
             std::array<std::int16_t, SIZE> input;
             std::array<float, SIZE> out;
-            std::memset(out.data(), 0, SIZE * 4);
+            out.fill(0);
             int usedInputs = 0;
             for (MixerInput& in : m_inputs)
             {
-                std::size_t res = in.source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input.data()), SIZE * 2);
-                if (!res || in.multiplier == 0)
+                std::size_t res = in.source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input.data()), STD_ARRAY_SIZEOF(input));
+                if (res == 0 || in.multiplier == 0)
                 {
                     //LOGV("AudioMixer: skipping silent packet");
                     continue;
                 }
                 ++usedInputs;
-                float k = in.multiplier;
-                if (k != 1)
+                for (std::size_t i = 0; i < SIZE; ++i)
                 {
-                    for (std::size_t i = 0; i < SIZE; ++i)
-                    {
-                        out[i] += input[i] * k;
-                    }
-                }
-                else
-                {
-                    for (std::size_t i = 0; i < SIZE; ++i)
-                    {
-                        out[i] += input[i];
-                    }
+                    out[i] += input[i] * in.multiplier;
                 }
             }
             if (usedInputs > 0)
@@ -182,10 +175,10 @@ void AudioMixer::RunThread()
             }
             else
             {
-                std::memset(*data, 0, SIZE * 2);
+                std::memset(buf, 0, SIZE * INT16_SIZE);
             }
             if (m_echoCanceller != nullptr)
-                m_echoCanceller->SpeakerOutCallback(*data, SIZE * 2);
+                m_echoCanceller->SpeakerOutCallback(reinterpret_cast<std::uint8_t*>(buf), SIZE * INT16_SIZE);
             m_processedQueue.Put(std::move(data));
         }
         catch (const std::bad_alloc& exception)

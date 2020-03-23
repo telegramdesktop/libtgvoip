@@ -308,7 +308,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
     }
 
     for (jitter_packet_t& slot : m_slots)
-        if (slot.buffer.IsEmpty() && slot.timestamp < m_nextTimestamp - 1)
+        if (!slot.buffer.IsEmpty() && slot.timestamp < m_nextTimestamp - 1)
             slot.buffer = Buffer();
 
     /*double prevTime=0;

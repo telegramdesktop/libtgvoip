@@ -17,7 +17,7 @@ using namespace tgvoip;
 CongestionControl::CongestionControl()
     : m_cwnd(static_cast<std::size_t>(ServerConfig::GetSharedInstance()->GetInt("audio_congestion_window", 1024)))
 {
-    std::memset(m_inflightPackets.data(), 0, sizeof(m_inflightPackets));
+    std::memset(m_inflightPackets.data(), 0, STD_ARRAY_SIZEOF(m_inflightPackets));
 }
 
 CongestionControl::~CongestionControl() = default;

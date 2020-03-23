@@ -12,6 +12,7 @@
 #else
 #include "os/posix/NetworkSocketPosix.h"
 #endif
+#include "PrivateDefines.h"
 #include "Buffers.h"
 #include "NetworkSocket.h"
 #include "VoIPController.h"
@@ -139,15 +140,17 @@ void NetworkSocket::GenerateTCPO2States(std::uint8_t* buffer, TCPO2State* recvSt
 {
     std::memset(recvState, 0, sizeof(TCPO2State));
     std::memset(sendState, 0, sizeof(TCPO2State));
+
     std::array<std::uint8_t, 64> nonce;
+
     std::uint32_t *first = reinterpret_cast<std::uint32_t*>(nonce.data()), *second = first + 1;
-    std::uint32_t first1 = 0x44414548u, first2 = 0x54534f50u, first3 = 0x20544547u, first4 = 0x20544547u, first5 = 0xEEEEEEEEu;
+    std::uint32_t first1 = 0x44414548u, first2 = 0x54534F50u, first3 = 0x20544547u, first4 = 0x20544547u, first5 = 0xEEEEEEEEu;
     std::uint32_t second1 = 0;
     do
     {
-        VoIPController::crypto.rand_bytes(nonce.data(), nonce.size());
+        VoIPController::crypto.rand_bytes(nonce.data(), STD_ARRAY_SIZEOF(nonce));
     } while (*first == first1 || *first == first2 || *first == first3 || *first == first4 ||
-             *first == first5 || *second == second1 || *reinterpret_cast<std::uint8_t*>(nonce.data()) == 0xEF);
+             *first == first5 || *second == second1 || nonce.front() == 0xEF);
 
     // prepare encryption key/iv
     std::memcpy(sendState->key, nonce.data() + 8, 32);
@@ -155,15 +158,16 @@ void NetworkSocket::GenerateTCPO2States(std::uint8_t* buffer, TCPO2State* recvSt
 
     // prepare decryption key/iv
     std::array<char, 48> reversed;
-    std::memcpy(reversed.data(), nonce.data() + 8, reversed.size());
-    std::reverse(reversed.data(), reversed.data() + reversed.size());
+
+    std::memcpy(reversed.data(), nonce.data() + 8, STD_ARRAY_SIZEOF(reversed));
+    std::reverse(reversed.begin(), reversed.end());
     std::memcpy(recvState->key, reversed.data(), 32);
     std::memcpy(recvState->iv, reversed.data() + 32, 16);
 
     // write protocol identifier
     *reinterpret_cast<std::uint32_t*>(nonce.data() + 56) = 0xEFEFEFEFu;
     std::memcpy(buffer, nonce.data(), 56);
-    EncryptForTCPO2(nonce.data(), nonce.size(), sendState);
+    EncryptForTCPO2(nonce.data(), STD_ARRAY_SIZEOF(nonce), sendState);
     std::memcpy(buffer + 56, nonce.data() + 56, 8);
 }
 
