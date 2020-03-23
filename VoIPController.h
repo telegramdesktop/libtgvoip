@@ -39,6 +39,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <deque>
 
 #define LIBTGVOIP_VERSION "2.6"
 
@@ -646,6 +647,7 @@ private:
     void ActuallySendPacket(NetworkPacket pkt, Endpoint& ep);
     void InitializeAudio();
     void StartAudio();
+    void ProcessRelaySpecialRequest(BufferInputStream& in, Endpoint& srcEndpoint);
     void ProcessAcknowledgedOutgoingExtra(UnacknowledgedExtraData& extra);
     void AddIPv6Relays();
     void AddTCPRelays();
@@ -736,7 +738,7 @@ private:
     std::uint32_t m_prevSendLossCount = 0;
     std::uint32_t m_firstSentPing;
 
-    std::vector<PendingOutgoingPacket> m_sendQueue;
+    std::list<PendingOutgoingPacket> m_sendQueue;
     BlockingQueue<RawPendingOutgoingPacket> m_rawSendQueue;
     std::vector<QueuedPacket> m_queuedPackets;
     std::vector<UnacknowledgedExtraData> m_currentExtras;
@@ -752,7 +754,7 @@ private:
     std::vector<std::shared_ptr<Stream>> m_incomingStreams;
 
     std::vector<Buffer> m_ecAudioPackets;
-    std::vector<DebugLoggedPacket> m_debugLoggedPackets;
+    std::deque<DebugLoggedPacket> m_debugLoggedPackets;
 
     effects::Volume m_outputVolume;
     effects::Volume m_inputVolume;
