@@ -89,7 +89,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                             if (addrPtr->ai_family == AF_INET6)
                             {
                                 sockaddr_in6* translatedAddr = (sockaddr_in6*)addrPtr->ai_addr;
-                                std::uint32_t v4part = *((std::uint32_t*)&translatedAddr->sin6_addr.s6_addr[12]);
+                                std::uint32_t v4part = *(reinterpret_cast<std::uint32_t*>(&translatedAddr->sin6_addr.s6_addr[12]));
                                 if (v4part == 0xAA0000C0 && !addr170)
                                 {
                                     addr170 = translatedAddr->sin6_addr.s6_addr;
@@ -119,7 +119,7 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                 }
                 std::memset(&addr, 0, sizeof(sockaddr_in6));
                 addr.sin6_family = AF_INET6;
-                *((std::uint32_t*)&addr.sin6_addr.s6_addr[12]) = packet.address.addr.ipv4;
+                *(reinterpret_cast<std::uint32_t*>(&addr.sin6_addr.s6_addr[12])) = packet.address.addr.ipv4;
                 if (nat64Present)
                     std::memcpy(addr.sin6_addr.s6_addr, m_nat64Prefix, 12);
                 else
@@ -130,7 +130,8 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
                 std::memcpy(addr.sin6_addr.s6_addr, packet.address.addr.ipv6, 16);
             }
             addr.sin6_port = htons(packet.port);
-            res = sendto(fd, (const char*)*packet.data, packet.data.Length(), 0, (const sockaddr*)&addr, sizeof(addr));
+            res = sendto(fd, reinterpret_cast<const char*>(*packet.data), packet.data.Length(),
+                         0, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
         }
         else
         {
@@ -138,7 +139,8 @@ void NetworkSocketWinsock::Send(NetworkPacket packet)
             addr.sin_addr.s_addr = packet.address.addr.ipv4;
             addr.sin_port = htons(packet.port);
             addr.sin_family = AF_INET;
-            res = sendto(fd, (const char*)*packet.data, packet.data.Length(), 0, (const sockaddr*)&addr, sizeof(addr));
+            res = sendto(fd, reinterpret_cast<const char*>(*packet.data), packet.data.Length(),
+                         0, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
         }
     }
     else
@@ -195,7 +197,7 @@ bool NetworkSocketWinsock::OnReadyToSend()
     if (!pendingOutgoingPacket.IsEmpty())
     {
         Send(std::move(pendingOutgoingPacket));
-        pendingOutgoingPacket = std::move(NetworkPacket::Empty());
+        pendingOutgoingPacket = NetworkPacket::Empty();
         return false;
     }
     m_readyToSend = true;
@@ -205,14 +207,17 @@ bool NetworkSocketWinsock::OnReadyToSend()
 NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
 {
     if (maxLen == 0)
-        maxLen = UINT32_MAX;
-    if (m_protocol == NetworkProtocol::UDP)
+        maxLen = std::numeric_limits<std::uint32_t>::max();
+    switch (m_protocol)
+    {
+    case NetworkProtocol::UDP:
     {
         if (isAtLeastVista)
         {
             int addrLen = sizeof(sockaddr_in6);
             sockaddr_in6 srcAddr;
-            int res = recvfrom(fd, (char*)*recvBuf, std::min(recvBuf.Length(), maxLen), 0, (sockaddr*)&srcAddr, (socklen_t*)&addrLen);
+            int res = recvfrom(fd, reinterpret_cast<char*>(*recvBuf), std::min(recvBuf.Length(), maxLen), 0,
+                               reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
             if (res == SOCKET_ERROR)
             {
                 int error = WSAGetLastError();
@@ -228,24 +233,27 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
             NetworkAddress addr = NetworkAddress::Empty();
             if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (nat64Present && memcmp(m_nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
             {
-                in_addr v4addr = *((in_addr*)&srcAddr.sin6_addr.s6_addr[12]);
+                in_addr v4addr = *(reinterpret_cast<in_addr*>(&srcAddr.sin6_addr.s6_addr[12]));
                 addr = NetworkAddress::IPv4(v4addr.s_addr);
             }
             else
             {
                 addr = NetworkAddress::IPv6(srcAddr.sin6_addr.s6_addr);
             }
-            return NetworkPacket {
-                Buffer::CopyOf(recvBuf, 0, (std::size_t)res),
+            return NetworkPacket
+            {
+                Buffer::CopyOf(recvBuf, 0, static_cast<std::size_t>(res)),
                 addr,
                 ntohs(srcAddr.sin6_port),
-                NetworkProtocol::UDP};
+                NetworkProtocol::UDP
+            };
         }
         else
         {
             int addrLen = sizeof(sockaddr_in);
             sockaddr_in srcAddr;
-            int res = recvfrom(fd, (char*)*recvBuf, std::min(recvBuf.Length(), maxLen), 0, (sockaddr*)&srcAddr, (socklen_t*)&addrLen);
+            int res = recvfrom(fd, reinterpret_cast<char*>(*recvBuf), std::min(recvBuf.Length(), maxLen), 0,
+                               reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
             if (res == SOCKET_ERROR)
             {
                 LOGE("error receiving %d", WSAGetLastError());
@@ -258,9 +266,9 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
                 NetworkProtocol::UDP};
         }
     }
-    else if (m_protocol == NetworkProtocol::TCP)
+    case NetworkProtocol::TCP:
     {
-        int res = recv(fd, (char*)*recvBuf, std::min(recvBuf.Length(), maxLen), 0);
+        int res = recv(fd, reinterpret_cast<char*>(*recvBuf), std::min(recvBuf.Length(), maxLen), 0);
         if (res == SOCKET_ERROR)
         {
             int error = WSAGetLastError();
@@ -270,12 +278,15 @@ NetworkPacket NetworkSocketWinsock::Receive(std::size_t maxLen)
         }
         else
         {
-            return NetworkPacket {
-                Buffer::CopyOf(recvBuf, 0, (std::size_t)res),
+            return NetworkPacket
+            {
+                Buffer::CopyOf(recvBuf, 0, static_cast<std::size_t>(res)),
                 tcpConnectedAddress,
                 tcpConnectedPort,
-                NetworkProtocol::TCP};
+                NetworkProtocol::TCP
+            };
         }
+    }
     }
 }
 
@@ -321,7 +332,7 @@ void NetworkSocketWinsock::Open()
             std::memset(&addr6, 0, sizeof(sockaddr_in6));
             //addr.sin6_len=sizeof(sa_family_t);
             addr6.sin6_family = AF_INET6;
-            addr = (sockaddr*)&addr6;
+            addr = reinterpret_cast<sockaddr*>(&addr6);
             addrLen = sizeof(addr6);
         }
         else
@@ -329,16 +340,16 @@ void NetworkSocketWinsock::Open()
             sockaddr_in addr4;
             addr4.sin_addr.s_addr = 0;
             addr4.sin_family = AF_INET;
-            addr = (sockaddr*)&addr4;
+            addr = reinterpret_cast<sockaddr*>(&addr4);
             addrLen = sizeof(addr4);
         }
         for (tries = 0; tries < 10; tries++)
         {
             std::uint16_t port = htons(GenerateLocalPort());
             if (isAtLeastVista)
-                ((sockaddr_in6*)addr)->sin6_port = port;
+                (reinterpret_cast<sockaddr_in6*>(addr))->sin6_port = port;
             else
-                ((sockaddr_in*)addr)->sin_port = port;
+                (reinterpret_cast<sockaddr_in*>(addr))->sin_port = port;
             res = ::bind(fd, addr, addrLen);
             LOGV("trying bind to port %u", ntohs(port));
             if (res < 0)
@@ -353,9 +364,9 @@ void NetworkSocketWinsock::Open()
         if (tries == 10)
         {
             if (isAtLeastVista)
-                ((sockaddr_in6*)addr)->sin6_port = 0;
+                (reinterpret_cast<sockaddr_in6*>(addr))->sin6_port = 0;
             else
-                ((sockaddr_in*)addr)->sin_port = 0;
+                (reinterpret_cast<sockaddr_in*>(addr))->sin_port = 0;
             res = ::bind(fd, addr, addrLen);
             if (res < 0)
             {
@@ -364,12 +375,12 @@ void NetworkSocketWinsock::Open()
                 return;
             }
         }
-        getsockname(fd, addr, (socklen_t*)&addrLen);
+        getsockname(fd, addr, reinterpret_cast<socklen_t*>(&addrLen));
         std::uint16_t localUdpPort;
         if (isAtLeastVista)
-            localUdpPort = ntohs(((sockaddr_in6*)addr)->sin6_port);
+            localUdpPort = ntohs((reinterpret_cast<sockaddr_in6*>(addr))->sin6_port);
         else
-            localUdpPort = ntohs(((sockaddr_in*)addr)->sin_port);
+            localUdpPort = ntohs((reinterpret_cast<sockaddr_in*>(addr))->sin_port);
         LOGD("Bound to local UDP port %u", localUdpPort);
 
         needUpdateNat64Prefix = true;
@@ -515,12 +526,12 @@ std::uint16_t NetworkSocketWinsock::GetLocalPort()
     {
         sockaddr_in addr;
         std::size_t addrLen = sizeof(sockaddr_in);
-        getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
+        getsockname(fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
         return ntohs(addr.sin_port);
     }
     sockaddr_in6 addr;
     std::size_t addrLen = sizeof(sockaddr_in6);
-    getsockname(fd, (sockaddr*)&addr, (socklen_t*)&addrLen);
+    getsockname(fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
     return ntohs(addr.sin6_port);
 }
 
@@ -535,7 +546,7 @@ std::string NetworkSocketWinsock::V4AddressToString(std::uint32_t address)
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t wbuf[INET_ADDRSTRLEN];
     ZeroMemory(wbuf, sizeof(wbuf));
-    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), nullptr, wbuf, &len);
+    WSAAddressToStringW(reinterpret_cast<sockaddr*>(&addr), sizeof(addr), nullptr, wbuf, &len);
     WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), nullptr, nullptr);
 #else
     WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), nullptr, buf, &len);
@@ -554,7 +565,7 @@ std::string NetworkSocketWinsock::V6AddressToString(const std::uint8_t* address)
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t wbuf[INET6_ADDRSTRLEN];
     ZeroMemory(wbuf, sizeof(wbuf));
-    WSAAddressToStringW((sockaddr*)&addr, sizeof(addr), nullptr, wbuf, &len);
+    WSAAddressToStringW(reinterpret_cast<sockaddr*>(&addr), sizeof(addr), nullptr, wbuf, &len);
     WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, sizeof(buf), nullptr, nullptr);
 #else
     WSAAddressToStringA((sockaddr*)&addr, sizeof(addr), nullptr, buf, &len);
@@ -571,7 +582,7 @@ std::uint32_t NetworkSocketWinsock::StringToV4Address(std::string address)
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t buf[INET_ADDRSTRLEN];
     MultiByteToWideChar(CP_UTF8, 0, address.c_str(), -1, buf, INET_ADDRSTRLEN);
-    WSAStringToAddressW(buf, AF_INET, nullptr, (sockaddr*)&addr, &size);
+    WSAStringToAddressW(buf, AF_INET, nullptr, reinterpret_cast<sockaddr*>(&addr), &size);
 #else
     WSAStringToAddressA((char*)address.c_str(), AF_INET, nullptr, (sockaddr*)&addr, &size);
 #endif
@@ -587,7 +598,7 @@ void NetworkSocketWinsock::StringToV6Address(std::string address, std::uint8_t* 
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
     wchar_t buf[INET6_ADDRSTRLEN];
     MultiByteToWideChar(CP_UTF8, 0, address.c_str(), -1, buf, INET6_ADDRSTRLEN);
-    WSAStringToAddressW(buf, AF_INET, nullptr, (sockaddr*)&addr, &size);
+    WSAStringToAddressW(buf, AF_INET, nullptr, reinterpret_cast<sockaddr*>(&addr), &size);
 #else
     WSAStringToAddressA((char*)address.c_str(), AF_INET, nullptr, (sockaddr*)&addr, &size);
 #endif
@@ -633,7 +644,7 @@ void NetworkSocketWinsock::Connect(const NetworkAddress address, std::uint16_t p
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
     timeout = 60000;
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-    int res = connect(fd, (const sockaddr*)addr, addrLen);
+    int res = connect(fd, reinterpret_cast<const sockaddr*>(addr), addrLen);
     if (res != 0)
     {
         int error = WSAGetLastError();
@@ -837,10 +848,10 @@ void SocketSelectCancellerWin32::CancelSelect()
 int NetworkSocketWinsock::GetDescriptorFromSocket(NetworkSocket* socket)
 {
     NetworkSocketWinsock* sp = dynamic_cast<NetworkSocketWinsock*>(socket);
-    if (sp)
+    if (sp != nullptr)
         return sp->fd;
     NetworkSocketWrapper* sw = dynamic_cast<NetworkSocketWrapper*>(socket);
-    if (sw)
+    if (sw != nullptr)
         return GetDescriptorFromSocket(sw->GetWrapped());
     return 0;
 }

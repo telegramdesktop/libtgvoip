@@ -1108,7 +1108,7 @@ void VoIPController::InitializeTimers()
                     GetCurrentTime() - m_connectionInitTime,
                     m_endpoints.at(m_currentEndpoint).m_rtts[0],
                     m_lastRemoteSeq,
-                    (std::uint32_t)m_seq,
+                    m_seq.load(),
                     m_lastRemoteAckSeq,
                     m_recvLossCount,
                     m_conctl ? m_conctl->GetSendLossCount() : 0,
@@ -1139,9 +1139,9 @@ void VoIPController::RunSendThread()
             break;
 
         if (IS_MOBILE_NETWORK(m_networkType))
-            m_stats.bytesSentMobile += (std::uint64_t)pkt.packet.data.Length();
+            m_stats.bytesSentMobile += static_cast<std::uint64_t>(pkt.packet.data.Length());
         else
-            m_stats.bytesSentWifi += (std::uint64_t)pkt.packet.data.Length();
+            m_stats.bytesSentWifi += static_cast<std::uint64_t>(pkt.packet.data.Length());
         if (pkt.packet.protocol == NetworkProtocol::TCP)
         {
             if (pkt.socket && !pkt.socket->IsFailed())
@@ -2156,7 +2156,14 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                     srcEndpoint.m_udpPingTimes.erase(queryID);
                     srcEndpoint.m_selfRtts.Add(selfRTT = GetCurrentTime() - sendTime);
                 }
-                LOGV("Received UDP ping reply from %s:%d: date=%d, queryID=%ld, my IP=%s, my port=%d, selfRTT=%f", srcEndpoint.address.ToString().c_str(), srcEndpoint.port, date, (long int)queryID, NetworkAddress::IPv4(*reinterpret_cast<std::uint32_t*>(myIP + 12)).ToString().c_str(), myPort, selfRTT);
+                LOGV("Received UDP ping reply from %s:%d: date=%d, queryID=%ld, my IP=%s, my port=%d, selfRTT=%f",
+                     srcEndpoint.address.ToString().c_str(),
+                     srcEndpoint.port,
+                     date,
+                     static_cast<long>(queryID),
+                     NetworkAddress::IPv4(*reinterpret_cast<std::uint32_t*>(myIP + 12)).ToString().c_str(),
+                     myPort,
+                     selfRTT);
                 if (srcEndpoint.IsIPv6Only() && !m_didSendIPv6Endpoint)
                 {
                     NetworkAddress realAddr = NetworkAddress::IPv6(myIP);
@@ -2813,11 +2820,11 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                     stm->type = StreamType::AUDIO;
                     stm->jitterBuffer = std::make_shared<JitterBuffer>(nullptr, stm->frameDuration);
                     if (stm->frameDuration > 50)
-                        stm->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_60", 2));
+                        stm->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_60", 2)));
                     else if (stm->frameDuration > 30)
-                        stm->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_40", 4));
+                        stm->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_40", 4)));
                     else
-                        stm->jitterBuffer->SetMinPacketCount((std::uint32_t)ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_20", 6));
+                        stm->jitterBuffer->SetMinPacketCount(static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_initial_delay_20", 6)));
                     stm->decoder = nullptr;
                 }
                 else if (type == static_cast<std::uint8_t>(StreamType::VIDEO))

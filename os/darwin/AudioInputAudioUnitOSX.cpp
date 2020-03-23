@@ -101,7 +101,7 @@ void AudioInputAudioUnitLegacy::Stop()
 
 OSStatus AudioInputAudioUnitLegacy::BufferCallback(void* inRefCon, AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList* ioData)
 {
-    AudioInputAudioUnitLegacy* input = (AudioInputAudioUnitLegacy*)inRefCon;
+    AudioInputAudioUnitLegacy* input = reinterpret_cast<AudioInputAudioUnitLegacy*>(inRefCon);
     input->inBufferList.mBuffers[0].mDataByteSize = 10240;
     AudioUnitRender(input->unit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, &input->inBufferList);
     input->HandleBufferCallback(&input->inBufferList);
@@ -117,7 +117,12 @@ void AudioInputAudioUnitLegacy::HandleBufferCallback(AudioBufferList* ioData)
         std::size_t len = buf.mDataByteSize;
         if (hardwareSampleRate != 48000)
         {
-            len = tgvoip::audio::Resampler::Convert((std::int16_t*)buf.mData, (std::int16_t*)(remainingData + remainingDataSize), buf.mDataByteSize / 2, (10240 - (buf.mDataByteSize + remainingDataSize)) / 2, 48000, hardwareSampleRate) * 2;
+            len = 2 * tgvoip::audio::Resampler::Convert(reinterpret_cast<std::int16_t*>(buf.mData),
+                                                        reinterpret_cast<std::int16_t*>(remainingData + remainingDataSize),
+                                                        buf.mDataByteSize / 2,
+                                                        (10240 - (buf.mDataByteSize + remainingDataSize)) / 2,
+                                                        48000,
+                                                        hardwareSampleRate);
         }
         else
         {
@@ -326,7 +331,7 @@ void AudioInputAudioUnitLegacy::SetCurrentDevice(std::string deviceID)
 OSStatus AudioInputAudioUnitLegacy::DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* inClientData)
 {
     LOGV("System default input device changed");
-    AudioInputAudioUnitLegacy* self = (AudioInputAudioUnitLegacy*)inClientData;
+    AudioInputAudioUnitLegacy* self = reinterpret_cast<AudioInputAudioUnitLegacy*>(inClientData);
     if (self->m_currentDevice == "default")
     {
         self->SetCurrentDevice(self->m_currentDevice);

@@ -19,7 +19,7 @@ inline std::wstring ToUtf16(const char* utf8, std::size_t len)
         nullptr, 0);
     wchar_t* ws = STACK_ARRAY(wchar_t, len16);
     ::MultiByteToWideChar(CP_UTF8, 0, utf8, static_cast<int>(len), ws, len16);
-    return std::wstring(ws, len16);
+    return std::wstring(ws, static_cast<std::size_t>(len16));
 }
 
 inline std::wstring ToUtf16(const std::string& str)

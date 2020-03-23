@@ -120,7 +120,7 @@ void ScreamCongestionController::AdjustQDelayTarget(float qdelay)
     }
     qdelayNormVar /= m_qdelayNormHist.Size();
 
-    float newTarget = qdelayNormAvg + sqrt(qdelayNormVar);
+    float newTarget = qdelayNormAvg + std::sqrt(qdelayNormVar);
     newTarget *= QDELAY_TARGET_LO;
 
     if (m_lossEventRate > 0.002f)

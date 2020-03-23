@@ -87,29 +87,29 @@ namespace audio
         (LPCWSTR /*NewDisplayName*/, LPCGUID /*EventContext*/)
         {
             return S_OK;
-        };
+        }
         STDMETHOD(OnIconPathChanged)
-        (LPCWSTR /*NewIconPath*/, LPCGUID /*EventContext*/) { return S_OK; };
+        (LPCWSTR /*NewIconPath*/, LPCGUID /*EventContext*/) { return S_OK; }
         STDMETHOD(OnSimpleVolumeChanged)
         (float /*NewSimpleVolume*/, BOOL /*NewMute*/, LPCGUID /*EventContext*/) { return S_OK; }
         STDMETHOD(OnChannelVolumeChanged)
-        (DWORD /*ChannelCount*/, float /*NewChannelVolumes*/[], DWORD /*ChangedChannel*/, LPCGUID /*EventContext*/) { return S_OK; };
+        (DWORD /*ChannelCount*/, float /*NewChannelVolumes*/[], DWORD /*ChangedChannel*/, LPCGUID /*EventContext*/) { return S_OK; }
         STDMETHOD(OnGroupingParamChanged)
-        (LPCGUID /*NewGroupingParam*/, LPCGUID /*EventContext*/) { return S_OK; };
+        (LPCGUID /*NewGroupingParam*/, LPCGUID /*EventContext*/) { return S_OK; }
         STDMETHOD(OnStateChanged)
-        (AudioSessionState /*NewState*/) { return S_OK; };
+        (AudioSessionState /*NewState*/) { return S_OK; }
         STDMETHOD(OnSessionDisconnected)
         (AudioSessionDisconnectReason DisconnectReason);
         STDMETHOD(OnDeviceStateChanged)
         (LPCWSTR /*DeviceId*/, DWORD /*NewState*/) { return S_OK; }
         STDMETHOD(OnDeviceAdded)
-        (LPCWSTR /*DeviceId*/) { return S_OK; };
+        (LPCWSTR /*DeviceId*/) { return S_OK; }
         STDMETHOD(OnDeviceRemoved)
-        (LPCWSTR /*DeviceId(*/) { return S_OK; };
+        (LPCWSTR /*DeviceId(*/) { return S_OK; }
         STDMETHOD(OnDefaultDeviceChanged)
         (EDataFlow Flow, ERole Role, LPCWSTR NewDefaultDeviceId);
         STDMETHOD(OnPropertyValueChanged)
-        (LPCWSTR /*DeviceId*/, const PROPERTYKEY /*Key*/) { return S_OK; };
+        (LPCWSTR /*DeviceId*/, const PROPERTYKEY /*Key*/) { return S_OK; }
 
         //
         //  IUnknown

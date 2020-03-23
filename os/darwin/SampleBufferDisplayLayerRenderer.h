@@ -26,12 +26,12 @@ namespace video
     {
     public:
         SampleBufferDisplayLayerRenderer(TGVVideoRenderer* renderer);
-        virtual ~SampleBufferDisplayLayerRenderer();
-        virtual void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
-        virtual void DecodeAndDisplay(Buffer frame, std::uint32_t pts) override;
-        virtual void SetStreamEnabled(bool enabled) override;
-        virtual void SetRotation(std::uint16_t rotation) override;
-        virtual void SetStreamPaused(bool paused) override;
+        ~SampleBufferDisplayLayerRenderer() override;
+        void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
+        void DecodeAndDisplay(Buffer frame, std::uint32_t pts) override;
+        void SetStreamEnabled(bool enabled) override;
+        void SetRotation(std::uint16_t rotation) override;
+        void SetStreamPaused(bool paused) override;
         static int GetMaximumResolution();
         static std::vector<std::uint32_t> GetAvailableDecoders();
 

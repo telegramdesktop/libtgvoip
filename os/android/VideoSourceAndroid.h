@@ -18,14 +18,14 @@ namespace video
     {
     public:
         VideoSourceAndroid(jobject jobj);
-        virtual ~VideoSourceAndroid();
-        virtual void Start() override;
-        virtual void Stop() override;
-        virtual void Reset(std::uint32_t codec, int maxResolution) override;
+        ~VideoSourceAndroid() override;
+        void Start() override;
+        void Stop() override;
+        void Reset(std::uint32_t codec, int maxResolution) override;
         void SendFrame(Buffer frame, std::uint32_t flags);
         void SetStreamParameters(std::vector<Buffer> m_csd, unsigned int m_width, unsigned int m_height);
-        virtual void RequestKeyFrame() override;
-        virtual void SetBitrate(std::uint32_t bitrate) override;
+        void RequestKeyFrame() override;
+        void SetBitrate(std::uint32_t bitrate) override;
         void SetStreamPaused(bool paused);
 
         static std::vector<std::uint32_t> availableEncoders;

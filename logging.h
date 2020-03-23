@@ -106,30 +106,30 @@ void tgvoip_log_file_write_header(FILE* file);
 
 #ifndef TGVOIP_NO_STDOUT_LOGS
 #ifndef TGVOIP_NO_STDOUT_COLOR
-#define _TGVOIP_LOG_PRINT(verb, color, msg, ...)                                   \
+#define TGVOIP_LOG_PRINT(verb, color, msg, ...)                                   \
     {                                                                              \
         printf("\033[%dm%c/tgvoip: " msg "\033[0m\n", color, verb, ##__VA_ARGS__); \
         tgvoip_log_file_printf(verb, msg, ##__VA_ARGS__);                          \
     }
 #else
-#define _TGVOIP_LOG_PRINT(verb, color, msg, ...)             \
+#define TGVOIP_LOG_PRINT(verb, color, msg, ...)             \
     {                                                        \
         printf("%c/tgvoip: " msg "\n", verb, ##__VA_ARGS__); \
         tgvoip_log_file_printf(verb, msg, ##__VA_ARGS__);    \
     }
 #endif
 #else
-#define _TGVOIP_LOG_PRINT(verb, color, msg, ...)          \
+#define TGVOIP_LOG_PRINT(verb, color, msg, ...)          \
     {                                                     \
         tgvoip_log_file_printf(verb, msg, ##__VA_ARGS__); \
     }
 #endif
 
-#define LOGV(msg, ...) _TGVOIP_LOG_PRINT('V', 90, msg, ##__VA_ARGS__)
-#define LOGD(msg, ...) _TGVOIP_LOG_PRINT('D', 37, msg, ##__VA_ARGS__)
-#define LOGI(msg, ...) _TGVOIP_LOG_PRINT('I', 94, msg, ##__VA_ARGS__)
-#define LOGW(msg, ...) _TGVOIP_LOG_PRINT('W', 93, msg, ##__VA_ARGS__)
-#define LOGE(msg, ...) _TGVOIP_LOG_PRINT('E', 91, msg, ##__VA_ARGS__)
+#define LOGV(msg, ...) TGVOIP_LOG_PRINT('V', 90, msg, ##__VA_ARGS__)
+#define LOGD(msg, ...) TGVOIP_LOG_PRINT('D', 37, msg, ##__VA_ARGS__)
+#define LOGI(msg, ...) TGVOIP_LOG_PRINT('I', 94, msg, ##__VA_ARGS__)
+#define LOGW(msg, ...) TGVOIP_LOG_PRINT('W', 93, msg, ##__VA_ARGS__)
+#define LOGE(msg, ...) TGVOIP_LOG_PRINT('E', 91, msg, ##__VA_ARGS__)
 
 #endif
 

@@ -120,7 +120,7 @@ void AudioOutputAudioUnitLegacy::Stop()
 
 OSStatus AudioOutputAudioUnitLegacy::BufferCallback(void* inRefCon, AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList* ioData)
 {
-    AudioOutputAudioUnitLegacy* input = (AudioOutputAudioUnitLegacy*)inRefCon;
+    AudioOutputAudioUnitLegacy* input = reinterpret_cast<AudioOutputAudioUnitLegacy*>(inRefCon);
     input->HandleBufferCallback(ioData);
     return noErr;
 }
@@ -375,7 +375,7 @@ void AudioOutputAudioUnitLegacy::SetPanRight(bool panRight)
 
 OSStatus AudioOutputAudioUnitLegacy::DefaultDeviceChangedCallback(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* inClientData)
 {
-    AudioOutputAudioUnitLegacy* self = (AudioOutputAudioUnitLegacy*)inClientData;
+    AudioOutputAudioUnitLegacy* self = reinterpret_cast<AudioOutputAudioUnitLegacy*>(inClientData);
     if (inAddresses[0].mSelector == kAudioHardwarePropertyDefaultOutputDevice)
     {
         LOGV("System default input device changed");

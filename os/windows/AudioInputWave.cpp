@@ -31,7 +31,7 @@ AudioInputWave::AudioInputWave(std::string deviceID)
     {
         ZeroMemory(&buffers[i], sizeof(WAVEHDR));
         buffers[i].dwBufferLength = 960 * 2;
-        buffers[i].lpData = (char*)std::malloc(960 * 2);
+        buffers[i].lpData = reinterpret_cast<char*>(std::malloc(960 * 2));
     }
 
     hWaveIn = nullptr;

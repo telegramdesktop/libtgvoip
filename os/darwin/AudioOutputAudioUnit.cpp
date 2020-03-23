@@ -22,7 +22,7 @@ AudioOutputAudioUnit::AudioOutputAudioUnit(std::string deviceID, AudioUnitIO* io
     remainingDataSize = 0;
     this->io = io;
 #if TARGET_OS_OSX
-    io->SetCurrentDevice(false, deviceID);
+    io->SetCurrentDevice(false, std::move(deviceID));
 #endif
 }
 

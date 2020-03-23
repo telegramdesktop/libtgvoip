@@ -43,8 +43,8 @@ AudioInputOpenSLES::AudioInputOpenSLES()
         nativeBufferSize *= 2;
     LOGI("Adjusted native buffer size is %u", nativeBufferSize);
 
-    buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
-    nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
+    buffer = reinterpret_cast<std::int16_t*>(std::calloc(BUFFER_SIZE, sizeof(std::int16_t)));
+    nativeBuffer = reinterpret_cast<std::int16_t*>(std::calloc(static_cast<std::size_t>(nativeBufferSize), sizeof(std::int16_t)));
     slRecorderObj = nullptr;
 }
 
@@ -66,7 +66,7 @@ AudioInputOpenSLES::~AudioInputOpenSLES()
 
 void AudioInputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void* context)
 {
-    ((AudioInputOpenSLES*)context)->HandleSLCallback();
+    reinterpret_cast<AudioInputOpenSLES*>(context)->HandleSLCallback();
 }
 
 void AudioInputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)
@@ -140,7 +140,7 @@ void AudioInputOpenSLES::HandleSLCallback()
             InvokeCallback((unsigned char*)buffer, BUFFER_SIZE * sizeof(std::int16_t));
             positionInBuffer = 0;
         }
-        std::memcpy(((unsigned char*)buffer) + positionInBuffer * 2, nativeBuffer, (std::size_t)nativeBufferSize * 2);
+        std::memcpy(reinterpret_cast<unsigned char*>(buffer) + positionInBuffer * 2, nativeBuffer, static_cast<std::size_t>(nativeBufferSize) * 2);
         positionInBuffer += nativeBufferSize;
     }
     else if (nativeBufferSize > BUFFER_SIZE)

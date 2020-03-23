@@ -32,15 +32,15 @@ class NetworkSocketWinsock : public NetworkSocket
 {
 public:
     NetworkSocketWinsock(NetworkProtocol m_protocol);
-    virtual ~NetworkSocketWinsock();
-    virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(std::size_t maxLen) override;
-    virtual void Open() override;
-    virtual void Close() override;
-    virtual std::string GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr) override;
-    virtual void OnActiveInterfaceChanged() override;
-    virtual std::uint16_t GetLocalPort() override;
-    virtual void Connect(const NetworkAddress address, std::uint16_t port) override;
+    ~NetworkSocketWinsock() override;
+    void Send(NetworkPacket packet) override;
+    NetworkPacket Receive(std::size_t maxLen) override;
+    void Open() override;
+    void Close() override;
+    std::string GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr) override;
+    void OnActiveInterfaceChanged() override;
+    std::uint16_t GetLocalPort() override;
+    void Connect(const NetworkAddress& address, std::uint16_t port) override;
 
     static std::string V4AddressToString(std::uint32_t address);
     static std::string V6AddressToString(const std::uint8_t address[16]);
@@ -48,13 +48,13 @@ public:
     static void StringToV6Address(std::string address, std::uint8_t* out);
     static NetworkAddress ResolveDomainName(std::string name);
     static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
-    virtual NetworkAddress GetConnectedAddress() override;
-    virtual std::uint16_t GetConnectedPort() override;
-    virtual void SetTimeouts(int sendTimeout, int recvTimeout) override;
-    virtual bool OnReadyToSend() override;
+    NetworkAddress GetConnectedAddress() override;
+    std::uint16_t GetConnectedPort() override;
+    void SetTimeouts(int sendTimeout, int recvTimeout) override;
+    bool OnReadyToSend() override;
 
 protected:
-    virtual void SetMaxPriority();
+    void SetMaxPriority() override;
 
 private:
     static int GetDescriptorFromSocket(NetworkSocket* socket);

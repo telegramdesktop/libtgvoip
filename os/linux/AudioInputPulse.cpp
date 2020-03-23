@@ -122,10 +122,10 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
 
     pa_buffer_attr bufferAttr =
     {
-        .maxlength = (std::uint32_t)-1,
-        .tlength = (std::uint32_t)-1,
-        .prebuf = (std::uint32_t)-1,
-        .minreq = (std::uint32_t)-1,
+        .maxlength = std::numeric_limits<std::uint32_t>::max(),
+        .tlength = std::numeric_limits<std::uint32_t>::max(),
+        .prebuf = std::numeric_limits<std::uint32_t>::max(),
+        .minreq = std::numeric_limits<std::uint32_t>::max(),
         .fragsize = 960 * 2
     };
     int streamFlags = PA_STREAM_START_CORKED | PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_ADJUST_LATENCY;
@@ -186,7 +186,7 @@ bool AudioInputPulse::EnumerateDevices(std::vector<AudioInputDevice>& devs)
 
 void AudioInputPulse::StreamStateCallback(pa_stream* s, void* arg)
 {
-    AudioInputPulse* self = (AudioInputPulse*)arg;
+    AudioInputPulse* self = reinterpret_cast<AudioInputPulse*>(arg);
     pa_threaded_mainloop_signal(self->mainloop, 0);
 }
 
@@ -202,7 +202,7 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
     pa_usec_t latency;
     if (pa_stream_get_latency(stream, &latency, nullptr) == 0)
     {
-        m_estimatedDelay = (std::int32_t)(latency / 100);
+        m_estimatedDelay = static_cast<std::int32_t>(latency / 100);
     }
     while (bytesRemaining > 0)
     {

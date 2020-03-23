@@ -157,7 +157,7 @@ AudioUnitIO::~AudioUnitIO()
 
 OSStatus AudioUnitIO::BufferCallback(void* inRefCon, AudioUnitRenderActionFlags* ioActionFlags, const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList* ioData)
 {
-    ((AudioUnitIO*)inRefCon)->BufferCallback(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
+    (reinterpret_cast<AudioUnitIO*>(inRefCon)->BufferCallback(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
     return noErr;
 }
 

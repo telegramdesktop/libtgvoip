@@ -89,7 +89,7 @@ void VideoRendererAndroid::RunThread()
     while (running)
     {
         //LOGV("before get from queue");
-        Request request = std::move(queue.GetBlocking());
+        Request request = queue.GetBlocking();
         //LOGV("1 before decode %u", (unsigned int)request.Length());
         if (request.type == Request::Type::Shutdown)
         {
@@ -100,7 +100,7 @@ void VideoRendererAndroid::RunThread()
         {
             if (request.buffer.Length() > bufferSize)
             {
-                LOGE("Frame data is too long (%u, max %u)", (int)request.buffer.Length(), (int)bufferSize);
+                LOGE("Frame data is too long (%u, max %u)", static_cast<int>(request.buffer.Length()), static_cast<int>(bufferSize));
             }
             else
             {

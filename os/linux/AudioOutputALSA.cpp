@@ -102,11 +102,11 @@ void AudioOutputALSA::RunThread()
         frames = m_snd_pcm_writei(m_handle, buffer, BUFFER_SIZE);
         if (frames < 0)
         {
-            frames = m_snd_pcm_recover(m_handle, frames, 0);
+            frames = m_snd_pcm_recover(m_handle, static_cast<int>(frames), 0);
         }
         if (frames < 0)
         {
-            LOGE("snd_pcm_writei failed: %s\n", m_snd_strerror(frames));
+            LOGE("snd_pcm_writei failed: %s\n", m_snd_strerror(static_cast<int>(frames)));
             break;
         }
     }
@@ -160,7 +160,7 @@ void AudioOutputALSA::EnumerateDevices(std::vector<AudioOutputDevice>& devs)
     }
 
     char** hints;
-    int err = _snd_device_name_hint(-1, "pcm", (void***)&hints);
+    int err = _snd_device_name_hint(-1, "pcm", reinterpret_cast<void***>(&hints));
     if (err != 0)
     {
         dlclose(lib);

@@ -50,8 +50,8 @@ AudioOutputOpenSLES::AudioOutputOpenSLES()
 	}
 	LOGI("Adjusted native buffer size is %u", nativeBufferSize);*/
 
-    buffer = (std::int16_t*)calloc(BUFFER_SIZE, sizeof(std::int16_t));
-    nativeBuffer = (std::int16_t*)calloc((std::size_t)nativeBufferSize, sizeof(std::int16_t));
+    buffer = reinterpret_cast<std::int16_t*>(std::calloc(BUFFER_SIZE, sizeof(std::int16_t)));
+    nativeBuffer = reinterpret_cast<std::int16_t*>(std::calloc(static_cast<std::size_t>(nativeBufferSize), sizeof(std::int16_t)));
     slPlayerObj = nullptr;
     remainingDataSize = 0;
 }
@@ -77,7 +77,7 @@ void AudioOutputOpenSLES::SetNativeBufferSize(unsigned int size)
 
 void AudioOutputOpenSLES::BufferCallback(SLAndroidSimpleBufferQueueItf bq, void* context)
 {
-    ((AudioOutputOpenSLES*)context)->HandleSLCallback();
+    reinterpret_cast<AudioOutputOpenSLES*>(context)->HandleSLCallback();
 }
 
 void AudioOutputOpenSLES::Configure(std::uint32_t sampleRate, std::uint32_t bitsPerSample, std::uint32_t channels)

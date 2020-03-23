@@ -65,22 +65,23 @@ namespace tgvoip
 
 void updateConnectionState(VoIPController* cntrlr, int state)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     jni::AttachAndCallVoidMethod(setStateMethod, impl->javaObject, state);
 }
 
 void updateSignalBarCount(VoIPController* cntrlr, int count)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     jni::AttachAndCallVoidMethod(setSignalBarsMethod, impl->javaObject, count);
 }
 
 void updateGroupCallStreams(VoIPGroupController* cntrlr, std::uint8_t* streams, std::size_t len)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     if (!impl->javaObject)
         return;
-    jni::DoWithJNI([streams, len, &impl](JNIEnv* env) {
+    jni::DoWithJNI([streams, len, &impl](JNIEnv* env)
+    {
         if (setSelfStreamsMethod)
         {
             jbyteArray jstreams = env->NewByteArray(static_cast<jsize>(len));
@@ -94,7 +95,7 @@ void updateGroupCallStreams(VoIPGroupController* cntrlr, std::uint8_t* streams, 
 
 void groupCallKeyReceived(VoIPController* cntrlr, const std::uint8_t* key)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     if (!impl->javaObject)
         return;
     jni::DoWithJNI([key, &impl](JNIEnv* env) {
@@ -111,19 +112,19 @@ void groupCallKeyReceived(VoIPController* cntrlr, const std::uint8_t* key)
 
 void groupCallKeySent(VoIPController* cntrlr)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     jni::AttachAndCallVoidMethod(groupCallKeySentMethod, impl->javaObject);
 }
 
 void callUpgradeRequestReceived(VoIPController* cntrlr)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     jni::AttachAndCallVoidMethod(callUpgradeRequestReceivedMethod, impl->javaObject);
 }
 
 void updateParticipantAudioState(VoIPGroupController* cntrlr, std::int32_t userID, bool enabled)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)cntrlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(cntrlr->implData);
     jni::AttachAndCallVoidMethod(setParticipantAudioEnabledMethod, impl->javaObject, userID, enabled);
 }
 
@@ -281,7 +282,7 @@ void VoIPController_nativeRelease(JNIEnv* env, jobject thiz, jlong inst)
     //env->DeleteGlobalRef(AudioInputAndroid::jniClass);
 
     VoIPController* ctlr = ((VoIPController*)(intptr_t)inst);
-    ImplDataAndroid* impl = (ImplDataAndroid*)ctlr->implData;
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(ctlr->implData);
     ctlr->Stop();
     std::vector<std::uint8_t> state = ctlr->GetPersistentState();
     delete ctlr;
@@ -468,7 +469,7 @@ jint Resampler_convert48to44(JNIEnv* env, jclass cls, jobject from, jobject to)
 #ifndef TGVOIP_NO_GROUP_CALLS
 jlong VoIPGroupController_nativeInit(JNIEnv* env, jobject thiz, jint timeDifference)
 {
-    ImplDataAndroid* impl = (ImplDataAndroid*)std::malloc(sizeof(ImplDataAndroid));
+    ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(std::malloc(sizeof(ImplDataAndroid)));
     impl->javaObject = env->NewGlobalRef(thiz);
     VoIPGroupController* cntrlr = new VoIPGroupController(timeDifference);
     cntrlr->implData = impl;

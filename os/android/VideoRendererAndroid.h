@@ -19,12 +19,12 @@ namespace video
     {
     public:
         VideoRendererAndroid(jobject jobj);
-        virtual ~VideoRendererAndroid();
-        virtual void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
-        virtual void DecodeAndDisplay(Buffer frame, std::uint32_t pts) override;
-        virtual void SetStreamEnabled(bool enabled) override;
-        virtual void SetRotation(std::uint16_t rotation) override;
-        virtual void SetStreamPaused(bool paused) override;
+        ~VideoRendererAndroid() override;
+        void Reset(std::uint32_t codec, unsigned int width, unsigned int height, std::vector<Buffer>& csd) override;
+        void DecodeAndDisplay(Buffer frame, std::uint32_t pts) override;
+        void SetStreamEnabled(bool enabled) override;
+        void SetRotation(std::uint16_t rotation) override;
+        void SetStreamPaused(bool paused) override;
 
         static jmethodID resetMethod;
         static jmethodID decodeAndDisplayMethod;
@@ -48,12 +48,12 @@ namespace video
             Type type;
         };
         void RunThread();
-        Thread* thread = NULL;
+        Thread* thread = nullptr;
         bool running = true;
         BlockingQueue<Request> queue;
         std::vector<Buffer> csd;
-        int width;
-        int height;
+        unsigned int width;
+        unsigned int height;
         bool streamEnabled = true;
         bool streamPaused = false;
         std::uint32_t codec;
