@@ -86,7 +86,7 @@ void VoIPControllerWrapper::SetPublicEndpoints(const Platform::Array<libtgvoip::
         if (_ep->peerTag->Length != 16)
             throw ref new Platform::InvalidArgumentException("Peer tag must be exactly 16 bytes long");
         std::memcpy(ep.peerTag, _ep->peerTag->Data, 16);
-        eps.push_back(ep);
+        eps.emplace_back(ep);
     }
     controller->SetRemoteEndpoints(eps, allowP2P, connectionMaxLayer);
 }

@@ -123,7 +123,7 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint
             s->decoder->SetLevelMeter(p.levelMeter);
             m_audioMixer->AddInput(s->callbackWrapper);
         }
-        m_incomingStreams.push_back(s);
+        m_incomingStreams.emplace_back(s);
     }
 
     if (!audioStreamID)
@@ -132,7 +132,7 @@ void VoIPGroupController::AddGroupCallParticipant(std::int32_t userID, std::uint
     }
 
     p.streams.insert(p.streams.end(), streams.begin(), streams.end());
-    m_participants.push_back(p);
+    m_participants.emplace_back(p);
     LOGI("Added group call participant %d", userID);
 }
 
@@ -185,7 +185,7 @@ vector<shared_ptr<VoIPController::Stream>> VoIPGroupController::DeserializeStrea
             std::uint32_t flags = inner.ReadUInt32();
             s->enabled = (flags & STREAM_FLAG_ENABLED) == STREAM_FLAG_ENABLED;
             s->frameDuration = inner.ReadUInt16();
-            res.push_back(s);
+            res.emplace_back(s);
         }
     }
     catch (const out_of_range& exception)
@@ -688,7 +688,7 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
     {
         PacketIdMapping mapping = {srcPacket.seq, *reinterpret_cast<std::uint16_t*>(sig + 14), 0};
         MutexGuard m(m_sentPacketsMutex);
-        m_recentSentPackets.push_back(mapping);
+        m_recentSentPackets.emplace_back(mapping);
         //LOGD("sent packet with id: %04X", mapping.id);
         while (m_recentSentPackets.size() > 64)
             m_recentSentPackets.erase(m_recentSentPackets.begin());

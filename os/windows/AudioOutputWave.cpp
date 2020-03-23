@@ -114,7 +114,7 @@ void AudioOutputWave::EnumerateDevices(std::vector<tgvoip::AudioOutputDevice>& d
         WideCharToMultiByte(CP_UTF8, 0, caps.szPname, -1, nameBuf, sizeof(nameBuf), nullptr, nullptr);
         dev.displayName = std::string(nameBuf);
         dev.id = std::string(nameBuf);
-        devs.push_back(dev);
+        devs.emplace_back(dev);
     }
 }
 

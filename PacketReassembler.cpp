@@ -71,7 +71,7 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
 
     m_maxTimestamp = std::max(m_maxTimestamp, pts);
 
-    m_packets.push_back(std::unique_ptr<Packet>(new Packet(fseq, pts, fragmentCount, 0, keyframe, rotation)));
+    m_packets.emplace_back(std::make_unique<Packet>(fseq, pts, fragmentCount, 0, keyframe, rotation));
     m_packets[m_packets.size() - 1]->AddFragment(std::move(pkt), fragmentIndex);
     while (m_packets.size() > 3)
     {
@@ -83,7 +83,7 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
 
             Buffer buffer = old->Reassemble();
             m_callback(std::move(buffer), old->seq, old->isKeyframe, old->rotation);
-            m_oldPackets.push_back(std::move(old));
+            m_oldPackets.emplace_back(std::move(old));
             while (m_oldPackets.size() > NUM_OLD_PACKETS)
                 m_oldPackets.erase(m_oldPackets.begin());
         }
@@ -116,7 +116,7 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
                 LOGE("unrecoverable packet loss");
                 std::unique_ptr<Packet> old = std::move(m_packets[0]);
                 m_packets.erase(m_packets.begin());
-                m_oldPackets.push_back(std::move(old));
+                m_oldPackets.emplace_back(std::move(old));
                 while (m_oldPackets.size() > NUM_OLD_PACKETS)
                     m_oldPackets.erase(m_oldPackets.begin());
             }
@@ -154,7 +154,7 @@ void PacketReassembler::AddFEC(Buffer data, std::uint8_t _fseq, unsigned int fra
             m_waitingForFEC = false;
         }
     }
-    m_fecPackets.push_back(std::move(fec));
+    m_fecPackets.emplace_back(std::move(fec));
     while (m_fecPackets.size() > NUM_FEC_PACKETS)
         m_fecPackets.erase(m_fecPackets.begin());
 }
@@ -176,7 +176,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
             LOGD("Adding frame %u from old", p->seq);
             for (std::uint32_t i = 0; i < p->partCount; ++i)
             {
-                packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
+                packetsForRecovery.emplace_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
             }
         }
     }
@@ -189,7 +189,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
             for (std::uint32_t i = 0; i < p->partCount; ++i)
             {
                 //LOGV("[%u] size %u", i, p.parts[i].Length());
-                packetsForRecovery.push_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
+                packetsForRecovery.emplace_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
             }
         }
     }
@@ -203,7 +203,7 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
             std::unique_ptr<Packet>& pkt = m_packets[0];
             if (pkt->parts.size() < pkt->partCount)
             {
-                pkt->parts.push_back(std::move(recovered));
+                pkt->parts.emplace_back(std::move(recovered));
             }
             else
             {
@@ -242,7 +242,7 @@ void PacketReassembler::Packet::AddFragment(Buffer pkt, std::uint32_t fragmentIn
     //LOGV("Add fragment %u/%u to packet %u", fragmentIndex, partCount, timestamp);
     if (parts.size() == fragmentIndex)
     {
-        parts.push_back(std::move(pkt));
+        parts.emplace_back(std::move(pkt));
         //LOGV("add1");
     }
     else if (parts.size() > fragmentIndex)

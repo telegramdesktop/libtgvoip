@@ -311,7 +311,7 @@ void tgvoip::OpusEncoder::SetVadMode(bool vad)
 }
 void tgvoip::OpusEncoder::AddAudioEffect(effects::AudioEffect* effect)
 {
-    m_postProcEffects.push_back(effect);
+    m_postProcEffects.emplace_back(effect);
 }
 
 void tgvoip::OpusEncoder::RemoveAudioEffect(effects::AudioEffect* effect)

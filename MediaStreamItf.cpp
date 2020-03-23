@@ -91,7 +91,7 @@ void AudioMixer::AddInput(std::shared_ptr<MediaStreamItf> input)
     MixerInput in;
     in.multiplier = 1;
     in.source = std::move(input);
-    m_inputs.push_back(in);
+    m_inputs.emplace_back(in);
 }
 
 void AudioMixer::RemoveInput(std::shared_ptr<MediaStreamItf> input)

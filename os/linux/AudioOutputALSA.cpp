@@ -203,7 +203,7 @@ void AudioOutputALSA::EnumerateDevices(std::vector<AudioOutputDevice>& devs)
             {
                 dev.displayName = std::string(actualName);
             }
-            devs.push_back(dev);
+            devs.emplace_back(dev);
         }
         std::free(name);
         std::free(desc);

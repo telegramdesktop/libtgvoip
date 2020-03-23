@@ -190,7 +190,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             m_stm->codecSpecificData.clear();
             for (Buffer& b : csd)
             {
-                m_stm->codecSpecificData.push_back(Buffer::CopyOf(b));
+                m_stm->codecSpecificData.emplace_back(Buffer::CopyOf(b));
             }
             m_stm->csdIsValid = true;
             m_stm->width = m_source->GetFrameWidth();
@@ -291,7 +291,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
 
             Buffer fecPacketData(pkt.GetLength() - dataOffset);
             fecPacketData.CopyFrom(pkt.GetBuffer() + dataOffset, 0, pkt.GetLength() - dataOffset);
-            m_packetsForFEC.push_back(std::move(fecPacketData));
+            m_packetsForFEC.emplace_back(std::move(fecPacketData));
             offset += len;
 
             Buffer packetData(std::move(pkt));
@@ -307,10 +307,10 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             IncrementUnsentStreamPackets();
             std::uint32_t seq = SendPacket(std::move(p));
             m_videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pkt.GetLength()));
-            sentFrame.unacknowledgedPackets.push_back(seq);
+            sentFrame.unacknowledgedPackets.emplace_back(seq);
             //packetQueue.Put(QueuedPacket{std::move(p), sentFrame.seq});
         }
-        m_fecFrameCount++;
+        ++m_fecFrameCount;
         if (m_fecFrameCount >= 3)
         {
             Buffer fecPacket = ParityFEC::Encode(m_packetsForFEC);
@@ -326,15 +326,17 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             out.WriteUInt16(static_cast<std::uint16_t>(fecPacket.Length()));
             out.WriteBytes(fecPacket);
 
-            VoIPController::PendingOutgoingPacket p {
+            VoIPController::PendingOutgoingPacket p
+            {
                 0,
                 PktType::STREAM_EC,
                 out.GetLength(),
                 Buffer(std::move(out)),
-                0};
+                0
+            };
             std::uint32_t seq = SendPacket(std::move(p));
         }
-        m_sentVideoFrames.push_back(sentFrame);
+        m_sentVideoFrames.emplace_back(sentFrame);
     });
 }
 

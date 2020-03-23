@@ -56,7 +56,7 @@ private:
 #endif
 
     void Run();
-    void InsertMessageInternal(Message& m);
+    void InsertMessageInternal(const Message& m);
 };
 
 } // namespace tgvoip

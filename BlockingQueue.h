@@ -36,7 +36,7 @@ public:
     void Put(T thing)
     {
         MutexGuard sync(m_mutex);
-        m_queue.push_back(std::move(thing));
+        m_queue.emplace_back(std::move(thing));
         bool didOverflow = false;
         while (m_queue.size() > m_capacity)
         {

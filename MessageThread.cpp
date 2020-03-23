@@ -115,7 +115,7 @@ void MessageThread::Run()
             {
                 if (m->deliverAt == 0.0 || currentTime >= m->deliverAt)
                 {
-                    msgsToDeliverNow.push_back(*m);
+                    msgsToDeliverNow.emplace_back(*m);
                     m = m_queue.erase(m);
                     continue;
                 }
@@ -165,12 +165,12 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
     return message.id;
 }
 
-void MessageThread::InsertMessageInternal(MessageThread::Message& m)
+void MessageThread::InsertMessageInternal(const MessageThread::Message& m)
 {
-    MutexGuard _m(m_queueAccessMutex);
+    MutexGuard lock(m_queueAccessMutex);
     if (m_queue.empty())
     {
-        m_queue.push_back(m);
+        m_queue.emplace_back(m);
     }
     else
     {

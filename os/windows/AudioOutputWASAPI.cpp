@@ -204,7 +204,7 @@ void AudioOutputWASAPI::EnumerateDevices(std::vector<tgvoip::AudioOutputDevice>&
         dev.id = buf;
         WideCharToMultiByte(CP_UTF8, 0, actualFriendlyName, -1, buf, sizeof(buf), nullptr, nullptr);
         dev.displayName = buf;
-        devs.push_back(dev);
+        devs.emplace_back(dev);
 
         CoTaskMemFree(devID);
     }

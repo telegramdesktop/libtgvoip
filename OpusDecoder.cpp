@@ -328,7 +328,7 @@ void tgvoip::OpusDecoder::SetLevelMeter(AudioLevelMeter* levelMeter)
 
 void tgvoip::OpusDecoder::AddAudioEffect(effects::AudioEffect* effect)
 {
-    m_postProcEffects.push_back(effect);
+    m_postProcEffects.emplace_back(effect);
 }
 
 void tgvoip::OpusDecoder::RemoveAudioEffect(effects::AudioEffect* effect)

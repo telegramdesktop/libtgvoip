@@ -295,7 +295,7 @@ void ScreamCongestionController::UpdateBytesInFlightHistory()
 {
     double currentTime = VoIPController::GetCurrentTime();
     ValueSample now = {m_bytesInFlight, currentTime};
-    m_bytesInFlightHistory.push_back(now);
+    m_bytesInFlightHistory.emplace_back(now);
     std::uint32_t max = 0;
     for (std::vector<ValueSample>::iterator i = m_bytesInFlightHistory.begin(); i != m_bytesInFlightHistory.end();)
     {

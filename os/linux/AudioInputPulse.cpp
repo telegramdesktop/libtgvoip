@@ -178,7 +178,7 @@ bool AudioInputPulse::EnumerateDevices(std::vector<AudioInputDevice>& devs)
                 AudioInputDevice dev;
                 dev.id = std::string(info->name);
                 dev.displayName = std::string(info->description);
-                devs->push_back(dev);
+                devs->emplace_back(dev);
             },
             &devs);
     });
