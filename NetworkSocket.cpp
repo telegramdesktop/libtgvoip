@@ -156,14 +156,14 @@ void NetworkSocket::GenerateTCPO2States(std::uint8_t* buffer, TCPO2State* recvSt
     // prepare decryption key/iv
     std::array<char, 48> reversed;
     std::memcpy(reversed.data(), nonce.data() + 8, reversed.size());
-    std::reverse(reversed.data(), reversed.data() + sizeof(reversed));
+    std::reverse(reversed.data(), reversed.data() + reversed.size());
     std::memcpy(recvState->key, reversed.data(), 32);
     std::memcpy(recvState->iv, reversed.data() + 32, 16);
 
     // write protocol identifier
     *reinterpret_cast<std::uint32_t*>(nonce.data() + 56) = 0xEFEFEFEFu;
     std::memcpy(buffer, nonce.data(), 56);
-    EncryptForTCPO2(nonce.data(), sizeof(nonce), sendState);
+    EncryptForTCPO2(nonce.data(), nonce.size(), sendState);
     std::memcpy(buffer + 56, nonce.data() + 56, 8);
 }
 

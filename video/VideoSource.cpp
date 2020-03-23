@@ -28,7 +28,7 @@ void VideoSource::SetCallback(CallbackType callback)
 }
 void VideoSource::SetStreamStateCallback(std::function<void(bool)> callback)
 {
-    m_streamStateCallback = callback;
+    m_streamStateCallback = std::move(callback);
 }
 
 bool VideoSource::Failed() const
