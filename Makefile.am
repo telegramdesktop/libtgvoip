@@ -765,7 +765,7 @@ nobase_tgvoipinclude_HEADERS = $(TGVOIP_HDRS)
 
 pkgconfig_DATA = tgvoip.pc
 
-CXXFLAGS += -std=gnu++0x $(CFLAGS)
+CXXFLAGS += -std=gnu++17 $(CFLAGS)
 if TARGET_OS_OSX
 OBJCFLAGS = $(CFLAGS)
 OBJCXXFLAGS += -std=gnu++0x $(CFLAGS)
