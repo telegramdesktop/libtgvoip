@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <deque>
 
@@ -570,7 +571,7 @@ protected:
 
     virtual void ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcEndpoint);
     virtual void ProcessExtraData(Buffer& data);
-    virtual void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, PktType type, std::uint32_t length, PacketSender* source);
+    virtual void WritePacketHeader(std::uint32_t pseq, BufferOutputStream* s, PktType type, std::uint32_t length, PacketSender* source);
     virtual void SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket);
     virtual void SendInit();
     virtual void SendUdpPing(Endpoint& endpoint);
@@ -663,8 +664,8 @@ private:
     void ResetUdpAvailability();
     std::string GetPacketTypeString(PktType type);
     void SetupOutgoingVideoStream();
-    bool WasOutgoingPacketAcknowledged(std::uint32_t m_seq);
-    RecentOutgoingPacket* GetRecentOutgoingPacket(std::uint32_t m_seq);
+    bool WasOutgoingPacketAcknowledged(std::uint32_t seq);
+    RecentOutgoingPacket* GetRecentOutgoingPacket(std::uint32_t seq);
     void NetworkPacketReceived(std::shared_ptr<NetworkPacket> packet);
     void TrySendQueuedPackets();
 
@@ -730,8 +731,8 @@ private:
 
     HistoricBuffer<std::uint8_t, 4, int> m_signalBarsHistory;
 
-    std::vector<RecentOutgoingPacket> m_recentOutgoingPackets;
-    std::vector<std::uint32_t> m_recentIncomingPackets;
+    std::deque<RecentOutgoingPacket> m_recentOutgoingPackets;
+    std::deque<std::uint32_t> m_recentIncomingPackets;
 
     std::uint32_t m_packetsReceived = 0;
     std::uint32_t m_recvLossCount = 0;
@@ -740,8 +741,8 @@ private:
 
     std::list<PendingOutgoingPacket> m_sendQueue;
     BlockingQueue<RawPendingOutgoingPacket> m_rawSendQueue;
-    std::vector<QueuedPacket> m_queuedPackets;
-    std::vector<UnacknowledgedExtraData> m_currentExtras;
+    std::list<QueuedPacket> m_queuedPackets;
+    std::list<UnacknowledgedExtraData> m_currentExtras;
 
     HistoricBuffer<std::uint32_t, 5> m_unsentStreamPacketsHistory;
     HistoricBuffer<std::uint32_t, 10, double> m_sendLossCountHistory;
@@ -753,7 +754,7 @@ private:
     std::vector<std::shared_ptr<Stream>> m_outgoingStreams;
     std::vector<std::shared_ptr<Stream>> m_incomingStreams;
 
-    std::vector<Buffer> m_ecAudioPackets;
+    std::deque<Buffer> m_ecAudioPackets;
     std::deque<DebugLoggedPacket> m_debugLoggedPackets;
 
     effects::Volume m_outputVolume;
@@ -803,7 +804,7 @@ private:
         .callUpgradeSupported = false
     };
 
-    std::map<std::int64_t, Endpoint> m_endpoints;
+    std::unordered_map<std::int64_t, Endpoint> m_endpoints;
     std::int64_t m_currentEndpoint = 0;
 
     std::atomic<std::uint32_t> m_seq{1};
@@ -932,7 +933,7 @@ protected:
     void SendUdpPing(Endpoint& endpoint) override;
     void SendRelayPings() override;
     void SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket) override;
-    void WritePacketHeader(std::uint32_t m_seq, BufferOutputStream* s, PktType type,
+    void WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, PktType type,
                            std::uint32_t length, PacketSender* sender = nullptr) override;
     void OnAudioOutputReady() override;
 

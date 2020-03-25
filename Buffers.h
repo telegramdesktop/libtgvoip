@@ -165,7 +165,7 @@ public:
         {
             if (i != 0)
             {
-                nonZeroCount++;
+                ++nonZeroCount;
                 avg += i;
             }
         }
@@ -184,10 +184,8 @@ public:
     {
         T min = std::numeric_limits<T>::max();
         for (T i : m_data)
-        {
             if (i < min)
                 min = i;
-        }
         return min;
     }
 

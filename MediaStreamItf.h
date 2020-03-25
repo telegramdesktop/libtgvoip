@@ -14,7 +14,7 @@
 #include <mutex>
 #include <cstdint>
 #include <cstring>
-#include <vector>
+#include <unordered_map>
 #include <functional>
 
 namespace tgvoip
@@ -30,13 +30,13 @@ public:
     void SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> f, void* param);
 
     //protected:
-    std::size_t InvokeCallback(std::uint8_t* data, std::size_t length);
+    std::size_t InvokeCallback(std::uint8_t* data, std::size_t length) const;
 
     virtual ~MediaStreamItf() = default;
 
 private:
     std::function<std::size_t(std::uint8_t*, std::size_t, void*)> m_callback = nullptr;
-    std::mutex m_mutexCallback;
+    mutable std::mutex m_mutexCallback;
     void* m_callbackParam = nullptr;
 };
 
@@ -54,13 +54,24 @@ public:
     void SetEchoCanceller(EchoCanceller* aec);
 
 private:
-    struct MixerInput
-    {
-        std::shared_ptr<MediaStreamItf> source;
-        float multiplier;
-    };
+//    struct MixerInput
+//    {
+//        std::shared_ptr<MediaStreamItf> source;
+//        float multiplier;
+
+//        struct Hash
+//        {
+//            std::size_t operator()(const MixerInput& value) const noexcept
+//            {
+//                std::size_t h1 = std::hash<std::shared_ptr<MediaStreamItf>>{}(value.source);
+//                std::size_t h2 = std::hash<float>{}(value.multiplier);
+//                return h1 ^ (h2 << 1);
+//            }
+//        };
+//    };
+
     mutable Mutex m_inputsMutex;
-    std::vector<MixerInput> m_inputs;
+    std::unordered_map<std::shared_ptr<MediaStreamItf>, float> m_inputs;
     Thread* m_thread = nullptr;
     BufferPool<960 * 2, 16> m_bufferPool;
     BlockingQueue<Buffer> m_processedQueue;

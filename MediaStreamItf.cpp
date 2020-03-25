@@ -23,7 +23,7 @@ void MediaStreamItf::SetCallback(std::function<std::size_t(std::uint8_t*, std::s
     m_callbackParam = param;
 }
 
-std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t length)
+std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t length) const
 {
     std::lock_guard<std::mutex> lock(m_mutexCallback);
     if (m_callback != nullptr)
@@ -89,38 +89,27 @@ std::size_t AudioMixer::OutputCallback(std::uint8_t* data, std::size_t length, v
 void AudioMixer::AddInput(std::shared_ptr<MediaStreamItf> input)
 {
     MutexGuard m(m_inputsMutex);
-    MixerInput in;
-    in.multiplier = 1;
-    in.source = std::move(input);
-    m_inputs.emplace_back(in);
+    m_inputs.emplace(std::move(input), 1);
 }
 
 void AudioMixer::RemoveInput(std::shared_ptr<MediaStreamItf> input)
 {
     MutexGuard m(m_inputsMutex);
-    for (std::vector<MixerInput>::iterator i = m_inputs.begin(); i != m_inputs.end(); ++i)
-    {
-        if (i->source == input)
-        {
-            m_inputs.erase(i);
-            return;
-        }
-    }
+    auto it = m_inputs.find(input);
+    if (it != m_inputs.end())
+        m_inputs.erase(it);
 }
 
 void AudioMixer::SetInputVolume(std::shared_ptr<MediaStreamItf> input, float volumeDB)
 {
     MutexGuard m(m_inputsMutex);
-    for (MixerInput& in : m_inputs)
+    auto it = m_inputs.find(input);
+    if (it != m_inputs.end())
     {
-        if (in.source == input)
-        {
-            if (volumeDB == -std::numeric_limits<float>::infinity())
-                in.multiplier = 0;
-            else
-                in.multiplier = expf(volumeDB / 20.0f * logf(10.0f));
-            return;
-        }
+        if (volumeDB == -std::numeric_limits<float>::infinity())
+            it->second = 0;
+        else
+            it->second = expf(volumeDB / 20.0f * logf(10.0f));
     }
 }
 
@@ -147,10 +136,10 @@ void AudioMixer::RunThread()
             std::array<float, SIZE> out;
             out.fill(0);
             int usedInputs = 0;
-            for (MixerInput& in : m_inputs)
+            for (auto& [source, multiplier] : m_inputs)
             {
-                std::size_t res = in.source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input.data()), STD_ARRAY_SIZEOF(input));
-                if (res == 0 || in.multiplier == 0)
+                std::size_t res = source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input.data()), STD_ARRAY_SIZEOF(input));
+                if (res == 0 || multiplier == 0)
                 {
                     //LOGV("AudioMixer: skipping silent packet");
                     continue;
@@ -158,7 +147,7 @@ void AudioMixer::RunThread()
                 ++usedInputs;
                 for (std::size_t i = 0; i < SIZE; ++i)
                 {
-                    out[i] += input[i] * in.multiplier;
+                    out[i] += input[i] * multiplier;
                 }
             }
             if (usedInputs > 0)

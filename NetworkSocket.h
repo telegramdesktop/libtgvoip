@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <list>
 
 namespace tgvoip
 {
@@ -109,8 +110,8 @@ public:
 
     static NetworkSocket* Create(NetworkProtocol m_protocol);
     static NetworkAddress ResolveDomainName(std::string name);
-    static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds,
-                       std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
+    static bool Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds,
+                       std::list<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
 protected:
     virtual std::uint16_t GenerateLocalPort();

@@ -299,7 +299,7 @@ NetworkAddress NetworkAddress::IPv6(const std::uint8_t addr[16])
     return a;
 }
 
-bool NetworkSocket::Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller)
+bool NetworkSocket::Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds, std::list<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller)
 {
 #ifndef _WIN32
     return NetworkSocketPosix::Select(readFds, writeFds, errorFds, canceller);

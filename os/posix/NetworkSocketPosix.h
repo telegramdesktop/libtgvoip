@@ -50,7 +50,8 @@ public:
     static std::uint32_t StringToV4Address(const std::string& address);
     static void StringToV6Address(const std::string& address, std::uint8_t* out);
     static NetworkAddress ResolveDomainName(const std::string& name);
-    static bool Select(std::vector<NetworkSocket*>& readFds, std::vector<NetworkSocket*>& writeFds, std::vector<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
+    static bool Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds,
+                       std::list<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
     virtual NetworkAddress GetConnectedAddress() override;
     virtual std::uint16_t GetConnectedPort() override;

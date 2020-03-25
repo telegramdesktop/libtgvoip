@@ -9,7 +9,7 @@
 
 #include "threading.h"
 #include "utils.h"
-#include <list>
+#include <queue>
 #include <cstdlib>
 #include <functional>
 
@@ -36,7 +36,7 @@ public:
     void Put(T thing)
     {
         MutexGuard sync(m_mutex);
-        m_queue.emplace_back(std::move(thing));
+        m_queue.emplace(std::move(thing));
         bool didOverflow = false;
         while (m_queue.size() > m_capacity)
         {
@@ -44,7 +44,7 @@ public:
             if (m_overflowCallback)
             {
                 m_overflowCallback(std::move(m_queue.front()));
-                m_queue.pop_front();
+                m_queue.pop();
             }
             else
             {
@@ -90,11 +90,11 @@ private:
         //if(queue.size()==0)
         //	return NULL;
         T r = std::move(m_queue.front());
-        m_queue.pop_front();
+        m_queue.pop();
         return r;
     }
 
-    std::list<T> m_queue;
+    std::queue<T> m_queue;
     std::size_t m_capacity;
     //tgvoip_lock_t lock;
     mutable Semaphore m_semaphore;
