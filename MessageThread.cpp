@@ -138,7 +138,6 @@ void MessageThread::Run()
 
 std::uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
 {
-    LOGI("Post message: id = %d, delay = %f, interval = %f", m_lastMessageID, delay, interval);
     assert(delay >= 0);
     //LOGI("MessageThread post [function] delay %f", delay);
     Message message;
