@@ -67,8 +67,8 @@ void MessageThread::Run()
         double currentTime = VoIPController::GetCurrentTime();
         double waitTimeout;
         {
-            MutexGuard _m(m_queueAccessMutex);
-            waitTimeout = m_queue.empty() ? DBL_MAX : (m_queue[0].deliverAt - currentTime);
+            MutexGuard lock(m_queueAccessMutex);
+            waitTimeout = m_queue.empty() ? std::numeric_limits<double>::max() : (m_queue.begin()->deliverAt - currentTime);
         }
         //LOGW("MessageThread wait timeout %f", waitTimeout);
         if (waitTimeout > 0.0)
@@ -108,35 +108,28 @@ void MessageThread::Run()
             return;
         }
         currentTime = VoIPController::GetCurrentTime();
-        std::vector<Message> msgsToDeliverNow;
+
+        std::vector<Message> messagesToDeliverNow;
         {
-            MutexGuard _m(m_queueAccessMutex);
-            for (std::vector<Message>::iterator m = m_queue.begin(); m != m_queue.end();)
-            {
-                if (m->deliverAt == 0.0 || currentTime >= m->deliverAt)
-                {
-                    msgsToDeliverNow.emplace_back(*m);
-                    m = m_queue.erase(m);
-                    continue;
-                }
-                ++m;
-            }
+            MutexGuard lock(m_queueAccessMutex);
+            std::set<Message>::iterator msgsToDeliverNowBegin = m_queue.begin();
+            std::set<Message>::iterator msgsToDeliverNowEnd = m_queue.upper_bound(Message{ .id = 0, .deliverAt = currentTime, .interval = 0, .func = nullptr });
+            for (std::set<Message>::iterator it = msgsToDeliverNowBegin; it != msgsToDeliverNowEnd; it = m_queue.erase(it))
+                messagesToDeliverNow.emplace_back(*it);
         }
 
-        for (Message& m : msgsToDeliverNow)
+        for (Message& message : messagesToDeliverNow)
         {
             //LOGI("MessageThread delivering %u", m.msg);
             m_cancelCurrent = false;
-            if (m.deliverAt == 0.0)
-                m.deliverAt = VoIPController::GetCurrentTime();
-            if (m.func != nullptr)
+            if (message.deliverAt == 0.0)
+                message.deliverAt = VoIPController::GetCurrentTime();
+            if (message.func != nullptr)
+                message.func();
+            if (!m_cancelCurrent && message.interval > 0.0)
             {
-                m.func();
-            }
-            if (!m_cancelCurrent && m.interval > 0.0)
-            {
-                m.deliverAt += m.interval;
-                InsertMessageInternal(m);
+                message.deliverAt += message.interval;
+                InsertMessageInternal(message);
             }
         }
     }
@@ -145,6 +138,7 @@ void MessageThread::Run()
 
 std::uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
 {
+    LOGI("Post message: id = %d, delay = %f, interval = %f", m_lastMessageID, delay, interval);
     assert(delay >= 0);
     //LOGI("MessageThread post [function] delay %f", delay);
     Message message;
@@ -165,48 +159,27 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
     return message.id;
 }
 
-void MessageThread::InsertMessageInternal(const MessageThread::Message& m)
+bool MessageThread::Message::operator<(const MessageThread::Message& other) const
+{
+    return std::tie(deliverAt, id) < std::tie(other.deliverAt, other.id);
+}
+
+void MessageThread::InsertMessageInternal(const MessageThread::Message& message)
 {
     MutexGuard lock(m_queueAccessMutex);
-    if (m_queue.empty())
-    {
-        m_queue.emplace_back(m);
-    }
-    else
-    {
-        if (m_queue[0].deliverAt > m.deliverAt)
-        {
-            m_queue.insert(m_queue.begin(), m);
-        }
-        else
-        {
-            std::vector<Message>::iterator insertAfter = m_queue.begin();
-            for (; insertAfter != m_queue.end(); ++insertAfter)
-            {
-                std::vector<Message>::iterator next = std::next(insertAfter);
-                if (next == m_queue.end() || (next->deliverAt > m.deliverAt && insertAfter->deliverAt <= m.deliverAt))
-                {
-                    m_queue.insert(next, m);
-                    break;
-                }
-            }
-        }
-    }
+    m_queue.emplace(message);
 }
 
 void MessageThread::Cancel(std::uint32_t id)
 {
-    MutexGuard _m(m_queueAccessMutex);
+    MutexGuard lock(m_queueAccessMutex);
 
-    for (std::vector<Message>::iterator m = m_queue.begin(); m != m_queue.end();)
+    for (std::set<Message>::iterator it = m_queue.begin(); it != m_queue.end(); ++it)
     {
-        if (m->id == id)
+        if (it->id == id)
         {
-            m = m_queue.erase(m);
-        }
-        else
-        {
-            ++m;
+            m_queue.erase(it);
+            break;
         }
     }
 }

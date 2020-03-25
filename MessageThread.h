@@ -9,8 +9,8 @@
 #include "utils.h"
 #include <atomic>
 #include <functional>
-#include <vector>
 #include <mutex>
+#include <set>
 
 namespace tgvoip
 {
@@ -38,10 +38,12 @@ private:
         double deliverAt;
         double interval;
         std::function<void()> func;
+
+        bool operator<(const Message& other) const;
     };
 
     std::atomic<bool> m_running;
-    std::vector<Message> m_queue;
+    std::set<Message> m_queue;
     mutable Mutex m_queueMutex;
     mutable Mutex m_queueAccessMutex;
 
@@ -56,7 +58,7 @@ private:
 #endif
 
     void Run();
-    void InsertMessageInternal(const Message& m);
+    void InsertMessageInternal(const Message& message);
 };
 
 } // namespace tgvoip

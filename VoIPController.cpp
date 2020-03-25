@@ -398,9 +398,10 @@ void VoIPController::SetNetworkType(NetType type)
         m_activeNetItfName = itfName;
         if (isFirstChange)
             return;
-        m_messageThread.Post([this] {
+        m_messageThread.Post([this]
+        {
             m_wasNetworkHandover = true;
-            if (m_currentEndpoint)
+            if (m_currentEndpoint != 0)
             {
                 const Endpoint& _currentEndpoint = m_endpoints.at(m_currentEndpoint);
                 const Endpoint& _preferredRelay = m_endpoints.at(m_preferredRelay);
@@ -514,23 +515,23 @@ void VoIPController::SetMicMute(bool mute)
         m_echoCanceller->Enable(!mute);
     if (m_state == State::ESTABLISHED)
     {
-        m_messageThread.Post([this] {
+        m_messageThread.Post([this]
+        {
             for (std::shared_ptr<Stream>& s : m_outgoingStreams)
             {
-                if (s->type == StreamType::AUDIO)
+                if (s->type != StreamType::AUDIO)
+                    continue;
+                s->enabled = !m_micMuted;
+                if (m_peerVersion < 6)
                 {
-                    s->enabled = !m_micMuted;
-                    if (m_peerVersion < 6)
-                    {
-                        std::uint8_t buf[2];
-                        buf[0] = s->id;
-                        buf[1] = (m_micMuted ? 0 : 1);
-                        SendPacketReliably(PktType::STREAM_STATE, buf, 2, 0.5, 20);
-                    }
-                    else
-                    {
-                        SendStreamFlags(*s);
-                    }
+                    std::uint8_t buf[2];
+                    buf[0] = s->id;
+                    buf[1] = (m_micMuted ? 0 : 1);
+                    SendPacketReliably(PktType::STREAM_STATE, buf, 2, 0.5, 20);
+                }
+                else
+                {
+                    SendStreamFlags(*s);
                 }
             }
         });
@@ -903,7 +904,8 @@ void VoIPController::SendGroupCallKey(std::uint8_t* key)
     Buffer buf(256);
     buf.CopyFrom(key, 0, 256);
     std::shared_ptr<Buffer> keyPtr = std::make_shared<Buffer>(std::move(buf));
-    m_messageThread.Post([this, keyPtr] {
+    m_messageThread.Post([this, keyPtr]
+    {
         if (!(m_peerCapabilities & TGVOIP_PEER_CAP_GROUP_CALLS))
         {
             LOGE("Tried to send group call key but peer isn't capable of them");
@@ -926,7 +928,8 @@ void VoIPController::SendGroupCallKey(std::uint8_t* key)
 
 void VoIPController::RequestCallUpgrade()
 {
-    m_messageThread.Post([this] {
+    m_messageThread.Post([this]
+    {
         if (!(m_peerCapabilities & TGVOIP_PEER_CAP_GROUP_CALLS))
         {
             LOGE("Tried to send group call key but peer isn't capable of them");
@@ -1090,17 +1093,19 @@ void VoIPController::SetAudioOutputDuckingEnabled(bool enabled)
 
 void VoIPController::InitializeTimers()
 {
-    m_initTimeoutID = m_messageThread.Post([this] {
-        LOGW("Init timeout, disconnecting");
-        m_lastError = Error::TIMEOUT;
-        SetState(State::FAILED);
-    },
+    m_initTimeoutID = m_messageThread.Post([this]
+        {
+            LOGW("Init timeout, disconnecting");
+            m_lastError = Error::TIMEOUT;
+            SetState(State::FAILED);
+        },
         m_config.initTimeout);
 
     if (!m_config.statsDumpFilePath.empty())
     {
-        m_messageThread.Post([this] {
-            if (m_statsDump && m_incomingStreams.size() == 1)
+        m_messageThread.Post([this]
+        {
+            if (m_statsDump != nullptr && m_incomingStreams.size() == 1)
             {
                 std::shared_ptr<JitterBuffer>& jitterBuffer = m_incomingStreams[0]->jitterBuffer;
                 //fprintf(statsDump, "Time\tRTT\tLISeq\tLASeq\tCWnd\tBitrate\tJitter\tJDelay\tAJDelay\n");
@@ -1120,7 +1125,7 @@ void VoIPController::InitializeTimers()
                     jitterBuffer ? jitterBuffer->GetAverageDelay() * 0.06 : 0);
             }
         },
-            0.1, 0.1);
+        0.1, 0.1);
     }
 
     m_messageThread.Post(std::bind(&VoIPController::SendRelayPings, this), 0.0, 2.0);
@@ -1144,7 +1149,7 @@ void VoIPController::RunSendThread()
             m_stats.bytesSentWifi += static_cast<std::uint64_t>(pkt.packet.data.Length());
         if (pkt.packet.protocol == NetworkProtocol::TCP)
         {
-            if (pkt.socket && !pkt.socket->IsFailed())
+            if (pkt.socket != nullptr && !pkt.socket->IsFailed())
             {
                 pkt.socket->Send(std::move(pkt.packet));
             }
@@ -1165,7 +1170,8 @@ void VoIPController::SetState(State state)
     this->m_state = state;
     LOGV("Call state changed to %d", static_cast<int>(state));
     m_stateChangeTime = GetCurrentTime();
-    m_messageThread.Post([this, state] {
+    m_messageThread.Post([this, state]
+    {
         if (m_callbacks.connectionStateChanged)
             m_callbacks.connectionStateChanged(this, state);
     });
@@ -1255,10 +1261,12 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
 
     // TODO make an AudioPacketSender
 
+    bool hasSecondaryData = (secondaryLen != 0 && secondaryData != nullptr);
+
     Buffer dataBuf = m_outgoingAudioBufferPool.Get();
-    Buffer secondaryDataBuf = secondaryLen && secondaryData ? m_outgoingAudioBufferPool.Get() : Buffer();
+    Buffer secondaryDataBuf = hasSecondaryData ? m_outgoingAudioBufferPool.Get() : Buffer();
     dataBuf.CopyFrom(data, 0, len);
-    if (secondaryLen && secondaryData)
+    if (hasSecondaryData)
     {
         secondaryDataBuf.CopyFrom(secondaryData, 0, secondaryLen);
     }
@@ -1267,7 +1275,7 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
     m_messageThread.Post([this, dataBufPtr, secondaryDataBufPtr, len, secondaryLen]()
     {
         m_unsentStreamPacketsHistory.Add(static_cast<unsigned int>(m_unsentStreamPackets));
-        if (m_unsentStreamPacketsHistory.Average() >= m_maxUnsentStreamPackets && !m_videoPacketSender)
+        if (m_unsentStreamPacketsHistory.Average() >= m_maxUnsentStreamPackets && m_videoPacketSender == nullptr)
         {
             LOGW("Resetting stalled send queue");
             m_sendQueue.clear();
@@ -2897,7 +2905,8 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                 StartAudio();
                 m_audioStarted = true;
             }
-            m_messageThread.Post([this] {
+            m_messageThread.Post([this]
+            {
                 if (m_state == State::WAIT_INIT_ACK)
                 {
                     SetState(State::ESTABLISHED);
@@ -3332,7 +3341,8 @@ void VoIPController::ProcessExtraData(Buffer& data)
         {
             std::uint8_t groupKey[256];
             in.ReadBytes(groupKey, 256);
-            m_messageThread.Post([this, &groupKey] {
+            m_messageThread.Post([this, &groupKey]
+            {
                 if (m_callbacks.groupCallKeyReceived)
                     m_callbacks.groupCallKeyReceived(this, groupKey);
             });
@@ -3344,7 +3354,8 @@ void VoIPController::ProcessExtraData(Buffer& data)
     {
         if (!m_didInvokeUpgradeCallback)
         {
-            m_messageThread.Post([this] {
+            m_messageThread.Post([this]
+            {
                 if (m_callbacks.upgradeToGroupCallRequested)
                     m_callbacks.upgradeToGroupCallRequested(this);
             });
@@ -3414,7 +3425,7 @@ Endpoint* VoIPController::GetEndpointForPacket(const PendingOutgoingPacket& pkt)
             return nullptr;
         }
     }
-    if (!endpoint)
+    if (endpoint == nullptr)
         endpoint = &m_endpoints.at(m_currentEndpoint);
     return endpoint;
 }
