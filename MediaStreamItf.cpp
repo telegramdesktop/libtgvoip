@@ -16,18 +16,24 @@
 
 using namespace tgvoip;
 
-void MediaStreamItf::SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> f, void* param)
+void MediaStreamItf::SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> callback, void* param)
 {
     std::lock_guard<std::mutex> lock(m_mutexCallback);
-    m_callback = f;
+    m_callback = std::move(callback);
     m_callbackParam = param;
 }
 
 std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t length) const
 {
-    std::lock_guard<std::mutex> lock(m_mutexCallback);
-    if (m_callback != nullptr)
-        return m_callback(data, length, m_callbackParam);
+    CallbackType callback;
+    void* callbackParam;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexCallback);
+        callback = m_callback;
+        callbackParam = m_callbackParam;
+    }
+    if (callback != nullptr)
+        return callback(data, length, callbackParam);
     return 0;
 }
 

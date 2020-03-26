@@ -25,9 +25,11 @@ class EchoCanceller;
 class MediaStreamItf
 {
 public:
+    using CallbackType = std::function<std::size_t(std::uint8_t*, std::size_t, void*)>;
+
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    void SetCallback(std::function<std::size_t(std::uint8_t*, std::size_t, void*)> f, void* param);
+    void SetCallback(CallbackType callback, void* param);
 
     //protected:
     std::size_t InvokeCallback(std::uint8_t* data, std::size_t length) const;
@@ -35,7 +37,7 @@ public:
     virtual ~MediaStreamItf() = default;
 
 private:
-    std::function<std::size_t(std::uint8_t*, std::size_t, void*)> m_callback = nullptr;
+    CallbackType m_callback = nullptr;
     mutable std::mutex m_mutexCallback;
     void* m_callbackParam = nullptr;
 };
