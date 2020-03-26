@@ -88,7 +88,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         LOGW("tried to send null packet");
         return;
     }
-    int res;
+    ssize_t res;
     switch (m_protocol)
     {
     case NetworkProtocol::UDP:
@@ -159,14 +159,14 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         }
         addr.sin6_port = htons(packet.port);
         std::lock_guard<std::mutex> lock(m_mutexFd);
-        res = static_cast<int>(sendto(m_fd, *packet.data, packet.data.Length(), 0,
-                               reinterpret_cast<sockaddr*>(&addr), sizeof(addr)));
+        res = ::sendto(m_fd, *packet.data, packet.data.Length(), 0,
+                       reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
         break;
     }
     case NetworkProtocol::TCP:
     {
         std::lock_guard<std::mutex> lock(m_mutexFd);
-        res = static_cast<int>(send(m_fd, *packet.data, packet.data.Length(), 0));
+        res = ::send(m_fd, *packet.data, packet.data.Length(), 0);
         break;
     }
     }
