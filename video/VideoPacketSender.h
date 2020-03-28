@@ -29,7 +29,7 @@ public:
     void PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, PktType type, std::uint32_t size) override;
     void PacketLost(std::uint32_t seq, PktType type, std::uint32_t size) override;
     void SetSource(VideoSource* m_source);
-    std::uint32_t GetBitrate() const;
+    [[nodiscard]] std::uint32_t GetBitrate() const;
 
 private:
     struct SentVideoFrame

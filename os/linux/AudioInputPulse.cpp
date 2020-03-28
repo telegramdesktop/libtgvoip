@@ -17,13 +17,14 @@
 #endif
 
 #include <cassert>
+#include <cstring>
 
 #define BUFFER_SIZE 960
 #define CHECK_ERROR(res, msg)                      \
     if (res != 0)                                  \
     {                                              \
         LOGE(msg " failed: %s", pa_strerror(res)); \
-        failed = true;                             \
+        m_failed = true;                           \
         return;                                    \
     }
 
@@ -166,7 +167,7 @@ bool AudioInputPulse::EnumerateDevices(std::vector<AudioInputDevice>& devs)
             {
                 if (eol > 0)
                     return;
-                std::vector<AudioInputDevice>* devs = reinterpret_cast<std::vector<AudioInputDevice>*>userdata;
+                std::vector<AudioInputDevice>* devs = reinterpret_cast<std::vector<AudioInputDevice>*>(userdata);
                 AudioInputDevice dev;
                 dev.id = std::string(info->name);
                 dev.displayName = std::string(info->description);
@@ -203,7 +204,7 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
         if (bytesToFill > bytesRemaining)
             bytesToFill = bytesRemaining;
 
-        int err = pa_stream_peek(stream, reinterpret_cast<void**>(&buffer), &bytesToFill);
+        int err = pa_stream_peek(stream, reinterpret_cast<const void**>(&buffer), &bytesToFill);
         CHECK_ERROR(err, "pa_stream_peek");
 
         if (m_isRecording)
@@ -217,7 +218,7 @@ void AudioInputPulse::StreamReadCallback(pa_stream* stream, std::size_t requeste
             while (m_remainingDataSize >= 960 * 2)
             {
                 InvokeCallback(m_remainingData, 960 * 2);
-                memmove(m_remainingData, m_remainingData + 960 * 2, m_remainingDataSize - 960 * 2);
+                std::memmove(m_remainingData, m_remainingData + 960 * 2, m_remainingDataSize - 960 * 2);
                 m_remainingDataSize -= 960 * 2;
             }
         }

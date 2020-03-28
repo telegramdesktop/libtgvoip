@@ -34,17 +34,19 @@ struct TCPO2State
 class NetworkAddress
 {
 public:
-    virtual std::string ToString() const;
+    virtual ~NetworkAddress() = default;
+
+    [[nodiscard]] virtual std::string ToString() const;
+    [[nodiscard]] virtual bool IsEmpty() const;
+    [[nodiscard]] virtual bool PrefixMatches(const unsigned int prefix, const NetworkAddress& other) const;
+
     bool operator==(const NetworkAddress& other) const;
     bool operator!=(const NetworkAddress& other) const;
-    virtual ~NetworkAddress() = default;
-    virtual bool IsEmpty() const;
-    virtual bool PrefixMatches(const unsigned int prefix, const NetworkAddress& other) const;
 
     static NetworkAddress Empty();
-    static NetworkAddress IPv4(std::string str);
+    static NetworkAddress IPv4(const std::string& str);
     static NetworkAddress IPv4(std::uint32_t addr);
-    static NetworkAddress IPv6(std::string str);
+    static NetworkAddress IPv6(const std::string& str);
     static NetworkAddress IPv6(const std::uint8_t addr[16]);
 
     union
@@ -69,7 +71,7 @@ struct NetworkPacket
     std::uint16_t port;
 
     static NetworkPacket Empty();
-    bool IsEmpty() const;
+    [[nodiscard]] bool IsEmpty() const;
 };
 
 class SocketSelectCanceller
@@ -102,14 +104,14 @@ public:
     virtual std::uint16_t GetConnectedPort();
     virtual void SetTimeouts(int sendTimeout, int recvTimeout);
 
-    virtual bool IsFailed() const;
-    virtual bool IsReadyToSend() const;
+    [[nodiscard]] virtual bool IsFailed() const;
+    [[nodiscard]] virtual bool IsReadyToSend() const;
     virtual bool OnReadyToSend();
     virtual bool OnReadyToReceive();
     void SetTimeout(double timeout);
 
     static NetworkSocket* Create(NetworkProtocol m_protocol);
-    static NetworkAddress ResolveDomainName(std::string name);
+    static NetworkAddress ResolveDomainName(const std::string& name);
     static bool Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds,
                        std::list<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
@@ -153,8 +155,8 @@ public:
     void Connect(const NetworkAddress& address, std::uint16_t port) override;
     bool OnReadyToSend() override;
 
-    bool IsFailed() const override;
-    bool IsReadyToSend() const override;
+    [[nodiscard]] bool IsFailed() const override;
+    [[nodiscard]] bool IsReadyToSend() const override;
 
 private:
     NetworkSocket* m_wrapped;
@@ -175,13 +177,13 @@ public:
     void Connect(const NetworkAddress& address, std::uint16_t port) override;
     NetworkSocket* GetWrapped() override;
     void InitConnection() override;
-    bool IsFailed() const override;
     NetworkAddress GetConnectedAddress() override;
     std::uint16_t GetConnectedPort() override;
     bool OnReadyToSend() override;
     bool OnReadyToReceive() override;
 
-    bool NeedSelectForSending();
+    [[nodiscard]] bool IsFailed() const override;
+    [[nodiscard]] bool NeedSelectForSending() const;
 
 private:
     enum class ConnectionState

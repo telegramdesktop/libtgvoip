@@ -27,24 +27,24 @@ VoIPGroupController::VoIPGroupController(std::int32_t timeDifference)
 
 VoIPGroupController::~VoIPGroupController()
 {
-    if (m_audioOutput)
+    if (m_audioOutput != nullptr)
     {
         m_audioOutput->Stop();
     }
+
     LOGD("before stop audio mixer");
     m_audioMixer->Stop();
     delete m_audioMixer;
 
-    for (std::vector<GroupCallParticipant>::iterator p = m_participants.begin(); p != m_participants.end(); ++p)
+    for (GroupCallParticipant& participant : m_participants)
     {
-        if (p->levelMeter)
-            delete p->levelMeter;
+        delete participant.levelMeter;
     }
 }
 
 void VoIPGroupController::SetGroupCallInfo(std::uint8_t* encryptionKey, std::uint8_t* reflectorGroupTag, std::uint8_t* reflectorSelfTag,
                                            std::uint8_t* reflectorSelfSecret, std::uint8_t* reflectorSelfTagHash, std::int32_t selfUserID,
-                                           NetworkAddress reflectorAddress, NetworkAddress reflectorAddressV6, std::uint16_t reflectorPort)
+                                           const NetworkAddress& reflectorAddress, const NetworkAddress& reflectorAddressV6, std::uint16_t reflectorPort)
 {
     Endpoint e;
     e.address = reflectorAddress;
@@ -57,10 +57,10 @@ void VoIPGroupController::SetGroupCallInfo(std::uint8_t* encryptionKey, std::uin
     m_groupReflector = e;
     m_currentEndpoint = e.id;
 
-    std::memcpy(this->m_encryptionKey, encryptionKey, 256);
-    std::memcpy(this->m_reflectorSelfTag, reflectorSelfTag, 16);
-    std::memcpy(this->m_reflectorSelfSecret, reflectorSelfSecret, 16);
-    std::memcpy(this->m_reflectorSelfTagHash, reflectorSelfTagHash, 16);
+    std::memcpy(m_encryptionKey, encryptionKey, 256);
+    std::memcpy(m_reflectorSelfTag, reflectorSelfTag, 16);
+    std::memcpy(m_reflectorSelfSecret, reflectorSelfSecret, 16);
+    std::memcpy(m_reflectorSelfTagHash, reflectorSelfTagHash, 16);
     std::uint8_t sha256[SHA256_LENGTH];
     crypto.sha256(encryptionKey, 256, sha256);
     std::memcpy(m_callID, sha256 + (SHA256_LENGTH - 16), 16);
@@ -198,7 +198,7 @@ void VoIPGroupController::SetParticipantStreams(std::int32_t userID, std::uint8_
         for (const std::shared_ptr<Stream>& ns : streams)
         {
             bool found = false;
-            for (std::shared_ptr<Stream> s : participant.streams)
+            for (const std::shared_ptr<Stream>& s : participant.streams)
             {
                 if (s->id == ns->id)
                 {
@@ -414,7 +414,7 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
 
 void VoIPGroupController::SetCallbacks(VoIPGroupController::Callbacks callbacks)
 {
-    VoIPController::SetCallbacks(callbacks);
+    VoIPController::SetCallbacks(static_cast<VoIPController::Callbacks&>(callbacks));
     this->m_groupCallbacks = callbacks;
 }
 

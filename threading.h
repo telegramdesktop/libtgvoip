@@ -7,6 +7,8 @@
 #ifndef THREADING_H
 #define THREADING_H
 
+#include "utils.h"
+
 #include <functional>
 
 #if defined(_POSIX_THREADS) || defined(_POSIX_VERSION) || defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
@@ -26,14 +28,14 @@ class Mutex
 {
 public:
     Mutex();
+    TGVOIP_DISALLOW_COPY_AND_ASSIGN(Mutex);
     ~Mutex();
     void Lock();
     void Unlock();
     pthread_mutex_t* NativeHandle();
 
 private:
-    pthread_mutex_t m_mtx;
-    Mutex(const Mutex& other);
+    pthread_mutex_t m_mutex;
 };
 
 class Thread
@@ -52,8 +54,8 @@ public:
 private:
     static void* ActualEntryPoint(void* arg);
     std::function<void()> m_entry;
-    pthread_t m_thread;
-    const char* m_name;
+    pthread_t m_thread = 0;
+    const char* m_name = nullptr;
 #ifdef __APPLE__
     bool m_maxPriority = false;
 #endif

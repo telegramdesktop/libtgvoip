@@ -13,7 +13,7 @@ public:
     ~VoIPGroupController() override;
     void SetGroupCallInfo(std::uint8_t* m_encryptionKey, std::uint8_t* reflectorGroupTag, std::uint8_t* m_reflectorSelfTag,
                           std::uint8_t* m_reflectorSelfSecret, std::uint8_t* m_reflectorSelfTagHash, std::int32_t selfUserID,
-                          NetworkAddress reflectorAddress, NetworkAddress reflectorAddressV6, std::uint16_t reflectorPort);
+                          const NetworkAddress& reflectorAddress, const NetworkAddress& reflectorAddressV6, std::uint16_t reflectorPort);
     void AddGroupCallParticipant(std::int32_t userID, std::uint8_t* memberTagHash, std::uint8_t* serializedStreams, std::size_t streamsLength);
     void RemoveGroupCallParticipant(std::int32_t userID);
     float GetParticipantAudioLevel(std::int32_t userID);
@@ -38,7 +38,7 @@ protected:
     void SendRelayPings() override;
     void SendPacket(std::uint8_t* data, std::size_t len, Endpoint& ep, PendingOutgoingPacket& srcPacket) override;
     void WritePacketHeader(std::uint32_t seq, BufferOutputStream* s, PktType type,
-                           std::uint32_t length, PacketSender* sender = nullptr) override;
+                           std::uint32_t length, PacketSender* source) override;
     void OnAudioOutputReady() override;
 
 private:

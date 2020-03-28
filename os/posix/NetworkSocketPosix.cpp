@@ -53,7 +53,7 @@ NetworkSocketPosix::~NetworkSocketPosix()
 {
     if (m_fd >= 0)
     {
-        Close();
+        CloseHelper();
     }
 }
 
@@ -362,7 +362,7 @@ void NetworkSocketPosix::Open()
     m_switchToV6at = VoIPController::GetCurrentTime() + m_ipv6Timeout;
 }
 
-void NetworkSocketPosix::Close()
+void NetworkSocketPosix::CloseHelper()
 {
     if (m_closing)
     {
@@ -378,6 +378,11 @@ void NetworkSocketPosix::Close()
         ::close(m_fd);
         m_fd = -1;
     }
+}
+
+void NetworkSocketPosix::Close()
+{
+    CloseHelper();
 }
 
 void NetworkSocketPosix::Connect(const NetworkAddress& address, std::uint16_t port)
@@ -444,7 +449,7 @@ void NetworkSocketPosix::OnActiveInterfaceChanged()
 
 std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr)
 {
-    std::string name = "";
+    std::string name;
     // Android doesn't support ifaddrs
 #ifdef __ANDROID__
     JNIEnv* env = nullptr;
@@ -685,7 +690,7 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
         (void)::read(canceller->m_pipeRead, &c, 1);
         return false;
     }
-    else if (anyFailed)
+    if (anyFailed)
     {
         FD_ZERO(&readSet);
         FD_ZERO(&writeSet);
@@ -727,7 +732,7 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
             ++it;
     }
 
-    return readFds.size() > 0 || errorFds.size() > 0 || writeFds.size() > 0;
+    return !readFds.empty() || !errorFds.empty() || !writeFds.empty();
 }
 
 SocketSelectCancellerPosix::SocketSelectCancellerPosix()

@@ -103,8 +103,8 @@ public:
     struct PendingOutgoingPacket
     {
         PendingOutgoingPacket(std::uint32_t seq, PktType type, std::size_t len, Buffer&& data, std::int64_t endpoint);
-        PendingOutgoingPacket(PendingOutgoingPacket&& other);
-        PendingOutgoingPacket& operator=(PendingOutgoingPacket&& other);
+        PendingOutgoingPacket(PendingOutgoingPacket&& other) noexcept;
+        PendingOutgoingPacket& operator=(PendingOutgoingPacket&& other) noexcept;
         TGVOIP_DISALLOW_COPY_AND_ASSIGN(PendingOutgoingPacket);
 
         std::uint32_t seq;
@@ -161,7 +161,7 @@ public:
      * @param connectionMaxLayer The max_layer field from the phoneCallProtocol object returned by Telegram server.
      * DO NOT HARDCODE THIS VALUE, it's extremely important for backwards compatibility.
      */
-    void SetRemoteEndpoints(std::vector<Endpoint> m_endpoints, bool m_allowP2p, std::int32_t m_connectionMaxLayer);
+    void SetRemoteEndpoints(const std::vector<Endpoint>& m_endpoints, bool m_allowP2p, std::int32_t m_connectionMaxLayer);
 
     /**
      * Initialize and start all the internal threads

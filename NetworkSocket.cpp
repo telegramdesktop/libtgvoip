@@ -129,12 +129,12 @@ NetworkSocket* NetworkSocket::Create(NetworkProtocol protocol)
 #endif
 }
 
-NetworkAddress NetworkSocket::ResolveDomainName(std::string name)
+NetworkAddress NetworkSocket::ResolveDomainName(const std::string& name)
 {
 #ifndef _WIN32
-    return NetworkSocketPosix::ResolveDomainName(std::move(name));
+    return NetworkSocketPosix::ResolveDomainName(name);
 #else
-    return NetworkSocketWinsock::ResolveDomainName(std::move(name));
+    return NetworkSocketWinsock::ResolveDomainName(name);
 #endif
 }
 
@@ -261,7 +261,7 @@ NetworkAddress NetworkAddress::Empty()
     return addr;
 }
 
-NetworkAddress NetworkAddress::IPv4(std::string str)
+NetworkAddress NetworkAddress::IPv4(const std::string& str)
 {
     NetworkAddress addr;
     addr.isIPv6 = false;
@@ -281,7 +281,7 @@ NetworkAddress NetworkAddress::IPv4(std::uint32_t addr)
     return a;
 }
 
-NetworkAddress NetworkAddress::IPv6(std::string str)
+NetworkAddress NetworkAddress::IPv6(const std::string& str)
 {
     NetworkAddress addr;
     addr.isIPv6 = false;
@@ -862,7 +862,7 @@ void NetworkSocketSOCKS5Proxy::SendConnectionCommand()
     m_state = ConnectionState::WAITING_FOR_COMMAND_RESULT;
 }
 
-bool NetworkSocketSOCKS5Proxy::NeedSelectForSending()
+bool NetworkSocketSOCKS5Proxy::NeedSelectForSending() const
 {
     return m_state == ConnectionState::INITIAL || m_state == ConnectionState::CONNECTED;
 }

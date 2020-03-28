@@ -14,14 +14,12 @@ using namespace tgvoip::video;
 
 VideoPacketSender::VideoPacketSender(VoIPController* controller, VideoSource* videoSource, std::shared_ptr<VoIPController::Stream> stream)
     : PacketSender(controller)
-    , m_stm(stream)
+    , m_stm(std::move(stream))
 {
     SetSource(videoSource);
 }
 
-VideoPacketSender::~VideoPacketSender()
-{
-}
+VideoPacketSender::~VideoPacketSender() = default;
 
 std::uint32_t VideoPacketSender::GetBitrate() const
 {
@@ -33,13 +31,13 @@ void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, d
     std::uint32_t bytesNewlyAcked = 0;
     // video frames are stored in sentVideoFrames in order of increasing numbers
     // so if a frame (or part of it) is acknowledged but isn't sentVideoFrames[0], we know there was a packet loss
-    for (SentVideoFrame& f : m_sentVideoFrames)
+    for (SentVideoFrame& frame : m_sentVideoFrames)
     {
-        for (std::vector<std::uint32_t>::iterator s = f.unacknowledgedPackets.begin(); s != f.unacknowledgedPackets.end();)
+        for (auto s = frame.unacknowledgedPackets.begin(); s != frame.unacknowledgedPackets.end();)
         {
             if (*s == seq)
             {
-                s = f.unacknowledgedPackets.erase(s);
+                s = frame.unacknowledgedPackets.erase(s);
                 bytesNewlyAcked = size;
                 break;
             }
@@ -49,16 +47,16 @@ void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, d
             }
         }
     }
-    for (std::vector<SentVideoFrame>::iterator f = m_sentVideoFrames.begin(); f != m_sentVideoFrames.end();)
+    for (auto frame = m_sentVideoFrames.begin(); frame != m_sentVideoFrames.end();)
     {
-        if (f->unacknowledgedPackets.empty() && f->fragmentsInQueue == 0)
+        if (frame->unacknowledgedPackets.empty() && frame->fragmentsInQueue == 0)
         {
-            f = m_sentVideoFrames.erase(f);
+            frame = m_sentVideoFrames.erase(frame);
             continue;
         }
-        ++f;
+        ++frame;
     }
-    if (bytesNewlyAcked)
+    if (bytesNewlyAcked != 0)
     {
         float _sendTime = static_cast<float>(sendTime - GetConnectionInitTime());
         float recvTime = static_cast<float>(ackTime);
@@ -72,26 +70,25 @@ void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_
     if (type == PktType::STREAM_EC)
         return;
     LOGW("VideoPacketSender::PacketLost: %u (size %u)", seq, size);
-    for (std::vector<SentVideoFrame>::iterator f = m_sentVideoFrames.begin(); f != m_sentVideoFrames.end(); ++f)
+    for (auto frame = m_sentVideoFrames.begin(); frame != m_sentVideoFrames.end(); ++frame)
     {
-        std::vector<std::uint32_t>::iterator pkt = std::find(f->unacknowledgedPackets.begin(), f->unacknowledgedPackets.end(), seq);
-        if (pkt != f->unacknowledgedPackets.end())
+        auto pkt = std::find(frame->unacknowledgedPackets.begin(), frame->unacknowledgedPackets.end(), seq);
+        if (pkt == frame->unacknowledgedPackets.end())
+            continue;
+        LOGW("Lost packet belongs to frame %u", frame->seq);
+        m_videoPacketLossCount++;
+        m_videoCongestionControl.ProcessPacketLost(size);
+        if (!m_videoKeyframeRequested)
         {
-            LOGW("Lost packet belongs to frame %u", f->seq);
-            m_videoPacketLossCount++;
-            m_videoCongestionControl.ProcessPacketLost(size);
-            if (!m_videoKeyframeRequested)
-            {
-                m_videoKeyframeRequested = true;
-                m_source->RequestKeyFrame();
-            }
-            f->unacknowledgedPackets.erase(pkt);
-            if (f->unacknowledgedPackets.empty() && f->fragmentsInQueue == 0)
-            {
-                m_sentVideoFrames.erase(f);
-            }
-            return;
+            m_videoKeyframeRequested = true;
+            m_source->RequestKeyFrame();
         }
+        frame->unacknowledgedPackets.erase(pkt);
+        if (frame->unacknowledgedPackets.empty() && frame->fragmentsInQueue == 0)
+        {
+            m_sentVideoFrames.erase(frame);
+        }
+        return;
     }
 }
 
@@ -281,6 +278,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             m_packetsForFEC.emplace_back(std::move(fecPacketData));
             offset += len;
 
+            std::size_t pktLength = pkt.GetLength();
             Buffer packetData(std::move(pkt));
 
             std::size_t packetDataLength = packetData.Length();
@@ -293,7 +291,7 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             };
             IncrementUnsentStreamPackets();
             std::uint32_t seq = SendPacket(std::move(p));
-            m_videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pkt.GetLength()));
+            m_videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pktLength));
             sentFrame.unacknowledgedPackets.emplace_back(seq);
         }
         ++m_fecFrameCount;
@@ -312,11 +310,12 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             out.WriteUInt16(static_cast<std::uint16_t>(fecPacket.Length()));
             out.WriteBytes(fecPacket);
 
+            std::size_t outLength = out.GetLength();
             VoIPController::PendingOutgoingPacket p
             {
                 0,
                 PktType::STREAM_EC,
-                out.GetLength(),
+                outLength,
                 Buffer(std::move(out)),
                 0
             };

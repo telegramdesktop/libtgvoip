@@ -70,7 +70,7 @@ void MockReflector::Start()
     if (m_running)
         return;
     m_running = true;
-    pthread_create(
+    ::pthread_create(
         &m_thread, nullptr, [](void* arg) -> void*
         {
             reinterpret_cast<MockReflector*>(arg)->RunThread();
@@ -82,9 +82,9 @@ void MockReflector::Start()
 void MockReflector::Stop()
 {
     m_running = false;
-    shutdown(m_sfd, SHUT_RDWR);
-    close(m_sfd);
-    pthread_join(m_thread, nullptr);
+    ::shutdown(m_sfd, SHUT_RDWR);
+    ::close(m_sfd);
+    ::pthread_join(m_thread, nullptr);
 }
 
 void MockReflector::SetDropAllPackets(bool drop)
@@ -129,7 +129,7 @@ void MockReflector::RunThread()
                 {
                     continue;
                 }
-                else if (specialID[3] == -2)
+                if (specialID[3] == -2)
                 {
                     UdpReflectorSelfInfo response;
                     std::memcpy(response.peerTag, peerTag.data(), 16);

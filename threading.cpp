@@ -4,43 +4,39 @@ using namespace tgvoip;
 
 Mutex::Mutex()
 {
-    pthread_mutex_init(&m_mtx, nullptr);
+    ::pthread_mutex_init(&m_mutex, nullptr);
 }
 
 Mutex::~Mutex()
 {
-    pthread_mutex_destroy(&m_mtx);
+    ::pthread_mutex_destroy(&m_mutex);
 }
 
 void Mutex::Lock()
 {
-    pthread_mutex_lock(&m_mtx);
+    ::pthread_mutex_lock(&m_mutex);
 }
 
 void Mutex::Unlock()
 {
-    pthread_mutex_unlock(&m_mtx);
+    ::pthread_mutex_unlock(&m_mutex);
 }
 
 pthread_mutex_t* Mutex::NativeHandle()
 {
-    return &m_mtx;
+    return &m_mutex;
 }
 
 Thread::Thread(std::function<void()> entry)
-    : m_entry(entry)
+    : m_entry(std::move(entry))
 {
-    m_name = nullptr;
-    m_thread = 0;
 }
 
-Thread::~Thread()
-{
-}
+Thread::~Thread() = default;
 
 void Thread::Start()
 {
-    if (pthread_create(&m_thread, nullptr, Thread::ActualEntryPoint, this) == 0)
+    if (::pthread_create(&m_thread, nullptr, Thread::ActualEntryPoint, this) == 0)
     {
         m_valid = true;
     }
@@ -49,12 +45,12 @@ void Thread::Start()
 void Thread::Join()
 {
     if (m_valid)
-        pthread_join(m_thread, nullptr);
+        ::pthread_join(m_thread, nullptr);
 }
 
 void Thread::SetName(const char* name)
 {
-    this->m_name = name;
+    m_name = name;
 }
 
 void Thread::SetMaxPriority()
@@ -66,12 +62,12 @@ void Thread::SetMaxPriority()
 
 void Thread::Sleep(double seconds)
 {
-    usleep(static_cast<useconds_t>(seconds * 1000 * 1000.0));
+    ::usleep(static_cast<useconds_t>(seconds * 1000 * 1000.0));
 }
 
 bool Thread::IsCurrent()
 {
-    return pthread_equal(m_thread, pthread_self()) != 0;
+    return ::pthread_equal(m_thread, pthread_self()) != 0;
 }
 
 void* Thread::ActualEntryPoint(void* arg)
@@ -80,7 +76,7 @@ void* Thread::ActualEntryPoint(void* arg)
     if (self->m_name)
     {
 #if !defined(__APPLE__) && !defined(__gnu_hurd__)
-        pthread_setname_np(self->m_thread, self->m_name);
+        ::pthread_setname_np(self->m_thread, self->m_name);
 #elif !defined(__gnu_hurd__)
         pthread_setname_np(self->name);
         if (self->m_maxPriority)
@@ -133,33 +129,33 @@ void Semaphore::Release(int count)
 
 Semaphore::Semaphore(unsigned int maxCount, unsigned int initValue)
 {
-    sem_init(&m_sem, 0, initValue);
+    ::sem_init(&m_sem, 0, initValue);
 }
 
 Semaphore::~Semaphore()
 {
-    sem_destroy(&m_sem);
+    ::sem_destroy(&m_sem);
 }
 
 void Semaphore::Acquire()
 {
-    sem_wait(&m_sem);
+    ::sem_wait(&m_sem);
 }
 
 void Semaphore::Release()
 {
-    sem_post(&m_sem);
+    ::sem_post(&m_sem);
 }
 
 void Semaphore::Acquire(int count)
 {
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count; ++i)
         Acquire();
 }
 
 void Semaphore::Release(int count)
 {
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < count; ++i)
         Release();
 }
 
@@ -168,6 +164,7 @@ MutexGuard::MutexGuard(Mutex& mutex)
 {
     mutex.Lock();
 }
+
 MutexGuard::~MutexGuard()
 {
     m_mutex.Unlock();

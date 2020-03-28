@@ -38,11 +38,11 @@ public:
     virtual void RequestKeyFrame() = 0;
     virtual void SetBitrate(std::uint32_t bitrate) = 0;
 
-    bool Failed() const;
-    std::string GetErrorDescription() const;
+    [[nodiscard]] bool Failed() const;
+    [[nodiscard]] std::string GetErrorDescription() const;
     std::vector<Buffer>& GetCodecSpecificData();
-    unsigned int GetFrameWidth() const;
-    unsigned int GetFrameHeight() const;
+    [[nodiscard]] unsigned int GetFrameWidth() const;
+    [[nodiscard]] unsigned int GetFrameHeight() const;
     void SetRotation(unsigned int rotation);
 
 protected:

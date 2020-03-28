@@ -17,13 +17,14 @@
 #endif
 
 #include <cassert>
+#include <cstring>
 
 #define BUFFER_SIZE 960
 #define CHECK_ERROR(res, msg)                      \
     if (res != 0)                                  \
     {                                              \
         LOGE(msg " failed: %s", pa_strerror(res)); \
-        failed = true;                             \
+        m_failed = true;                           \
         return;                                    \
     }
 
@@ -38,7 +39,7 @@ AudioOutputPulse::AudioOutputPulse(pa_context* context, pa_threaded_mainloop* ma
     m_stream = CreateAndInitStream();
     pa_threaded_mainloop_unlock(mainloop);
 
-    SetCurrentDevice(devID);
+    SetCurrentDevice(std::move(devID));
 }
 
 AudioOutputPulse::~AudioOutputPulse()

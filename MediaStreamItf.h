@@ -67,7 +67,7 @@ private:
     Thread* m_thread = nullptr;
     EchoCanceller* m_echoCanceller = nullptr;
 
-    bool m_running;
+    bool m_running = false;
 
     void RunThread();
     void DoCallback(std::uint8_t* data, std::size_t length);

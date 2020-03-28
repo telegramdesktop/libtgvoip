@@ -162,13 +162,13 @@ enum class VideoRotation : std::uint8_t
 struct CryptoFunctions
 {
     void (*rand_bytes)(std::uint8_t* buffer, std::size_t length);
-    void (*sha1)(std::uint8_t* msg, std::size_t length, std::uint8_t* output);
-    void (*sha256)(std::uint8_t* msg, std::size_t length, std::uint8_t* output);
-    void (*aes_ige_encrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
-    void (*aes_ige_decrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
-    void (*aes_ctr_encrypt)(std::uint8_t* inout, std::size_t length, std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num);
-    void (*aes_cbc_encrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
-    void (*aes_cbc_decrypt)(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv);
+    void (*sha1)(const std::uint8_t* msg, std::size_t length, std::uint8_t* output);
+    void (*sha256)(const std::uint8_t* msg, std::size_t length, std::uint8_t* output);
+    void (*aes_ige_encrypt)(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_ige_decrypt)(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_ctr_encrypt)(std::uint8_t* inout, std::size_t length, const std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num);
+    void (*aes_cbc_encrypt)(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv);
+    void (*aes_cbc_decrypt)(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv);
 };
 
 struct CellularCarrierInfo

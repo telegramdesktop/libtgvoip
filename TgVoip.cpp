@@ -14,14 +14,14 @@ extern "C"
 #include <openssl/sha.h>
 }
 
-void tgvoip_openssl_aes_ige_encrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
+void tgvoip_openssl_aes_ige_encrypt(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 32 * 8, &akey);
     AES_ige_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
 }
 
-void tgvoip_openssl_aes_ige_decrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
+void tgvoip_openssl_aes_ige_decrypt(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_decrypt_key(key, 32 * 8, &akey);
@@ -33,31 +33,31 @@ void tgvoip_openssl_rand_bytes(std::uint8_t* buffer, std::size_t len)
     RAND_bytes(buffer, static_cast<int>(len));
 }
 
-void tgvoip_openssl_sha1(std::uint8_t* msg, std::size_t len, std::uint8_t* output)
+void tgvoip_openssl_sha1(const std::uint8_t* msg, std::size_t len, std::uint8_t* output)
 {
     SHA1(msg, len, output);
 }
 
-void tgvoip_openssl_sha256(std::uint8_t* msg, std::size_t len, std::uint8_t* output)
+void tgvoip_openssl_sha256(const std::uint8_t* msg, std::size_t len, std::uint8_t* output)
 {
     SHA256(msg, len, output);
 }
 
-void tgvoip_openssl_aes_ctr_encrypt(std::uint8_t* inout, std::size_t length, std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num)
+void tgvoip_openssl_aes_ctr_encrypt(std::uint8_t* inout, std::size_t length, const std::uint8_t* key, std::uint8_t* iv, std::uint8_t* ecount, std::uint32_t* num)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 32 * 8, &akey);
     CRYPTO_ctr128_encrypt(inout, inout, length, &akey, iv, ecount, num, reinterpret_cast<block128_f>(AES_encrypt));
 }
 
-void tgvoip_openssl_aes_cbc_encrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
+void tgvoip_openssl_aes_cbc_encrypt(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_encrypt_key(key, 256, &akey);
     AES_cbc_encrypt(in, out, length, &akey, iv, AES_ENCRYPT);
 }
 
-void tgvoip_openssl_aes_cbc_decrypt(std::uint8_t* in, std::uint8_t* out, std::size_t length, std::uint8_t* key, std::uint8_t* iv)
+void tgvoip_openssl_aes_cbc_decrypt(const std::uint8_t* in, std::uint8_t* out, std::size_t length, const std::uint8_t* key, std::uint8_t* iv)
 {
     AES_KEY akey;
     AES_set_decrypt_key(key, 256, &akey);
@@ -100,7 +100,7 @@ public:
     ~TgVoipImpl() override;
     void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) override;
     void setOnSignalBarsUpdated(std::function<void(int)> onSignalBarsUpdated) override;
-    void setNetworkType(TgVoipNetworkType networkType) override final;
+    void setNetworkType(TgVoipNetworkType networkType) final;
     void setMuteMicrophone(bool muteMicrophone) override;
     void setAudioOutputGainControlEnabled(bool enabled) override;
     void setEchoCancellationStrength(int strength) override;

@@ -23,7 +23,7 @@ namespace audio
 class AudioInputPulse : public AudioInput
 {
 public:
-    AudioInputPulse(pa_context* m_context, pa_threaded_mainloop* m_mainloop, std::string devID);
+    AudioInputPulse(pa_context* context, pa_threaded_mainloop* mainloop, std::string devID);
     virtual ~AudioInputPulse();
     virtual void Start();
     virtual void Stop();
@@ -45,8 +45,8 @@ private:
     bool m_isLocked = false;
 
     static void StreamStateCallback(pa_stream* s, void* arg);
-    static void StreamReadCallback(pa_stream* m_stream, std::size_t requested_bytes, void* userdata);
-    void StreamReadCallback(pa_stream* m_stream, std::size_t requestedBytes);
+    static void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes, void* userdata);
+    void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes);
     pa_stream* CreateAndInitStream();
 };
 

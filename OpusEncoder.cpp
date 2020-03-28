@@ -313,9 +313,9 @@ void tgvoip::OpusEncoder::AddAudioEffect(effects::AudioEffect* effect)
 
 void tgvoip::OpusEncoder::RemoveAudioEffect(effects::AudioEffect* effect)
 {
-    std::vector<effects::AudioEffect*>::iterator i = std::find(m_postProcEffects.begin(), m_postProcEffects.end(), effect);
-    if (i != m_postProcEffects.end())
-        m_postProcEffects.erase(i);
+    auto it = std::find(m_postProcEffects.begin(), m_postProcEffects.end(), effect);
+    if (it != m_postProcEffects.end())
+        m_postProcEffects.erase(it);
 }
 
 int tgvoip::OpusEncoder::GetComplexity() const

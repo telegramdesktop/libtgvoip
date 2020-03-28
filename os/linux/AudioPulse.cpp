@@ -18,10 +18,10 @@
         LOGE(msg ": %s", dlerror()); \
         return false;                \
     }
-#define LOAD_DL_FUNCTION(name)                                                  \
-    {                                                                           \
-        _import_##name = (typeof(_import_##name))dlsym(lib, #name);             \
-        CHECK_DL_ERROR(_import_##name, "Error getting entry point for " #name); \
+#define LOAD_DL_FUNCTION(name)                                                              \
+    {                                                                                       \
+        _import_##name = reinterpret_cast<decltype(_import_##name)>(::dlsym(m_lib, #name)); \
+        CHECK_DL_ERROR(_import_##name, "Error getting entry point for " #name);             \
     }
 #define CHECK_ERROR(res, msg)                      \
     if (res != 0)                                  \
@@ -223,8 +223,8 @@ AudioPulse::AudioPulse(std::string inputDevice, std::string outputDevice)
     pa_threaded_mainloop_unlock(m_mainloop);
     m_isLocked = false;
 
-    m_output = new AudioOutputPulse(m_context, m_mainloop, outputDevice);
-    m_input = new AudioInputPulse(m_context, m_mainloop, inputDevice);
+    m_output = new AudioOutputPulse(m_context, m_mainloop, std::move(outputDevice));
+    m_input = new AudioInputPulse(m_context, m_mainloop, std::move(inputDevice));
 }
 
 AudioPulse::~AudioPulse()

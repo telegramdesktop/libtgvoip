@@ -292,16 +292,16 @@ void ScreamCongestionController::UpdateBytesInFlightHistory()
     ValueSample now = {m_bytesInFlight, currentTime};
     m_bytesInFlightHistory.emplace_back(now);
     std::uint32_t max = 0;
-    for (std::vector<ValueSample>::iterator i = m_bytesInFlightHistory.begin(); i != m_bytesInFlightHistory.end();)
+    for (auto it = m_bytesInFlightHistory.begin(); it != m_bytesInFlightHistory.end();)
     {
-        if (currentTime - i->time >= 5.0)
+        if (currentTime - it->time >= 5.0)
         {
-            i = m_bytesInFlightHistory.erase(i);
+            it = m_bytesInFlightHistory.erase(it);
         }
         else
         {
-            max = std::max(max, i->sample);
-            ++i;
+            max = std::max(max, it->sample);
+            ++it;
         }
     }
     m_maxBytesInFlight = max;

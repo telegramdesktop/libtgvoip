@@ -54,42 +54,38 @@ AudioIO* AudioIO::Create(std::string inputDevice, std::string outputDevice)
 #elif defined(__APPLE__)
 #if TARGET_OS_OSX
     if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber10_7)
-        return new ContextlessAudioIO<AudioInputAudioUnitLegacy, AudioOutputAudioUnitLegacy>(inputDevice, outputDevice);
+        return new ContextlessAudioIO<AudioInputAudioUnitLegacy, AudioOutputAudioUnitLegacy>(std::move(inputDevice), std::move(outputDevice));
 
 #endif
-    return new AudioUnitIO(inputDevice, outputDevice);
+    return new AudioUnitIO(std::move(inputDevice), std::move(outputDevice));
 #elif defined(_WIN32)
 #ifdef TGVOIP_WINXP_COMPAT
     if (LOBYTE(LOWORD(GetVersion())) < 6)
-        return new ContextlessAudioIO<AudioInputWave, AudioOutputWave>(inputDevice, outputDevice);
+        return new ContextlessAudioIO<AudioInputWave, AudioOutputWave>(std::move(inputDevice), std::move(outputDevice));
 #endif
-    return new ContextlessAudioIO<AudioInputWASAPI, AudioOutputWASAPI>(inputDevice, outputDevice);
+    return new ContextlessAudioIO<AudioInputWASAPI, AudioOutputWASAPI>(std::move(inputDevice), std::move(outputDevice));
 #elif defined(__linux__)
 #ifndef WITHOUT_ALSA
 #ifndef WITHOUT_PULSE
     if (AudioPulse::Load())
     {
-        AudioIO* io = new AudioPulse(inputDevice, outputDevice);
+        AudioIO* io = new AudioPulse(std::move(inputDevice), std::move(outputDevice));
         if (!io->Failed() && io->GetInput()->IsInitialized() && io->GetOutput()->IsInitialized())
             return io;
         LOGW("PulseAudio available but not working; trying ALSA");
         delete io;
     }
 #endif
-    return new ContextlessAudioIO<AudioInputALSA, AudioOutputALSA>(inputDevice, outputDevice);
+    return new ContextlessAudioIO<AudioInputALSA, AudioOutputALSA>(std::move(inputDevice), std::move(outputDevice));
 #else
-    return new AudioPulse(inputDevice, outputDevice);
+    return new AudioPulse(std::move(inputDevice), std::move(outputDevice));
 #endif
 #endif
 }
 
-AudioIO::AudioIO()
-{
-}
+AudioIO::AudioIO() = default;
 
-AudioIO::~AudioIO()
-{
-}
+AudioIO::~AudioIO() = default;
 
 bool AudioIO::Failed()
 {

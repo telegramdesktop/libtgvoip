@@ -31,9 +31,9 @@ public:
     ~BufferInputStream() = default;
 
     void Seek(std::size_t m_offset);
-    std::size_t GetLength() const;
-    std::size_t GetOffset() const;
-    std::size_t Remaining() const;
+    [[nodiscard]] std::size_t GetLength() const;
+    [[nodiscard]] std::size_t GetOffset() const;
+    [[nodiscard]] std::size_t Remaining() const;
     std::int8_t ReadInt8();
     std::uint8_t ReadUInt8();
     std::int16_t ReadInt16();
@@ -75,8 +75,8 @@ public:
     void WriteBytes(const std::uint8_t* bytes, std::size_t count);
     void WriteBytes(const Buffer& m_buffer);
     void WriteBytes(const Buffer& m_buffer, std::size_t m_offset, std::size_t count);
-    std::uint8_t* GetBuffer() const;
-    std::size_t GetLength() const;
+    [[nodiscard]] std::uint8_t* GetBuffer() const;
+    [[nodiscard]] std::size_t GetLength() const;
     void Reset();
     void Rewind(std::size_t numBytes);
 
@@ -112,8 +112,8 @@ public:
 
     void Resize(std::size_t newSize);
 
-    std::size_t Length() const;
-    bool IsEmpty() const;
+    [[nodiscard]] std::size_t Length() const;
+    [[nodiscard]] bool IsEmpty() const;
 
     static Buffer CopyOf(const Buffer& other);
     static Buffer CopyOf(const Buffer& other, std::size_t offset, std::size_t length);
@@ -135,7 +135,7 @@ public:
         std::fill(m_data.begin(), m_data.end(), T{0});
     }
 
-    AVG_T Average() const
+    [[nodiscard]] AVG_T Average() const
     {
         AVG_T avg = AVG_T{0};
         for (T i : m_data)
@@ -145,7 +145,7 @@ public:
         return avg / AVG_T{size};
     }
 
-    AVG_T Average(std::size_t firstN) const
+    [[nodiscard]] AVG_T Average(std::size_t firstN) const
     {
         AVG_T avg = AVG_T{0};
         for (std::size_t i = 0; i < firstN; i++)
@@ -155,7 +155,7 @@ public:
         return avg / static_cast<AVG_T>(firstN);
     }
 
-    AVG_T NonZeroAverage() const
+    [[nodiscard]] AVG_T NonZeroAverage() const
     {
         AVG_T avg = AVG_T{0};
         int nonZeroCount = 0;
@@ -178,7 +178,7 @@ public:
         m_offset = (m_offset + 1) % size;
     }
 
-    T Min() const
+    [[nodiscard]] T Min() const
     {
         T min = std::numeric_limits<T>::max();
         for (T i : m_data)
@@ -187,7 +187,7 @@ public:
         return min;
     }
 
-    T Max() const
+    [[nodiscard]] T Max() const
     {
         T max = std::numeric_limits<T>::min();
         for (T i : m_data)
@@ -222,7 +222,7 @@ public:
         return m_data[_i];
     }
 
-    std::size_t Size() const
+    [[nodiscard]] std::size_t Size() const
     {
         return size;
     }

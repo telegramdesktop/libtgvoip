@@ -18,19 +18,19 @@
     if (res < 0)                              \
     {                                         \
         LOGE(msg ": %s", _snd_strerror(res)); \
-        failed = true;                        \
+        m_failed = true;                      \
         return;                               \
     }
 #define CHECK_DL_ERROR(res, msg)     \
     if (!res)                        \
     {                                \
         LOGE(msg ": %s", dlerror()); \
-        failed = true;               \
+        m_failed = true;             \
         return;                      \
     }
 #define LOAD_FUNCTION(lib, name, ref)                               \
     {                                                               \
-        ref = (typeof(ref))dlsym(lib, name);                        \
+        ref = reinterpret_cast<decltype(ref)>(::dlsym(lib, name));  \
         CHECK_DL_ERROR(ref, "Error getting entry point for " name); \
     }
 
@@ -58,7 +58,7 @@ AudioOutputALSA::AudioOutputALSA(std::string devID)
     LOAD_FUNCTION(m_lib, "snd_pcm_recover", m_snd_pcm_recover);
     LOAD_FUNCTION(m_lib, "snd_strerror", m_snd_strerror);
 
-    SetCurrentDevice(devID);
+    SetCurrentDevice(std::move(devID));
 }
 
 AudioOutputALSA::~AudioOutputALSA()

@@ -200,17 +200,16 @@ VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(std::uint32_t seq, 
 {
 }
 
-VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(PendingOutgoingPacket&& other)
+VoIPController::PendingOutgoingPacket::PendingOutgoingPacket(PendingOutgoingPacket&& other) noexcept
     : seq(other.seq)
     , type(other.type)
     , len(other.len)
     , data(std::move(other.data))
     , endpoint(other.endpoint)
 {
-
 }
 
-VoIPController::PendingOutgoingPacket& VoIPController::PendingOutgoingPacket::operator=(PendingOutgoingPacket&& other)
+VoIPController::PendingOutgoingPacket& VoIPController::PendingOutgoingPacket::operator=(PendingOutgoingPacket&& other) noexcept
 {
     if (this != &other)
     {
@@ -282,27 +281,27 @@ std::int32_t VoIPController::GetConnectionMaxLayer()
     return 92;
 }
 
-void VoIPController::SetRemoteEndpoints(std::vector<Endpoint> endpoints, bool allowP2p, std::int32_t connectionMaxLayer)
+void VoIPController::SetRemoteEndpoints(const std::vector<Endpoint>& endpoints, bool allowP2p, std::int32_t connectionMaxLayer)
 {
     LOGW("Set remote endpoints, allowP2P=%d, connectionMaxLayer=%u", allowP2p ? 1 : 0, connectionMaxLayer);
     assert(!m_runReceiver);
     m_preferredRelay = 0;
 
-    this->m_endpoints.clear();
+    m_endpoints.clear();
     m_didAddTcpRelays = false;
     m_useTCP = true;
-    for (std::vector<Endpoint>::iterator itrtr = endpoints.begin(); itrtr != endpoints.end(); ++itrtr)
+    for (const Endpoint& endpoint : endpoints)
     {
-        if (this->m_endpoints.find(itrtr->id) != this->m_endpoints.end())
+        if (m_endpoints.find(endpoint.id) != m_endpoints.end())
             LOGE("Endpoint IDs are not unique!");
-        this->m_endpoints[itrtr->id] = *itrtr;
+        m_endpoints[endpoint.id] = endpoint;
         if (m_currentEndpoint == 0)
-            m_currentEndpoint = itrtr->id;
-        if (itrtr->type == Endpoint::Type::TCP_RELAY)
+            m_currentEndpoint = endpoint.id;
+        if (endpoint.type == Endpoint::Type::TCP_RELAY)
             m_didAddTcpRelays = true;
-        if (itrtr->type == Endpoint::Type::UDP_RELAY)
+        if (endpoint.type == Endpoint::Type::UDP_RELAY)
             m_useTCP = false;
-        LOGV("Adding endpoint: %s:%d, %s", itrtr->address.ToString().c_str(), itrtr->port, itrtr->type == Endpoint::Type::UDP_RELAY ? "UDP" : "TCP");
+        LOGV("Adding endpoint: %s:%d, %s", endpoint.address.ToString().c_str(), endpoint.port, endpoint.type == Endpoint::Type::UDP_RELAY ? "UDP" : "TCP");
     }
     m_preferredRelay = m_currentEndpoint;
     this->m_allowP2p = allowP2p;
@@ -841,7 +840,7 @@ int VoIPController::GetSignalBarsCount()
 
 void VoIPController::SetCallbacks(VoIPController::Callbacks callbacks)
 {
-    this->m_callbacks = callbacks;
+    m_callbacks = callbacks;
     if (callbacks.connectionStateChanged)
         callbacks.connectionStateChanged(this, m_state);
 }
@@ -1272,7 +1271,7 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
         if (hasExtraFEC)
         {
             pkt.WriteUInt8(static_cast<std::uint8_t>(std::min(static_cast<int>(m_ecAudioPackets.size()), m_extraEcLevel)));
-            for (std::deque<Buffer>::iterator ecData = m_ecAudioPackets.begin() + std::max(0, static_cast<int>(m_ecAudioPackets.size()) - m_extraEcLevel);
+            for (auto ecData = m_ecAudioPackets.begin() + std::max(0, static_cast<int>(m_ecAudioPackets.size()) - m_extraEcLevel);
                  ecData != m_ecAudioPackets.end(); ++ecData)
             {
                 pkt.WriteUInt8(static_cast<std::uint8_t>(ecData->Length()));
@@ -1310,7 +1309,7 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
             pkt.WriteUInt8(m_outgoingStreams[0]->id);
             pkt.WriteUInt32(m_audioTimestampOut);
             pkt.WriteUInt8(static_cast<std::uint8_t>(std::min(static_cast<int>(m_ecAudioPackets.size()), m_extraEcLevel)));
-            for (std::deque<Buffer>::iterator ecData = m_ecAudioPackets.begin() + std::max(0, static_cast<int>(m_ecAudioPackets.size()) - m_extraEcLevel);
+            for (auto ecData = m_ecAudioPackets.begin() + std::max(0, static_cast<int>(m_ecAudioPackets.size()) - m_extraEcLevel);
                  ecData != m_ecAudioPackets.end(); ++ecData)
             {
                 pkt.WriteUInt8(static_cast<std::uint8_t>(ecData->Length()));
@@ -1946,7 +1945,7 @@ void VoIPController::TrySendQueuedPackets()
 {
     ENFORCE_MSG_THREAD;
 
-    for (std::list<PendingOutgoingPacket>::iterator opkt = m_sendQueue.begin(); opkt != m_sendQueue.end();)
+    for (auto opkt = m_sendQueue.begin(); opkt != m_sendQueue.end();)
     {
         Endpoint* endpoint = GetEndpointForPacket(*opkt);
         if (endpoint == nullptr)
@@ -2209,8 +2208,8 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
     }
 
     if (in.Remaining() >= 16 && (srcEndpoint.type == Endpoint::Type::UDP_RELAY || srcEndpoint.type == Endpoint::Type::TCP_RELAY)
-        && *reinterpret_cast<std::uint64_t*>(buffer + 16) == std::numeric_limits<std::uint64_t>::max()
-        && *reinterpret_cast<std::uint32_t*>(buffer + 24) == std::numeric_limits<std::uint32_t>::max())
+        && *reinterpret_cast<const std::uint64_t*>(buffer + 16) == std::numeric_limits<std::uint64_t>::max()
+        && *reinterpret_cast<const std::uint32_t*>(buffer + 24) == std::numeric_limits<std::uint32_t>::max())
     {
         // relay special request response
         ProcessRelaySpecialRequest(in, srcEndpoint);
@@ -2244,7 +2243,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         if (_len > _in.Remaining())
             _len = static_cast<std::uint32_t>(_in.Remaining());
         crypto.sha1(aesOut.data(), static_cast<std::size_t>(_len) + 4, sha);
-        if (memcmp(msgHash, sha + (SHA1_LENGTH - 16), 16) != 0)
+        if (std::memcmp(msgHash, sha + (SHA1_LENGTH - 16), 16) != 0)
         {
             LOGW("Received packet has wrong hash after decryption");
             if (m_state == State::WAIT_INIT || m_state == State::WAIT_INIT_ACK)
@@ -2268,7 +2267,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         if (!shortFormat)
         {
             in.ReadBytes(fingerprint, 8);
-            if (memcmp(fingerprint, m_keyFingerprint, 8) != 0)
+            if (std::memcmp(fingerprint, m_keyFingerprint, 8) != 0)
             {
                 LOGW("Received packet has wrong key fingerprint");
                 return;
@@ -2382,7 +2381,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
             {
                 std::uint8_t pktCallID[16];
                 in.ReadBytes(pktCallID, 16);
-                if (memcmp(pktCallID, m_callID, 16) != 0)
+                if (std::memcmp(pktCallID, m_callID, 16) != 0)
                 {
                     LOGW("Received packet has wrong call id");
 
@@ -2531,7 +2530,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         if (m_peerVersion < 6)
         {
             std::size_t index = 0;
-            for (std::list<QueuedPacket>::iterator it = m_queuedPackets.begin(); it != m_queuedPackets.end();)
+            for (auto it = m_queuedPackets.begin(); it != m_queuedPackets.end();)
             {
                 QueuedPacket& qp = *it;
                 bool didAck = false;
@@ -2569,7 +2568,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         }
         else
         {
-            for (std::list<UnacknowledgedExtraData>::iterator x = m_currentExtras.begin(); x != m_currentExtras.end();)
+            for (auto x = m_currentExtras.begin(); x != m_currentExtras.end();)
             {
                 if (x->firstContainingSeq != 0 && (m_lastRemoteAckSeq == x->firstContainingSeq || seqgt(m_lastRemoteAckSeq, x->firstContainingSeq)))
                 {
@@ -2947,7 +2946,7 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
                 {
                     if (stream->jitterBuffer == nullptr)
                         break;
-                    stream->jitterBuffer->HandleInput(reinterpret_cast<std::uint8_t*>(buffer + in.GetOffset()), sdlen, pts, false);
+                    stream->jitterBuffer->HandleInput(reinterpret_cast<const std::uint8_t*>(buffer + in.GetOffset()), sdlen, pts, false);
                     if (extraFEC)
                     {
                         in.Seek(in.GetOffset() + sdlen);
@@ -3043,11 +3042,11 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         std::uint8_t id = in.ReadUInt8();
         std::uint8_t enabled = in.ReadUInt8();
         LOGV("Peer stream state: id %u flags %u", id, enabled);
-        for (std::vector<std::shared_ptr<Stream>>::iterator s = m_incomingStreams.begin(); s != m_incomingStreams.end(); ++s)
+        for (std::shared_ptr<Stream>& stream : m_incomingStreams)
         {
-            if ((*s)->id == id)
+            if (stream->id == id)
             {
-                (*s)->enabled = enabled == 1;
+                stream->enabled = enabled == 1;
                 UpdateAudioOutputState();
                 break;
             }
@@ -4248,14 +4247,7 @@ void VoIPController::SendRelayPings()
 void VoIPController::UpdateRTT()
 {
     m_RTTHistory.Add(GetAverageRTT());
-    if (m_RTTHistory[0] > 10.0 && m_RTTHistory[8] > 10.0 && (m_networkType == NetType::EDGE || m_networkType == NetType::GPRS))
-    {
-        m_waitingForAcks = true;
-    }
-    else
-    {
-        m_waitingForAcks = false;
-    }
+    m_waitingForAcks = (m_RTTHistory[0] > 10.0 && m_RTTHistory[8] > 10.0 && (m_networkType == NetType::EDGE || m_networkType == NetType::GPRS));
     for (const std::shared_ptr<Stream>& stream : m_incomingStreams)
     {
         if (stream->jitterBuffer != nullptr)
@@ -4472,7 +4464,7 @@ void VoIPController::UpdateSignalBars()
 void VoIPController::UpdateQueuedPackets()
 {
     std::vector<PendingOutgoingPacket> packetsToSend;
-    for (std::list<QueuedPacket>::iterator qp = m_queuedPackets.begin(); qp != m_queuedPackets.end();)
+    for (auto qp = m_queuedPackets.begin(); qp != m_queuedPackets.end();)
     {
         if (qp->timeout > 0 && qp->firstSentTime > 0 && GetCurrentTime() - qp->firstSentTime >= qp->timeout)
         {

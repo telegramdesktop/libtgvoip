@@ -41,7 +41,6 @@ std::size_t MediaStreamItf::InvokeCallback(std::uint8_t* data, std::size_t lengt
 AudioMixer::AudioMixer()
     : m_processedQueue(16)
     , m_semaphore(16, 0)
-    , m_running(false)
 {
 }
 

@@ -33,7 +33,7 @@ private:
     json11::Json m_config;
     Mutex m_mutex;
 
-    bool ContainsKey(const std::string& key) const;
+    [[nodiscard]] bool ContainsKey(const std::string& key) const;
 };
 
 } // namespace tgvoip

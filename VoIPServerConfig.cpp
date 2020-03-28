@@ -15,13 +15,9 @@ using namespace tgvoip;
 
 ServerConfig* ServerConfig::m_sharedInstance = nullptr;
 
-ServerConfig::ServerConfig()
-{
-}
+ServerConfig::ServerConfig() = default;
 
-ServerConfig::~ServerConfig()
-{
-}
+ServerConfig::~ServerConfig() = default;
 
 ServerConfig* ServerConfig::GetSharedInstance()
 {

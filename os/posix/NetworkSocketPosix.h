@@ -38,15 +38,15 @@ class NetworkSocketPosix : public NetworkSocket
 {
 public:
     NetworkSocketPosix(NetworkProtocol m_protocol);
-    virtual ~NetworkSocketPosix() override;
-    virtual void Send(NetworkPacket packet) override;
-    virtual NetworkPacket Receive(std::size_t maxLen) override;
-    virtual void Open() override;
-    virtual void Close() override;
-    virtual void Connect(const NetworkAddress& address, std::uint16_t port) override;
-    virtual std::string GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr) override;
-    virtual void OnActiveInterfaceChanged() override;
-    virtual std::uint16_t GetLocalPort() override;
+    ~NetworkSocketPosix() override;
+    void Send(NetworkPacket packet) override;
+    NetworkPacket Receive(std::size_t maxLen) override;
+    void Open() override;
+    void Close() override;
+    void Connect(const NetworkAddress& address, std::uint16_t port) override;
+    std::string GetLocalInterfaceInfo(NetworkAddress* v4addr, NetworkAddress* v6addr) override;
+    void OnActiveInterfaceChanged() override;
+    std::uint16_t GetLocalPort() override;
 
     static std::string V4AddressToString(std::uint32_t address);
     static std::string V6AddressToString(const std::uint8_t address[16]);
@@ -56,14 +56,14 @@ public:
     static bool Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds,
                        std::list<NetworkSocket*>& errorFds, SocketSelectCanceller* canceller);
 
-    virtual NetworkAddress GetConnectedAddress() override;
-    virtual std::uint16_t GetConnectedPort() override;
+    NetworkAddress GetConnectedAddress() override;
+    std::uint16_t GetConnectedPort() override;
 
-    virtual void SetTimeouts(int sendTimeout, int recvTimeout) override;
-    virtual bool OnReadyToSend() override;
+    void SetTimeouts(int sendTimeout, int recvTimeout) override;
+    bool OnReadyToSend() override;
 
 protected:
-    virtual void SetMaxPriority() override;
+    void SetMaxPriority() override;
 
 private:
     Buffer m_recvBuffer = Buffer(2048);
@@ -83,6 +83,7 @@ private:
     bool m_nat64Present;
 
     static int GetDescriptorFromSocket(NetworkSocket* socket);
+    void CloseHelper();
 };
 
 } // namespace tgvoip

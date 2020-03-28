@@ -10,6 +10,7 @@
 #include "VoIPServerConfig.h"
 
 #include <cmath>
+#include <cstring>
 
 using namespace tgvoip;
 
@@ -37,14 +38,14 @@ JitterBuffer::JitterBuffer(MediaStreamItf* out, std::uint32_t step)
         m_maxAllowedSlots = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_max_slots_60", 20));
     }
 
-    m_minDelay = 5;
-    m_maxDelay = 100;
-    m_maxAllowedSlots = 128;
-    m_lossesToReset = 20;
-    m_resyncThreshold = 1.0;
+//    m_minDelay = 6;
+//    m_maxDelay = 64;
+//    m_maxAllowedSlots = 128;
+//    m_lossesToReset = 20;
+//    m_resyncThreshold = 1.0;
 
-//    m_lossesToReset = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_losses_to_reset", 20));
-//    m_resyncThreshold = ServerConfig::GetSharedInstance()->GetDouble("jitter_resync_threshold", 1.0);
+    m_lossesToReset = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_losses_to_reset", 20));
+    m_resyncThreshold = ServerConfig::GetSharedInstance()->GetDouble("jitter_resync_threshold", 1.0);
 #ifdef TGVOIP_DUMP_JITTER_STATS
 #ifdef TGVOIP_JITTER_DUMP_FILE
     dump = fopen(TGVOIP_JITTER_DUMP_FILE, "w");
@@ -102,16 +103,14 @@ std::size_t JitterBuffer::CallbackOut(std::uint8_t* data, std::size_t len, void*
     return result; //((JitterBuffer*)param)->HandleOutput(data, len, 0, nullptr);
 }
 
-void JitterBuffer::HandleInput(std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC)
+void JitterBuffer::HandleInput(const std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC)
 {
     MutexGuard m(m_mutex);
     jitter_packet_t pkt;
     pkt.size = len;
-    pkt.buffer = Buffer::Wrap(
-        data, len, [](void*) {}, [](void* a, std::size_t) -> void* { return a; });
     pkt.timestamp = timestamp;
     pkt.isEC = isEC;
-    PutInternal(&pkt, !isEC);
+    PutInternal(pkt, data, !isEC);
     //LOGV("in, ts=%d, ec=%d", timestamp, isEC);
 }
 
@@ -136,12 +135,12 @@ void JitterBuffer::Reset()
     ResetNonBlocking();
 }
 
-std::size_t JitterBuffer::HandleOutput(std::uint8_t* buffer, std::size_t len, std::uint32_t offsetInSteps,
+std::size_t JitterBuffer::HandleOutput(std::uint8_t* data, std::size_t len, std::uint32_t offsetInSteps,
                                        bool advance, int& playbackScaledDuration, bool& isEC)
 {
     jitter_packet_t pkt;
     pkt.buffer = Buffer::Wrap(
-        buffer, len, [](void*) {}, [](void* a, std::size_t) -> void* { return a; });
+            data, len, [](void*) {}, [](void* a, std::size_t) -> void* { return a; });
     pkt.size = len;
     MutexGuard m(m_mutex);
 
@@ -224,7 +223,7 @@ JitterBuffer::Status JitterBuffer::GetInternal(jitter_packet_t* pkt, std::uint32
     if (m_lostCount >= m_lossesToReset || (m_gotSinceReset > m_delay * 25 && m_lostSinceReset > m_gotSinceReset / 2))
     {
         LOGW("jitter: lost %d packets in a row, resetting", m_lostCount);
-        m_dontIncDelay = 0;//16;
+        m_dontIncDelay = 16;
         m_dontDecDelay += 128;
         m_lostCount = 0;
         ResetNonBlocking();
@@ -233,9 +232,9 @@ JitterBuffer::Status JitterBuffer::GetInternal(jitter_packet_t* pkt, std::uint32
     return Status::MISSING;
 }
 
-void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
+void JitterBuffer::PutInternal(const jitter_packet_t& pkt, const std::uint8_t* data, bool overwriteExisting)
 {
-    if (pkt->size > JITTER_SLOT_SIZE)
+    if (pkt.size > JITTER_SLOT_SIZE)
     {
         LOGE("The packet is too big to fit into the jitter buffer");
         return;
@@ -243,13 +242,13 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
 
     if (overwriteExisting)
     {
-        auto it = m_slots.find(pkt->timestamp);
+        auto it = m_slots.find(pkt.timestamp);
         if (it != m_slots.end())
         {
             jitter_packet_t& slot = it->second;
-            slot.buffer.CopyFrom(pkt->buffer, pkt->size);
-            slot.size = pkt->size;
-            slot.isEC = pkt->isEC;
+            slot.buffer.CopyFrom(data, 0, pkt.size);
+            slot.size = pkt.size;
+            slot.isEC = pkt.isEC;
             return;
         }
     }
@@ -259,14 +258,14 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
     {
         m_wasReset = false;
         m_outstandingDelayChange = 0;
-        if (m_step * m_delay < pkt->timestamp)
+        if (m_step * m_delay < pkt.timestamp)
         {
-            m_nextTimestamp = pkt->timestamp - m_step * m_delay;
+            m_nextTimestamp = pkt.timestamp - m_step * m_delay;
         }
         else
         {
             m_nextTimestamp = 0;
-            m_addToTimestamp = m_step * m_delay - pkt->timestamp;
+            m_addToTimestamp = m_step * m_delay - pkt.timestamp;
         }
         LOGI("jitter: resyncing, next timestamp = %lld (step=%d, minDelay=%f)", static_cast<long long>(m_nextTimestamp), m_step, double(m_delay));
     }
@@ -288,43 +287,43 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
         m_expectNextAtTime = time + m_step / 1000.0;
     }
 
-    if (pkt->timestamp + GetAdditionForTimestamp() < m_nextTimestamp)
+    if (pkt.timestamp + GetAdditionForTimestamp() < m_nextTimestamp)
     {
         //LOGW("jitter: dropping packet with timestamp %d because it is too late", pkt->timestamp);
         ++m_latePacketCount;
         return;
     }
-    if (pkt->timestamp + m_addToTimestamp < m_nextTimestamp)
+    if (pkt.timestamp + m_addToTimestamp < m_nextTimestamp)
     {
         //LOGW("jitter: would drop packet with timestamp %d because it is late but not hopelessly", pkt->timestamp);
         ++m_latePacketCount;
         --m_lostPackets;
     }
 
-    if (pkt->timestamp > m_lastPutTimestamp)
-        m_lastPutTimestamp = pkt->timestamp;
+    if (pkt.timestamp > m_lastPutTimestamp)
+        m_lastPutTimestamp = pkt.timestamp;
 
     bool emplacePacket = true;
     if (m_slots.size() >= m_maxAllowedSlots)
     {
         Advance();
-        if (pkt->timestamp > m_slots.begin()->second.timestamp)
+        if (pkt.timestamp > m_slots.begin()->second.timestamp)
             m_slots.erase(m_slots.begin());
         else
             emplacePacket = false;
     }
     if (emplacePacket)
     {
-        const auto& [it, _] = m_slots.emplace(pkt->timestamp,
+        const auto& [it, _] = m_slots.emplace(pkt.timestamp,
                                               jitter_packet_t
                                               {
                                                   .buffer = m_bufferPool.Get(),
                                                   .recvTimeDiff = time - m_prevRecvTime,
-                                                  .size = pkt->size,
-                                                  .timestamp = pkt->timestamp,
-                                                  .isEC = pkt->isEC
+                                                  .size = pkt.size,
+                                                  .timestamp = pkt.timestamp,
+                                                  .isEC = pkt.isEC
                                               });
-        it->second.buffer.CopyFrom(pkt->buffer, pkt->size);
+        it->second.buffer.CopyFrom(data, 0, pkt.size);
     }
 #ifdef TGVOIP_DUMP_JITTER_STATS
     fprintf(dump, "%u\t%.03f\t%d\t%.03f\t%.03f\t%.03f\n", pkt->timestamp, time, GetCurrentDelay(), lastMeasuredJitter, lastMeasuredDelay, minDelay);
@@ -410,7 +409,7 @@ void JitterBuffer::Tick()
             if (diff < 0)
                 m_dontDecDelay += 25;
             if (diff > 0)
-                m_dontIncDelay = 16;//25;
+                m_dontIncDelay = 25;
         }
     }
     m_lastMeasuredJitter = stddev;

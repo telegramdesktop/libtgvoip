@@ -26,7 +26,7 @@ public:
     ~AudioInputCallback() override;
     void Start() override;
     void Stop() override;
-    void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c);
+    void SetDataCallback(std::function<void(std::int16_t*, std::size_t)> dataCallback);
 
 private:
     void RunThread();

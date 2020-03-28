@@ -67,9 +67,9 @@ void AudioInputCallback::Stop()
     m_recording = false;
 }
 
-void AudioInputCallback::SetDataCallback(std::function<void(std::int16_t*, std::size_t)> c)
+void AudioInputCallback::SetDataCallback(std::function<void(std::int16_t*, std::size_t)> dataCallback)
 {
-    m_dataCallback = c;
+    m_dataCallback = std::move(dataCallback);
 }
 
 void AudioInputCallback::RunThread()

@@ -32,8 +32,8 @@ public:
     std::uint32_t GetCurrentDelay() const;
     double GetAverageDelay() const;
     void Reset();
-    void HandleInput(std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC);
-    std::size_t HandleOutput(std::uint8_t* buffer, std::size_t len, std::uint32_t offsetInSteps,
+    void HandleInput(const std::uint8_t* data, std::size_t len, std::uint32_t timestamp, bool isEC);
+    std::size_t HandleOutput(std::uint8_t* data, std::size_t len, std::uint32_t offsetInSteps,
                              bool advance, int& playbackScaledDuration, bool& isEC);
     void Tick();
     void GetAverageLateCount(double* out) const;
@@ -59,7 +59,7 @@ private:
 
     static std::size_t CallbackIn(std::uint8_t* data, std::size_t len, void* param);
     static std::size_t CallbackOut(std::uint8_t* data, std::size_t len, void* param);
-    void PutInternal(jitter_packet_t* pkt, bool overwriteExisting);
+    void PutInternal(const jitter_packet_t& pkt, const std::uint8_t* data, bool overwriteExisting);
     Status GetInternal(jitter_packet_t* pkt, std::uint32_t offset, bool advance);
     void Advance();
     std::uint32_t GetAdditionForTimestamp() const;

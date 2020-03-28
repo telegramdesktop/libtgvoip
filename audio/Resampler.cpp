@@ -62,7 +62,7 @@ static constexpr std::int16_t hann[960] =
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-std::size_t Resampler::Convert48To44(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
+std::size_t Resampler::Convert48To44(const std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
 {
     std::size_t outLen = fromLen * 147 / 160;
     if (toLen < outLen)
@@ -76,7 +76,7 @@ std::size_t Resampler::Convert48To44(std::int16_t* from, std::int16_t* to, std::
     return outLen;
 }
 
-std::size_t Resampler::Convert44To48(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
+std::size_t Resampler::Convert44To48(const std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen)
 {
     std::size_t outLen = fromLen * 160 / 147;
     if (toLen < outLen)
@@ -91,7 +91,7 @@ std::size_t Resampler::Convert44To48(std::int16_t* from, std::int16_t* to, std::
     return outLen;
 }
 
-std::size_t Resampler::Convert(std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen, std::size_t num, std::size_t denom)
+std::size_t Resampler::Convert(const std::int16_t* from, std::int16_t* to, std::size_t fromLen, std::size_t toLen, std::size_t num, std::size_t denom)
 {
     std::size_t outLen = fromLen * num / denom;
     if (toLen < outLen)
@@ -106,7 +106,7 @@ std::size_t Resampler::Convert(std::int16_t* from, std::int16_t* to, std::size_t
     return outLen;
 }
 
-void Resampler::Rescale60To80(std::int16_t* in, std::int16_t* out)
+void Resampler::Rescale60To80(const std::int16_t* in, std::int16_t* out)
 {
     std::memcpy(out, in, 960 * 2);
     std::memcpy(out + 960 * 3, in + 960 * 2, 960 * 2);
@@ -117,7 +117,7 @@ void Resampler::Rescale60To80(std::int16_t* in, std::int16_t* out)
     }
 }
 
-void Resampler::Rescale60To40(std::int16_t* in, std::int16_t* out)
+void Resampler::Rescale60To40(const std::int16_t* in, std::int16_t* out)
 {
     for (int i = 0; i < 960; i++)
     {

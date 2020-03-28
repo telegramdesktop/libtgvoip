@@ -42,15 +42,15 @@ class ContextlessAudioIO : public AudioIO
 {
 public:
     ContextlessAudioIO()
+        : m_input(new I())
+        , m_output(new O())
     {
-        m_input = new I();
-        m_output = new O();
     }
 
     ContextlessAudioIO(std::string inputDeviceID, std::string outputDeviceID)
+        : m_input(new I(std::move(inputDeviceID)))
+        , m_output(new O(std::move(outputDeviceID)))
     {
-        m_input = new I(std::move(inputDeviceID));
-        m_output = new O(std::move(outputDeviceID));
     }
 
     virtual ~ContextlessAudioIO()

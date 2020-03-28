@@ -30,7 +30,7 @@ public:
     ~AudioInputTester();
     TGVOIP_DISALLOW_COPY_AND_ASSIGN(AudioInputTester);
     float GetAndResetLevel();
-    bool Failed() const;
+    [[nodiscard]] bool Failed() const;
 
 private:
     void Update(std::int16_t* samples, std::size_t count);

@@ -43,10 +43,10 @@ public:
              const NetworkAddress& v6address, Type type, const std::uint8_t peerTag[16]);
     Endpoint();
     ~Endpoint();
-    const NetworkAddress& GetAddress() const;
-    NetworkAddress& GetAddress();
-    bool IsIPv6Only() const;
-    std::int64_t CleanID() const;
+    [[nodiscard]] const NetworkAddress& GetAddress() const;
+    [[nodiscard]] NetworkAddress& GetAddress();
+    [[nodiscard]] bool IsIPv6Only() const;
+    [[nodiscard]] std::int64_t CleanID() const;
 
     std::int64_t id;
     NetworkAddress address;

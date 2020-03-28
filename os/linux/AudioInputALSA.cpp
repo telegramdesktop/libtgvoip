@@ -4,11 +4,13 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioInputALSA.h"
-#include "../../VoIPController.h"
 #include "../../logging.h"
-#include <cassert>
+#include "../../VoIPController.h"
+#include "AudioInputALSA.h"
+
 #include <dlfcn.h>
+
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -20,19 +22,19 @@ using namespace tgvoip::audio;
     if (res < 0)                              \
     {                                         \
         LOGE(msg ": %s", _snd_strerror(res)); \
-        failed = true;                        \
+        m_failed = true;                        \
         return;                               \
     }
-#define CHECK_DL_ERROR(res, msg)     \
-    if (!res)                        \
-    {                                \
-        LOGE(msg ": %s", dlerror()); \
-        failed = true;               \
-        return;                      \
+#define CHECK_DL_ERROR(res, msg)       \
+    if (!res)                          \
+    {                                  \
+        LOGE(msg ": %s", ::dlerror()); \
+        m_failed = true;               \
+        return;                        \
     }
 #define LOAD_FUNCTION(lib, name, ref)                               \
     {                                                               \
-        ref = (typeof(ref))dlsym(lib, name);                        \
+        ref = reinterpret_cast<decltype(ref)>(::dlsym(lib, name));  \
         CHECK_DL_ERROR(ref, "Error getting entry point for " name); \
     }
 
@@ -58,7 +60,7 @@ AudioInputALSA::AudioInputALSA(std::string devID)
     LOAD_FUNCTION(m_lib, "snd_pcm_recover", m_snd_pcm_recover);
     LOAD_FUNCTION(m_lib, "snd_strerror", m_snd_strerror);
 
-    SetCurrentDevice(devID);
+    SetCurrentDevice(std::move(devID));
 }
 
 AudioInputALSA::~AudioInputALSA()
@@ -148,8 +150,8 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
     if (lib == nullptr)
         return;
 
-    _snd_device_name_hint = reinterpret_cast<decltype(_snd_device_name_hint)>(::dlsym(lib, "snd_device_name_hint"));
-    _snd_device_name_get_hint = reinterpret_cast<decltype(_snd_device_name_get_hint)>(::dlsym(lib, "snd_device_name_get_hint"));
+    _snd_device_name_hint      = reinterpret_cast<decltype(_snd_device_name_hint)>     (::dlsym(lib, "snd_device_name_hint"));
+    _snd_device_name_get_hint  = reinterpret_cast<decltype(_snd_device_name_get_hint)> (::dlsym(lib, "snd_device_name_get_hint"));
     _snd_device_name_free_hint = reinterpret_cast<decltype(_snd_device_name_free_hint)>(::dlsym(lib, "snd_device_name_free_hint"));
 
     if (_snd_device_name_hint == nullptr || _snd_device_name_get_hint == nullptr || _snd_device_name_free_hint == nullptr)

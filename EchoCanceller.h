@@ -71,7 +71,7 @@ public:
     virtual void SetPassThrough(bool m_passThrough);
 
 protected:
-    bool GetPassThrough() const;
+    [[nodiscard]] bool GetPassThrough() const;
 
 private:
     bool m_passThrough = false;
@@ -87,7 +87,7 @@ public:
      * Level is (0.0, 2.0]
      */
     void SetLevel(float m_level);
-    float GetLevel() const;
+    [[nodiscard]] float GetLevel() const;
 
 private:
     float m_level = 1.0f;

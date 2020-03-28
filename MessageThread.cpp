@@ -30,7 +30,7 @@ MessageThread::MessageThread()
     event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 #endif
 #else
-    pthread_cond_init(&cond, nullptr);
+    ::pthread_cond_init(&cond, nullptr);
 #endif
 }
 
@@ -40,7 +40,7 @@ MessageThread::~MessageThread()
 #ifdef _WIN32
     CloseHandle(event);
 #else
-    pthread_cond_destroy(&cond);
+    ::pthread_cond_destroy(&cond);
 #endif
 }
 
@@ -52,7 +52,7 @@ void MessageThread::Stop()
 #ifdef _WIN32
         SetEvent(event);
 #else
-        pthread_cond_signal(&cond);
+        ::pthread_cond_signal(&cond);
 #endif
         Join();
     }
@@ -92,12 +92,12 @@ void MessageThread::Run()
                 waitTimeout += now.tv_sec;
                 waitTimeout += (now.tv_usec / 1000000.0);
                 timeout.tv_sec = static_cast<std::time_t>(std::floor(waitTimeout));
-                timeout.tv_nsec = static_cast<long>((waitTimeout - std::floor(waitTimeout)) * 1000 * 1000 * 1000.0);
-                pthread_cond_timedwait(&cond, m_queueMutex.NativeHandle(), &timeout);
+                timeout.tv_nsec = static_cast<decltype(timeout.tv_nsec)>((waitTimeout - std::floor(waitTimeout)) * 1000 * 1000 * 1000.0);
+                ::pthread_cond_timedwait(&cond, m_queueMutex.NativeHandle(), &timeout);
             }
             else
             {
-                pthread_cond_wait(&cond, m_queueMutex.NativeHandle());
+                ::pthread_cond_wait(&cond, m_queueMutex.NativeHandle());
             }
 #endif
         }
@@ -111,9 +111,9 @@ void MessageThread::Run()
         std::vector<Message> messagesToDeliverNow;
         {
             MutexGuard lock(m_queueAccessMutex);
-            std::set<Message>::iterator msgsToDeliverNowBegin = m_queue.begin();
-            std::set<Message>::iterator msgsToDeliverNowEnd = m_queue.upper_bound(Message{ .id = 0, .deliverAt = currentTime, .interval = 0, .func = nullptr });
-            for (std::set<Message>::iterator it = msgsToDeliverNowBegin; it != msgsToDeliverNowEnd; it = m_queue.erase(it))
+            auto msgsToDeliverNowBegin = m_queue.begin();
+            auto msgsToDeliverNowEnd = m_queue.upper_bound(Message{ .id = 0, .deliverAt = currentTime, .interval = 0, .func = nullptr });
+            for (auto it = msgsToDeliverNowBegin; it != msgsToDeliverNowEnd; it = m_queue.erase(it))
                 messagesToDeliverNow.emplace_back(*it);
         }
 
@@ -149,7 +149,7 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
 #ifdef _WIN32
         SetEvent(event);
 #else
-        pthread_cond_signal(&cond);
+        ::pthread_cond_signal(&cond);
 #endif
     }
     return message.id;
@@ -170,7 +170,7 @@ void MessageThread::Cancel(std::uint32_t id)
 {
     MutexGuard lock(m_queueAccessMutex);
 
-    for (std::set<Message>::iterator it = m_queue.begin(); it != m_queue.end(); ++it)
+    for (auto it = m_queue.begin(); it != m_queue.end(); ++it)
     {
         if (it->id == id)
         {

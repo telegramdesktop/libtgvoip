@@ -27,13 +27,13 @@ protected:
     void SendExtra(Buffer& data, ExtraType type) const;
     void IncrementUnsentStreamPackets();
     std::uint32_t SendPacket(VoIPController::PendingOutgoingPacket pkt);
-    double GetConnectionInitTime() const;
-    const HistoricBuffer<double, 32>& RTTHistory() const;
+    [[nodiscard]] double GetConnectionInitTime() const;
+    [[nodiscard]] const HistoricBuffer<double, 32>& RTTHistory() const;
     MessageThread& GetMessageThread();
-    const MessageThread& GetMessageThread() const;
-    const VoIPController::ProtocolInfo& GetProtocolInfo() const;
+    [[nodiscard]] const MessageThread& GetMessageThread() const;
+    [[nodiscard]] const VoIPController::ProtocolInfo& GetProtocolInfo() const;
     void SendStreamFlags(VoIPController::Stream& stm) const;
-    const VoIPController::Config& GetConfig() const;
+    [[nodiscard]] const VoIPController::Config& GetConfig() const;
 };
 
 } // namespace tgvoip

@@ -17,8 +17,7 @@ using namespace tgvoip;
 #pragma mark - Buffer
 
 Buffer::Buffer(std::size_t capacity)
-    : m_data(nullptr)
-    , m_length(capacity)
+    : m_length(capacity)
 {
     if (capacity > 0)
     {
@@ -31,8 +30,8 @@ Buffer::Buffer(std::size_t capacity)
 Buffer::Buffer(Buffer&& other) noexcept
     : m_data(other.m_data)
     , m_length(other.m_length)
-    , m_freeFn(other.m_freeFn)
-    , m_reallocFn(other.m_reallocFn)
+    , m_freeFn(std::move(other.m_freeFn))
+    , m_reallocFn(std::move(other.m_reallocFn))
 {
     other.m_data = nullptr;
 }
@@ -44,9 +43,7 @@ Buffer::Buffer(BufferOutputStream&& stream)
     stream.m_buffer = nullptr;
 }
 
-Buffer::Buffer()
-{
-}
+Buffer::Buffer() = default;
 
 Buffer::~Buffer()
 {
@@ -178,8 +175,8 @@ Buffer Buffer::Wrap(std::uint8_t* data, std::size_t size, std::function<void(voi
     Buffer b = Buffer();
     b.m_data = data;
     b.m_length = size;
-    b.m_freeFn = freeFn;
-    b.m_reallocFn = reallocFn;
+    b.m_freeFn = std::move(freeFn);
+    b.m_reallocFn = std::move(reallocFn);
     return b;
 }
 
