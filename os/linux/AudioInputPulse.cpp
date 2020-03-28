@@ -130,10 +130,6 @@ void AudioInputPulse::SetCurrentDevice(std::string devID)
     if (err != 0)
     {
         pa_threaded_mainloop_unlock(m_mainloop);
-        /*if(devID!="default"){
-			SetCurrentDevice("default");
-			return;
-		}*/
     }
     CHECK_ERROR(err, "pa_stream_connect_record");
 

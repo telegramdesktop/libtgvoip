@@ -198,14 +198,6 @@ void EchoCanceller::ProcessInput(std::int16_t* inOut, std::size_t numSamples, bo
 void EchoCanceller::SetAECStrength(int strength)
 {
 #ifndef TGVOIP_NO_DSP
-    /*if(aec){
-#ifndef TGVOIP_USE_DESKTOP_DSP
-		AecmConfig cfg;
-		cfg.cngMode=AecmFalse;
-        cfg.echoMode=(std::int16_t) strength;
-		WebRtcAecm_set_config(aec, cfg);
-#endif
-	}*/
 #endif
 }
 
