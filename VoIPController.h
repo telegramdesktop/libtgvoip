@@ -706,7 +706,7 @@ private:
     double m_lastRecvPacketTime = 0;
     double m_lastUdpPingTime = 0;
 
-    CongestionControl* m_conctl;
+    CongestionControl* m_congestionControl;
 
     NetworkSocket* m_udpSocket;
     NetworkSocket* m_realUdpSocket;

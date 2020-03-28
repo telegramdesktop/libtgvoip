@@ -610,7 +610,7 @@ void VoIPGroupController::WritePacketHeader(std::uint32_t seq, BufferOutputStrea
 
     if (type == PktType::STREAM_DATA || type == PktType::STREAM_DATA_X2 || type == PktType::STREAM_DATA_X3)
     {
-        m_conctl->PacketSent(seq, length);
+        m_congestionControl->PacketSent(seq, length);
     }
 
     /*if(pflags & PFlag::HAS_CALL_ID){
@@ -854,10 +854,10 @@ std::string VoIPGroupController::GetDebugString()
         "Send/recv losses: %u/%u (%d%%)\n"
         "Audio bitrate: %d kbit\n"
         "Bytes sent/recvd: %llu/%llu\n\n",
-        static_cast<int>(m_conctl->GetAverageRTT() * 1000),
-        static_cast<int>(m_conctl->GetMinimumRTT() * 1000),
-        static_cast<int>(m_conctl->GetInflightDataSize()),
-        static_cast<int>(m_conctl->GetCongestionWindow()),
+        static_cast<int>(m_congestionControl->GetAverageRTT() * 1000),
+        static_cast<int>(m_congestionControl->GetMinimumRTT() * 1000),
+        static_cast<int>(m_congestionControl->GetInflightDataSize()),
+        static_cast<int>(m_congestionControl->GetCongestionWindow()),
         m_keyFingerprint[0],
         m_keyFingerprint[1],
         m_keyFingerprint[2],
@@ -868,7 +868,7 @@ std::string VoIPGroupController::GetDebugString()
         m_keyFingerprint[7],
         m_lastSentSeq,
         m_lastRemoteAckSeq,
-        m_conctl->GetSendLossCount(),
+        m_congestionControl->GetSendLossCount(),
         m_recvLossCount,
         m_encoder ? m_encoder->GetPacketLoss() : 0,
         m_encoder ? (m_encoder->GetBitrate() / 1000) : 0,
