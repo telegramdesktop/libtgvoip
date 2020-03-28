@@ -543,7 +543,7 @@ std::string VoIPGroupController::GetDebugString()
     if (jitterBuffer != nullptr)
         jitterBuffer->GetAverageLateCount(avgLate);
     else
-        std::memset(avgLate, 0, 3 * sizeof(double));
+        std::fill(std::begin(avgLate), std::end(avgLate), 0);
     std::snprintf(
         buffer,
         sizeof(buffer),
