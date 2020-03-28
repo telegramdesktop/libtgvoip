@@ -4,10 +4,11 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
 #include "JitterBuffer.h"
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
-#include "logging.h"
+
 #include <cmath>
 
 using namespace tgvoip;
@@ -35,8 +36,15 @@ JitterBuffer::JitterBuffer(MediaStreamItf* out, std::uint32_t step)
         m_maxDelay  = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_max_delay_60", 10));
         m_maxAllowedSlots = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_max_slots_60", 20));
     }
-    m_lossesToReset = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_losses_to_reset", 20));
-    m_resyncThreshold = ServerConfig::GetSharedInstance()->GetDouble("jitter_resync_threshold", 1.0);
+
+    m_minDelay = 5;
+    m_maxDelay = 100;
+    m_maxAllowedSlots = 128;
+    m_lossesToReset = 20;
+    m_resyncThreshold = 1.0;
+
+//    m_lossesToReset = static_cast<std::uint32_t>(ServerConfig::GetSharedInstance()->GetInt("jitter_losses_to_reset", 20));
+//    m_resyncThreshold = ServerConfig::GetSharedInstance()->GetDouble("jitter_resync_threshold", 1.0);
 #ifdef TGVOIP_DUMP_JITTER_STATS
 #ifdef TGVOIP_JITTER_DUMP_FILE
     dump = fopen(TGVOIP_JITTER_DUMP_FILE, "w");
@@ -119,7 +127,7 @@ void JitterBuffer::ResetNonBlocking()
     m_expectNextAtTime = 0;
     m_deviationHistory.Reset();
     m_outstandingDelayChange = 0;
-    m_dontChangeDelay = 0;
+    m_dontChangeOutstandingDelay = 0;
 }
 
 void JitterBuffer::Reset()
@@ -216,8 +224,8 @@ JitterBuffer::Status JitterBuffer::GetInternal(jitter_packet_t* pkt, std::uint32
     if (m_lostCount >= m_lossesToReset || (m_gotSinceReset > m_delay * 25 && m_lostSinceReset > m_gotSinceReset / 2))
     {
         LOGW("jitter: lost %d packets in a row, resetting", m_lostCount);
-        m_dontIncMinDelay = 16;
-        m_dontDecMinDelay += 128;
+        m_dontIncDelay = 0;//16;
+        m_dontDecDelay += 128;
         m_lostCount = 0;
         ResetNonBlocking();
     }
@@ -297,7 +305,7 @@ void JitterBuffer::PutInternal(jitter_packet_t* pkt, bool overwriteExisting)
         m_lastPutTimestamp = pkt->timestamp;
 
     bool emplacePacket = true;
-    if (m_slots.size() > m_maxAllowedSlots)
+    if (m_slots.size() >= m_maxAllowedSlots)
     {
         Advance();
         if (pkt->timestamp > m_slots.begin()->second.timestamp)
@@ -365,8 +373,8 @@ void JitterBuffer::Tick()
         m_wasReset = true;
     }
 
-    if (absolutelyNoLatePackets && m_dontDecMinDelay > 0)
-        --m_dontDecMinDelay;
+    if (absolutelyNoLatePackets && m_dontDecDelay > 0)
+        --m_dontDecDelay;
 
     m_delayHistory.Add(GetCurrentDelayNonBlocking());
     m_avgDelay = m_delayHistory.Average(32);
@@ -388,41 +396,41 @@ void JitterBuffer::Tick()
     {
         std::int32_t diff = static_cast<std::int32_t>(stddevDelay) - static_cast<std::int32_t>(m_delay);
         if (diff > 0)
-            m_dontDecMinDelay = 100;
+            m_dontDecDelay = 100;
         if (diff < -1)
             diff = -1;
         if (diff > 1)
             diff = 1;
-        if ((diff > 0 && m_dontIncMinDelay == 0) || (diff < 0 && m_dontDecMinDelay == 0))
+        if ((diff > 0 && m_dontIncDelay == 0) || (diff < 0 && m_dontDecDelay == 0))
         {
             m_delay = static_cast<std::uint32_t>(static_cast<std::int32_t>(m_delay) + diff);
             m_outstandingDelayChange += diff * 60;
-            m_dontChangeDelay += 32;
+            m_dontChangeOutstandingDelay += 32;
             //LOGD("new delay from stddev %f", minDelay);
             if (diff < 0)
-                m_dontDecMinDelay += 25;
+                m_dontDecDelay += 25;
             if (diff > 0)
-                m_dontIncMinDelay = 25;
+                m_dontIncDelay = 16;//25;
         }
     }
     m_lastMeasuredJitter = stddev;
     m_lastMeasuredDelay = stddevDelay;
     //LOGV("stddev=%.3f, avg=%.3f, ndelay=%d, dontDec=%u", stddev, avgdev, stddevDelay, dontDecMinDelay);
-    if (m_dontChangeDelay == 0)
+    if (m_dontChangeOutstandingDelay == 0)
     {
         if (m_avgDelay > m_delay + 0.5)
         {
             m_outstandingDelayChange -= m_avgDelay > m_delay + 2 ? 60 : 20;
-            m_dontChangeDelay += 10;
+            m_dontChangeOutstandingDelay += 10;
         }
         else if (m_avgDelay < m_delay - 0.3)
         {
             m_outstandingDelayChange += 20;
-            m_dontChangeDelay += 10;
+            m_dontChangeOutstandingDelay += 10;
         }
     }
-    if (m_dontChangeDelay > 0)
-        --m_dontChangeDelay;
+    if (m_dontChangeOutstandingDelay > 0)
+        --m_dontChangeOutstandingDelay;
 }
 
 void JitterBuffer::GetAverageLateCount(double* out) const

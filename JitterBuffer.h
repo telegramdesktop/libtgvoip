@@ -7,12 +7,13 @@
 #ifndef LIBTGVOIP_JITTERBUFFER_H
 #define LIBTGVOIP_JITTERBUFFER_H
 
+#include "threading.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
 #include "MediaStreamItf.h"
-#include "threading.h"
-#include <map>
+
 #include <cstdint>
+#include <map>
 
 #define JITTER_SLOT_COUNT 64
 #define JITTER_SLOT_SIZE 1024
@@ -99,9 +100,9 @@ private:
     unsigned int m_lostSinceReset = 0;
     unsigned int m_gotSinceReset = 0;
     unsigned int m_latePacketCount = 0;
-    unsigned int m_dontIncMinDelay = 0;
-    unsigned int m_dontDecMinDelay = 0;
-    unsigned int m_dontChangeDelay = 0;
+    unsigned int m_dontIncDelay = 0;
+    unsigned int m_dontDecDelay = 0;
+    unsigned int m_dontChangeOutstandingDelay = 0;
     int m_lostPackets = 0;
     int m_outstandingDelayChange = 0;
 
