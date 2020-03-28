@@ -7,10 +7,10 @@
 #ifndef LIBTGVOIP_AUDIOOUTPUTOPENSLES_H
 #define LIBTGVOIP_AUDIOOUTPUTOPENSLES_H
 
+#include "../../audio/AudioOutput.h"
+
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
-
-#include "../../audio/AudioOutput.h"
 
 namespace tgvoip
 {
@@ -49,4 +49,4 @@ namespace audio
 }
 }
 
-#endif //LIBTGVOIP_AUDIOOUTPUTANDROID_H
+#endif // LIBTGVOIP_AUDIOOUTPUTANDROID_H

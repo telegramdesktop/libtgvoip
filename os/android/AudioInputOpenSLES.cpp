@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 #include "../../logging.h"
 #include "AudioInputOpenSLES.h"
@@ -121,20 +122,12 @@ void AudioInputOpenSLES::Stop()
 
 void AudioInputOpenSLES::HandleSLCallback()
 {
-    //SLmillisecond pMsec = 0;
-    //(*slRecorder)->GetPosition(slRecorder, &pMsec);
-    //LOGI("Callback! pos=%lu", pMsec);
-    //InvokeCallback((unsigned char*)buffer, BUFFER_SIZE*sizeof(std::int16_t));
-    //fwrite(nativeBuffer, 1, nativeBufferSize*2, test);
-
     if (nativeBufferSize == BUFFER_SIZE)
     {
-        //LOGV("nativeBufferSize==BUFFER_SIZE");
         InvokeCallback((unsigned char*)nativeBuffer, BUFFER_SIZE * sizeof(std::int16_t));
     }
     else if (nativeBufferSize < BUFFER_SIZE)
     {
-        //LOGV("nativeBufferSize<BUFFER_SIZE");
         if (positionInBuffer >= BUFFER_SIZE)
         {
             InvokeCallback((unsigned char*)buffer, BUFFER_SIZE * sizeof(std::int16_t));
@@ -145,7 +138,6 @@ void AudioInputOpenSLES::HandleSLCallback()
     }
     else if (nativeBufferSize > BUFFER_SIZE)
     {
-        //LOGV("nativeBufferSize>BUFFER_SIZE");
         for (unsigned int offset = 0; offset < nativeBufferSize; offset += BUFFER_SIZE)
         {
             InvokeCallback(((unsigned char*)nativeBuffer) + offset * 2, BUFFER_SIZE * sizeof(std::int16_t));

@@ -125,9 +125,6 @@ void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
         m_wasSecondaryEncoderEnabled = m_secondaryEncoderEnabled;
     }
     std::int32_t r = opus_encode(m_enc, data, static_cast<int>(len), m_buffer, 4096);
-    //	int bw;
-    //	opus_encoder_ctl(enc, OPUS_GET_BANDWIDTH(&bw));
-    //	LOGV("Opus bandwidth: %d", bw);
     if (r <= 0)
     {
         LOGE("Error encoding: %d", r);
@@ -138,13 +135,11 @@ void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
     }
     else if (m_running)
     {
-        //LOGV("Packet size = %d", r);
         std::int32_t secondaryLen = 0;
         std::uint8_t secondaryBuffer[128];
         if (m_secondaryEncoderEnabled && m_secondaryEncoder != nullptr)
         {
             secondaryLen = opus_encode(m_secondaryEncoder, data, static_cast<int>(len), secondaryBuffer, sizeof(secondaryBuffer));
-            //LOGV("secondaryLen %d", secondaryLen);
         }
         InvokeCallback(m_buffer, static_cast<std::size_t>(r), secondaryBuffer, static_cast<std::size_t>(secondaryLen));
     }

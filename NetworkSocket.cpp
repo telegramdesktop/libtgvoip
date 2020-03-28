@@ -374,7 +374,6 @@ void NetworkSocketTCPObfuscated::Send(NetworkPacket packet)
         0,
         NetworkProtocol::TCP
     });
-    //LOGD("Sent %u bytes", os.GetLength());
 }
 
 bool NetworkSocketTCPObfuscated::OnReadyToSend()
@@ -598,7 +597,6 @@ std::uint16_t NetworkSocketSOCKS5Proxy::GetConnectedPort()
 
 bool NetworkSocketSOCKS5Proxy::OnReadyToSend()
 {
-    //LOGV("on ready to send, state=%d", state);
     if (m_state == ConnectionState::INITIAL)
     {
         BufferOutputStream p(16);
@@ -627,7 +625,6 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToSend()
 
 bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
 {
-    //LOGV("on ready to receive state=%d", state);
     std::uint8_t buf[1024];
     switch (m_state)
     {

@@ -4,14 +4,17 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioOutputOpenSLES.h"
-#include "../../VoIPController.h"
 #include "../../logging.h"
+#include "../../VoIPController.h"
+#include "AudioOutputOpenSLES.h"
 #include "AudioInputAndroid.h"
 #include "OpenSLEngineWrapper.h"
-#include <cassert>
+
 #include <sys/time.h>
 #include <unistd.h>
+
+#include <cassert>
+#include <cstring>
 
 #define CHECK_SL_ERROR(res, msg)  \
     if (res != SL_RESULT_SUCCESS) \
@@ -142,11 +145,6 @@ void AudioOutputOpenSLES::Stop()
 
 void AudioOutputOpenSLES::HandleSLCallback()
 {
-    /*if(stopped){
-		//LOGV("left HandleSLCallback early");
-		return;
-	}*/
-    //LOGV("before InvokeCallback");
     if (!stopped)
     {
         while (remainingDataSize < nativeBufferSize * 2)
@@ -159,7 +157,6 @@ void AudioOutputOpenSLES::HandleSLCallback()
         remainingDataSize -= nativeBufferSize * 2;
         if (remainingDataSize > 0)
             memmove(remainingData, remainingData + nativeBufferSize * 2, remainingDataSize);
-        //InvokeCallback((unsigned char *) nativeBuffer, nativeBufferSize*sizeof(std::int16_t));
     }
     else
     {
@@ -167,7 +164,6 @@ void AudioOutputOpenSLES::HandleSLCallback()
     }
 
     (*slBufferQueue)->Enqueue(slBufferQueue, nativeBuffer, nativeBufferSize * sizeof(std::int16_t));
-    //LOGV("left HandleSLCallback");
 }
 
 bool AudioOutputOpenSLES::IsPlaying()

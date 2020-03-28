@@ -185,7 +185,6 @@ void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t reques
 
 void AudioOutputPulse::StreamWriteCallback(pa_stream* stream, std::size_t requestedBytes)
 {
-    //assert(requestedBytes<=sizeof(remainingData));
     if (requestedBytes > sizeof(m_remainingData))
     {
         requestedBytes = 960 * 2; // force buffer size to 20ms. This probably wrecks the jitter buffer, but still better than crashing

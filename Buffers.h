@@ -73,7 +73,6 @@ public:
     void WriteInt64(std::int64_t i);
     void WriteUInt64(std::uint64_t i);
     void WriteBytes(const std::uint8_t* bytes, std::size_t count);
-    //void WriteBytes(const std::int8_t* bytes, std::size_t count);
     void WriteBytes(const Buffer& m_buffer);
     void WriteBytes(const Buffer& m_buffer, std::size_t m_offset, std::size_t count);
     std::uint8_t* GetBuffer() const;

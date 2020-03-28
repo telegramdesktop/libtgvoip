@@ -32,7 +32,6 @@ public:
     bool IsInitialized() const;
     virtual std::string GetCurrentDevice() const;
     virtual void SetCurrentDevice(std::string deviceID);
-    //static AudioInput* Create(std::string deviceID, void* platformSpecific);
     static void EnumerateDevices(std::vector<AudioInputDevice>& devs);
     static std::int32_t GetEstimatedDelay();
 

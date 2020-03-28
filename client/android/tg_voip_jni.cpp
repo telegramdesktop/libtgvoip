@@ -279,8 +279,6 @@ void VoIPController_nativeSetNativeBufferSize(JNIEnv* env, jclass thiz, jint siz
 
 void VoIPController_nativeRelease(JNIEnv* env, jobject thiz, jlong inst)
 {
-    //env->DeleteGlobalRef(AudioInputAndroid::jniClass);
-
     VoIPController* ctlr = ((VoIPController*)(intptr_t)inst);
     ImplDataAndroid* impl = reinterpret_cast<ImplDataAndroid*>(ctlr->implData);
     ctlr->Stop();
@@ -598,7 +596,6 @@ void VideoSource_nativeSetVideoStreamParameters(JNIEnv* env, jobject thiz, jlong
 
 void VideoSource_nativeSendFrame(JNIEnv* env, jobject thiz, jlong inst, jobject buffer, jint offset, jint length, jint flags)
 {
-    //std::size_t bufsize=(std::size_t)env->GetDirectBufferCapacity(buffer);
     Buffer buf(static_cast<std::size_t>(length));
     buf.CopyFrom(((char*)env->GetDirectBufferAddress(buffer)) + offset, 0, static_cast<std::size_t>(length));
     ((video::VideoSourceAndroid*)(intptr_t)inst)->SendFrame(std::move(buf), static_cast<std::uint32_t>(flags));

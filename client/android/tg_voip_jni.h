@@ -16,4 +16,4 @@ extern "C"
 }
 #endif
 
-#endif //TELEGRAM_TG_VOIP_JNI_H
+#endif // TELEGRAM_TG_VOIP_JNI_H

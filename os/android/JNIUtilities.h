@@ -71,4 +71,4 @@ namespace jni
 }
 }
 
-#endif //LIBTGVOIP_JNIUTILITIES_H
+#endif // LIBTGVOIP_JNIUTILITIES_H

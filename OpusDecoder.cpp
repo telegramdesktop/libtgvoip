@@ -207,7 +207,6 @@ void tgvoip::OpusDecoder::RunThread()
                 }
                 else
                 {
-                    //LOGE("Error decoding, result=%d", size);
                     std::memset(*buf, 0, PACKET_SIZE);
                 }
                 m_decodedQueue->Put(std::move(buf));
@@ -230,8 +229,6 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
     {
         fec = true;
         len = m_jitterBuffer->HandleOutput(m_buffer, 8192, 0, false, playbackDuration, isEC);
-        //if(len)
-        //	LOGV("Trying FEC...");
     }
     int size;
     if (len != 0)
@@ -270,7 +267,6 @@ int tgvoip::OpusDecoder::DecodeNextFrame()
         else
         {
             size = opus_decode(m_prevWasEC ? m_ecDec : m_dec, nullptr, 0, reinterpret_cast<opus_int16*>(m_decodeBuffer), m_packetsPerFrame * 960, 0);
-            //LOGV("PLC");
         }
     }
     if (size < 0)

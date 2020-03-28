@@ -77,8 +77,6 @@ void AudioMixer::Stop()
 
 void AudioMixer::DoCallback(std::uint8_t* data, std::size_t length)
 {
-    //std::memset(data, 0, 960*2);
-    //LOGD("audio mixer callback, %d inputs", inputs.size());
     if (m_processedQueue.Size() == 0)
         m_semaphore.Release(2);
     else
@@ -132,7 +130,6 @@ void AudioMixer::RunThread()
         try
         {
             Buffer data = m_bufferPool.Get();
-            //LOGV("Audio mixer processing a frame");
             MutexGuard m(m_inputsMutex);
             std::int16_t* buf = reinterpret_cast<std::int16_t*>(*data);
 
@@ -148,7 +145,6 @@ void AudioMixer::RunThread()
                 std::size_t res = source->InvokeCallback(reinterpret_cast<std::uint8_t*>(input.data()), STD_ARRAY_SIZEOF(input));
                 if (res == 0 || multiplier == 0)
                 {
-                    //LOGV("AudioMixer: skipping silent packet");
                     continue;
                 }
                 ++usedInputs;
@@ -248,9 +244,6 @@ void AudioLevelMeter::Update(std::int16_t* samples, std::size_t count)
         std::size_t position = static_cast<std::size_t>(m_absMax) / 1000;
         // Make it less likely that the bar stays at position 0. I.e. only if
         // its in the range 0-250 (instead of 0-1000)
-        /*if ((position==0) && (absMax>250)){
-			position=1;
-		}*/
         m_currentLevel = permutation[position];
         // Decay the absolute maximum (divide by 4)
         m_absMax >>= 2;

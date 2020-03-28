@@ -69,7 +69,7 @@ void MessageThread::Run()
             MutexGuard lock(m_queueAccessMutex);
             waitTimeout = m_queue.empty() ? std::numeric_limits<double>::max() : (m_queue.begin()->deliverAt - currentTime);
         }
-        //LOGW("MessageThread wait timeout %f", waitTimeout);
+
         if (waitTimeout > 0.0)
         {
 #ifdef _WIN32
@@ -119,7 +119,6 @@ void MessageThread::Run()
 
         for (Message& message : messagesToDeliverNow)
         {
-            //LOGI("MessageThread delivering %u", m.msg);
             m_cancelCurrent = false;
             if (message.deliverAt == 0.0)
                 message.deliverAt = VoIPController::GetCurrentTime();
@@ -138,7 +137,6 @@ void MessageThread::Run()
 std::uint32_t MessageThread::Post(std::function<void()> func, double delay, double interval)
 {
     assert(delay >= 0);
-    //LOGI("MessageThread post [function] delay %f", delay);
     Message message;
     double currentTime = VoIPController::GetCurrentTime();
     {

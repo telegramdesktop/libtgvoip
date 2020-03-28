@@ -31,18 +31,15 @@ std::uint32_t VideoPacketSender::GetBitrate() const
 void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, double ackTime, PktType type, std::uint32_t size)
 {
     std::uint32_t bytesNewlyAcked = 0;
-    //if(!videoKeyframeRequested){
     // video frames are stored in sentVideoFrames in order of increasing numbers
     // so if a frame (or part of it) is acknowledged but isn't sentVideoFrames[0], we know there was a packet loss
     for (SentVideoFrame& f : m_sentVideoFrames)
     {
         for (std::vector<std::uint32_t>::iterator s = f.unacknowledgedPackets.begin(); s != f.unacknowledgedPackets.end();)
         {
-            //RecentOutgoingPacket* opkt=GetRecentOutgoingPacket(*s);
-            if (/*opkt && opkt->ackTime!=0.0*/ *s == seq)
+            if (*s == seq)
             {
                 s = f.unacknowledgedPackets.erase(s);
-                //newlyAckedVideoBytes+=opkt->size;
                 bytesNewlyAcked = size;
                 break;
             }
@@ -61,16 +58,13 @@ void VideoPacketSender::PacketAcknowledged(std::uint32_t seq, double sendTime, d
         }
         ++f;
     }
-    //}
     if (bytesNewlyAcked)
     {
         float _sendTime = static_cast<float>(sendTime - GetConnectionInitTime());
         float recvTime = static_cast<float>(ackTime);
         float oneWayDelay = recvTime - _sendTime;
-        //LOGV("one-way delay: %f", oneWayDelay);
         m_videoCongestionControl.ProcessAcks(oneWayDelay, bytesNewlyAcked, m_videoPacketLossCount, RTTHistory().Average(5));
     }
-    //videoCongestionControl.GetPacingInterval();
 }
 
 void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_t size)
@@ -78,7 +72,6 @@ void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_
     if (type == PktType::STREAM_EC)
         return;
     LOGW("VideoPacketSender::PacketLost: %u (size %u)", seq, size);
-    //LOGI("frame count %u", (unsigned int)sentVideoFrames.size());
     for (std::vector<SentVideoFrame>::iterator f = m_sentVideoFrames.begin(); f != m_sentVideoFrames.end(); ++f)
     {
         std::vector<std::uint32_t>::iterator pkt = std::find(f->unacknowledgedPackets.begin(), f->unacknowledgedPackets.end(), seq);
@@ -100,24 +93,22 @@ void VideoPacketSender::PacketLost(std::uint32_t seq, PktType type, std::uint32_
             return;
         }
     }
-    //std::abort();
 }
 
 void VideoPacketSender::SetSource(VideoSource* source)
 {
-    if (this->m_source == source)
+    if (m_source == source)
         return;
 
-    if (this->m_source)
+    if (m_source != nullptr)
     {
-        this->m_source->Stop();
-        this->m_source->SetCallback(nullptr);
-        //delete this->source;
+        m_source->Stop();
+        m_source->SetCallback(nullptr);
     }
 
-    this->m_source = source;
+    m_source = source;
 
-    if (!source)
+    if (source == nullptr)
         return;
 
     m_sourceChangeTime = m_lastVideoResolutionChangeTime = VoIPController::GetCurrentTime();
@@ -179,7 +170,6 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             else
             {
                 LOGV("Dropping input video frame waiting for key frame");
-                //return;
             }
         }
 
@@ -196,7 +186,6 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             m_stm->csdIsValid = true;
             m_stm->width = m_source->GetFrameWidth();
             m_stm->height = m_source->GetFrameHeight();
-            //SendStreamCSD();
         }
 
         Buffer csd;
@@ -226,13 +215,13 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
         SentVideoFrame sentFrame;
         sentFrame.seq = m_frameSeq;
         sentFrame.fragmentCount = static_cast<std::uint32_t>(segmentCount);
-        sentFrame.fragmentsInQueue = 0; //static_cast<std::uint32_t>(segmentCount);
+        sentFrame.fragmentsInQueue = 0;
         std::size_t offset = 0;
         std::size_t packetSize = totalLength / segmentCount;
         for (std::size_t seg = 0; seg < segmentCount; ++seg)
         {
             BufferOutputStream pkt(1500);
-            std::size_t len; //=std::min((std::size_t)1024, frame.Length()-offset);
+            std::size_t len;
             if (seg == segmentCount - 1)
             {
                 len = frame.Length() - offset;
@@ -242,7 +231,6 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
                 len = packetSize;
             }
             std::uint8_t pflags = STREAM_DATA_FLAG_LEN16;
-            //pflags |= STREAM_DATA_FLAG_HAS_MORE_FLAGS;
             pkt.WriteUInt8(static_cast<std::uint8_t>(m_stm->id | pflags)); // streamID + flags
             std::uint16_t lengthAndFlags = static_cast<std::uint16_t>(len & 0x7FF);
             if (segmentCount > 1)
@@ -250,7 +238,6 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
             if (flags & VIDEO_FRAME_FLAG_KEYFRAME)
                 lengthAndFlags |= STREAM_DATA_XFLAG_KEYFRAME;
             pkt.WriteUInt16(lengthAndFlags);
-            //pkt.WriteInt32(audioTimestampOut);
             pkt.WriteUInt32(pts);
             if (segmentCount > 1)
             {
@@ -288,7 +275,6 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
                 }
             }
             pkt.WriteBytes(frame, offset, len);
-            //LOGV("Sending segment %u of %u, length %u", (unsigned int)seg, (unsigned int)segmentCount, (unsigned int)pkt.GetLength());
 
             Buffer fecPacketData(pkt.GetLength() - dataOffset);
             fecPacketData.CopyFrom(pkt.GetBuffer() + dataOffset, 0, pkt.GetLength() - dataOffset);
@@ -299,17 +285,16 @@ void VideoPacketSender::SendFrame(const Buffer& _frame, std::uint32_t flags, std
 
             std::size_t packetDataLength = packetData.Length();
             VoIPController::PendingOutgoingPacket p {
-                /*.seq=*/0,
-                /*.type=*/PktType::STREAM_DATA,
-                /*.len=*/packetDataLength,
-                /*.data=*/std::move(packetData),
+                /*.seq=*/     0,
+                /*.type=*/    PktType::STREAM_DATA,
+                /*.len=*/     packetDataLength,
+                /*.data=*/    std::move(packetData),
                 /*.endpoint=*/0,
             };
             IncrementUnsentStreamPackets();
             std::uint32_t seq = SendPacket(std::move(p));
             m_videoCongestionControl.ProcessPacketSent(static_cast<unsigned int>(pkt.GetLength()));
             sentFrame.unacknowledgedPackets.emplace_back(seq);
-            //packetQueue.Put(QueuedPacket{std::move(p), sentFrame.seq});
         }
         ++m_fecFrameCount;
         if (m_fecFrameCount >= 3)

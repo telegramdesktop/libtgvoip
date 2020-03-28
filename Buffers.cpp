@@ -472,13 +472,6 @@ void BufferOutputStream::WriteBytes(const std::uint8_t* bytes, std::size_t count
     m_offset += count;
 }
 
-//void BufferOutputStream::WriteBytes(const std::int8_t* bytes, std::size_t count)
-//{
-//    this->ExpandBufferIfNeeded(count);
-//    std::memcpy(m_buffer + m_offset, reinterpret_cast<const std::uint8_t*>(bytes), count);
-//    m_offset += count;
-//}
-
 void BufferOutputStream::WriteBytes(const Buffer& buffer)
 {
     WriteBytes(*buffer, buffer.Length());

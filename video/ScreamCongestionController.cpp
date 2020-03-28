@@ -87,7 +87,6 @@ void ScreamCongestionController::UpdateCWnd(float qdelay)
         {
             if (m_bytesInFlight * 1.5f + m_bytesNewlyAcked > m_cwnd)
             {
-                //LOGD("HERE");
                 m_cwnd += m_bytesNewlyAcked;
             }
             return;
@@ -210,7 +209,6 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, std::uint32_t by
         m_rtpQueueSize -= (bytesNewlyAcked * 8);
         UpdateBytesInFlightHistory();
         m_bytesAcked += bytesNewlyAcked;
-        //LOGV("Scream: qdelay = %f, newly acked = %u, in flight = %u, losses = %u", qdelay, bytesNewlyAcked, bytesInFlight, lossCount);
         if (currentTime - m_lastVariablesUpdateTime >= 0.050)
         {
             m_lastVariablesUpdateTime = currentTime;
@@ -220,7 +218,6 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, std::uint32_t by
         {
             m_lastRateAdjustmentTime = currentTime;
             AdjustBitrate();
-            //LOGV("Scream: target bitrate = %u", targetBitrate);
         }
         if (lossCount > m_prevLossCount && currentTime > m_ignoreLossesUntil)
         {
@@ -241,7 +238,6 @@ void ScreamCongestionController::ProcessAcks(float oneWayDelay, std::uint32_t by
             {
                 m_lastCWndUpdateTime = currentTime;
                 UpdateCWnd(qdelay);
-                //LOGI("Scream: cwnd = %u", cwnd);
                 this->m_bytesNewlyAcked = 0;
             }
             AdjustQDelayTarget(qdelay);
@@ -272,7 +268,6 @@ void ScreamCongestionController::ProcessPacketSent(std::uint32_t size)
         m_rateTransmitUpdateTime = currentTime;
         m_bytesSent = 0;
         m_bytesAcked = 0;
-        //LOGV("rateTransmit %f, rateAck %f", rateTransmit, rateAck);
     }
     UpdateBytesInFlightHistory();
 }
@@ -287,7 +282,6 @@ void ScreamCongestionController::ProcessPacketLost(std::uint32_t size)
 double ScreamCongestionController::GetPacingInterval()
 {
     float paceBitrate = std::max(static_cast<float>(RATE_PACE_MIN), m_cwnd * 8.0f / m_sRTT);
-    //LOGV("RTT=%f cwnd=%u paceBitrate=%f fastIncrease=%d", sRTT, cwnd, paceBitrate, inFastIncrease);
     double pacingInterval = static_cast<double>(m_rtpSize * 8.0f / paceBitrate);
     return std::min(0.010, pacingInterval);
 }

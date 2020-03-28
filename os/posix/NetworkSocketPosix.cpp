@@ -269,7 +269,6 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
         }
         LOGE("error receiving %d / %s", errno, std::strerror(errno));
         return NetworkPacket::Empty();
-        //LOGV("Received %d bytes from %s:%d at %.5lf", len, inet_ntoa(srcAddr.sin_addr), ntohs(srcAddr.sin_port), GetCurrentTime());
     }
     case NetworkProtocol::TCP:
     {
@@ -350,7 +349,6 @@ void NetworkSocketPosix::Open()
         if (res < 0)
         {
             LOGE("error binding to port %u: %d / %s", ::ntohs(addr.sin6_port), errno, std::strerror(errno));
-            //SetState(State::FAILED);
             m_failed = true;
             return;
         }
@@ -693,7 +691,6 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
         FD_ZERO(&writeSet);
     }
 
-    //std::list<NetworkSocket*>::iterator itr = readFds.begin();
     for (auto it = readFds.begin(); it != readFds.end();)
     {
         int sfd = GetDescriptorFromSocket(*it);
@@ -729,7 +726,6 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
         else
             ++it;
     }
-    //LOGV("select fds left: read=%d, write=%d, error=%d", (int)readFds.size(), (int)writeFds.size(), (int)errorFds.size());
 
     return readFds.size() > 0 || errorFds.size() > 0 || writeFds.size() > 0;
 }

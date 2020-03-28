@@ -130,7 +130,7 @@ void PacketReassembler::AddFEC(Buffer data, std::uint8_t _fseq, unsigned int fra
         _s << (fseq - i);
         _s << ' ';
     }
-    //LOGV("Received FEC packet: len %u, scheme %u, frames %s", (unsigned int)data.Length(), fecScheme, _s.str().c_str());
+
     FecPacket fec
     {
         fseq,
@@ -183,7 +183,6 @@ bool PacketReassembler::TryDecodeFEC(PacketReassembler::FecPacket& fec)
             LOGD("Adding frame %u from pending", p->seq);
             for (std::uint32_t i = 0; i < p->partCount; ++i)
             {
-                //LOGV("[%u] size %u", i, p.parts[i].Length());
                 packetsForRecovery.emplace_back(i < p->parts.size() ? Buffer::CopyOf(p->parts[i]) : Buffer());
             }
         }
