@@ -7,14 +7,7 @@
 #ifndef VOIPCONTROLLER_H
 #define VOIPCONTROLLER_H
 
-#ifndef _WIN32
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#endif
-#ifdef __APPLE__
-#include "os/darwin/AudioUnitIO.h"
-#include <TargetConditionals.h>
-#endif
+#include "utils.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
 #include "CongestionControl.h"
@@ -28,17 +21,25 @@
 #include "audio/AudioIO.h"
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
-#include "utils.h"
 #include "video/ScreamCongestionController.h"
 #include "video/VideoRenderer.h"
 #include "video/VideoSource.h"
+
+#ifndef _WIN32
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
+#ifdef __APPLE__
+#include "os/darwin/AudioUnitIO.h"
+#include <TargetConditionals.h>
+#endif
+
 #include <atomic>
 #include <map>
 #include <memory>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include <deque>
 
@@ -49,9 +50,50 @@
 #undef Error::TIMEOUT
 #endif
 
-#define TGVOIP_PEER_CAP_GROUP_CALLS 1
-#define TGVOIP_PEER_CAP_VIDEO_CAPTURE 2
-#define TGVOIP_PEER_CAP_VIDEO_DISPLAY 4
+#define TGVOIP_PEER_CAP_GROUP_CALLS             (1 << 0)
+#define TGVOIP_PEER_CAP_VIDEO_CAPTURE           (1 << 1)
+#define TGVOIP_PEER_CAP_VIDEO_DISPLAY           (1 << 2)
+
+/* flags:# voice_call_id:flags.2?int128 in_seq_no:flags.4?int out_seq_no:flags.4?int
+ * recent_received_mask:flags.5?int proto:flags.3?int extra:flags.1?string raw_data:flags.0?string
+ */
+
+#define PFLAG_HAS_DATA                          std::uint32_t{1 << 0}
+#define PFLAG_HAS_EXTRA                         std::uint32_t{1 << 1}
+#define PFLAG_HAS_CALL_ID                       std::uint32_t{1 << 2}
+#define PFLAG_HAS_PROTO                         std::uint32_t{1 << 3}
+#define PFLAG_HAS_SEQ                           std::uint32_t{1 << 4}
+#define PFLAG_HAS_RECENT_RECV                   std::uint32_t{1 << 5}
+#define PFLAG_HAS_SENDER_TAG_HASH               std::uint32_t{1 << 6}
+
+#define XPFLAG_HAS_EXTRA                        std::uint8_t{1 << 0}
+#define XPFLAG_HAS_RECV_TS                      std::uint8_t{1 << 1}
+
+#define STREAM_FLAG_ENABLED                     std::uint8_t{1 << 0}
+#define STREAM_FLAG_DTX                         std::uint8_t{1 << 1}
+#define STREAM_FLAG_EXTRA_EC                    std::uint8_t{1 << 2}
+#define STREAM_FLAG_PAUSED                      std::uint8_t{1 << 3}
+
+#define STREAM_RFLAG_SUPPORTED                  1
+
+#define INIT_FLAG_DATA_SAVING_ENABLED           std::uint8_t{1 << 0}
+#define INIT_FLAG_GROUP_CALLS_SUPPORTED         std::uint8_t{1 << 1}
+#define INIT_FLAG_VIDEO_SEND_SUPPORTED          std::uint8_t{1 << 2}
+#define INIT_FLAG_VIDEO_RECV_SUPPORTED          std::uint8_t{1 << 3}
+
+#define TLID_DECRYPTED_AUDIO_BLOCK              std::uint32_t{0xDBF948C1}
+#define TLID_SIMPLE_AUDIO_BLOCK                 std::uint32_t{0xCC0D0E76}
+#define TLID_UDP_REFLECTOR_PEER_INFO            std::uint32_t{0x27D9371C}
+#define TLID_UDP_REFLECTOR_PEER_INFO_IPV6       std::uint32_t{0x83fc73b1}
+#define TLID_UDP_REFLECTOR_SELF_INFO            std::uint32_t{0xc01572c7}
+#define TLID_UDP_REFLECTOR_REQUEST_PACKETS_INFO std::uint32_t{0x1a06fc96}
+#define TLID_UDP_REFLECTOR_LAST_PACKETS_INFO    std::uint32_t{0x0e107305}
+#define TLID_VECTOR                             std::uint32_t{0x1cb5c415}
+
+#define NEED_RATE_FLAG_SHITTY_INTERNET_MODE     std::uint8_t{1 << 0}
+#define NEED_RATE_FLAG_UDP_NA                   std::uint8_t{1 << 1}
+#define NEED_RATE_FLAG_UDP_BAD                  std::uint8_t{1 << 2}
+#define NEED_RATE_FLAG_RECONNECTING             std::uint8_t{1 << 3}
 
 namespace tgvoip
 {
@@ -161,6 +203,7 @@ enum class VideoRotation : std::uint8_t
     _180,
     _270,
 };
+#define VIDEO_ROTATION_MASK 3
 
 struct CryptoFunctions
 {
@@ -220,20 +263,22 @@ public:
     std::int64_t CleanID() const;
 
     std::int64_t id;
-    std::uint16_t port;
     NetworkAddress address;
     NetworkAddress v6address;
     Type type;
+    std::uint16_t port;
     std::uint8_t peerTag[16];
 
 private:
-    double m_lastPingTime = 0;
-    std::uint32_t m_lastPingSeq = 0;
     HistoricBuffer<double, 6> m_rtts;
     HistoricBuffer<double, 4> m_selfRtts;
     std::map<std::int64_t, double> m_udpPingTimes;
-    double m_averageRTT = 0;
     std::shared_ptr<NetworkSocket> m_socket = nullptr;
+
+    double m_averageRTT = 0;
+    double m_lastPingTime = 0;
+
+    std::uint32_t m_lastPingSeq = 0;
     int m_udpPongCount = 0;
     int m_totalUdpPings = 0;
     int m_totalUdpPingReplies = 0;

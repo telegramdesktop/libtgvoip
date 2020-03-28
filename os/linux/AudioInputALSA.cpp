@@ -11,6 +11,7 @@
 #include <dlfcn.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 using namespace tgvoip::audio;
 
@@ -40,10 +41,10 @@ AudioInputALSA::AudioInputALSA(std::string devID)
     m_isRecording = false;
     m_handle = nullptr;
 
-    m_lib = dlopen("libasound.so.2", RTLD_LAZY);
-    if (!m_lib)
-        m_lib = dlopen("libasound.so", RTLD_LAZY);
-    if (!m_lib)
+    m_lib = ::dlopen("libasound.so.2", RTLD_LAZY);
+    if (m_lib == nullptr)
+        m_lib = ::dlopen("libasound.so", RTLD_LAZY);
+    if (m_lib == nullptr)
     {
         LOGE("Error loading libasound: %s", dlerror());
         m_failed = true;
@@ -65,7 +66,7 @@ AudioInputALSA::~AudioInputALSA()
     if (m_handle != nullptr)
         m_snd_pcm_close(m_handle);
     if (m_lib != nullptr)
-        dlclose(m_lib);
+        ::dlclose(m_lib);
 }
 
 void AudioInputALSA::Start()
@@ -114,7 +115,7 @@ void AudioInputALSA::SetCurrentDevice(std::string devID)
 {
     bool wasRecording = m_isRecording;
     m_isRecording = false;
-    if (m_handle)
+    if (m_handle != nullptr)
     {
         m_thread->Join();
         m_snd_pcm_close(m_handle);
@@ -141,19 +142,19 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
     int (*_snd_device_name_hint)(int card, const char* iface, void*** hints);
     char* (*_snd_device_name_get_hint)(const void* hint, const char* id);
     int (*_snd_device_name_free_hint)(void** hinst);
-    void* lib = dlopen("libasound.so.2", RTLD_LAZY);
+    void* lib = ::dlopen("libasound.so.2", RTLD_LAZY);
     if (lib == nullptr)
-        dlopen("libasound.so", RTLD_LAZY);
+        ::dlopen("libasound.so", RTLD_LAZY);
     if (lib == nullptr)
         return;
 
-    _snd_device_name_hint = reinterpret_cast<decltype(_snd_device_name_hint)>(dlsym(lib, "snd_device_name_hint"));
-    _snd_device_name_get_hint = reinterpret_cast<decltype(_snd_device_name_get_hint)>(dlsym(lib, "snd_device_name_get_hint"));
-    _snd_device_name_free_hint = reinterpret_cast<decltype(_snd_device_name_free_hint)>(dlsym(lib, "snd_device_name_free_hint"));
+    _snd_device_name_hint = reinterpret_cast<decltype(_snd_device_name_hint)>(::dlsym(lib, "snd_device_name_hint"));
+    _snd_device_name_get_hint = reinterpret_cast<decltype(_snd_device_name_get_hint)>(::dlsym(lib, "snd_device_name_get_hint"));
+    _snd_device_name_free_hint = reinterpret_cast<decltype(_snd_device_name_free_hint)>(::dlsym(lib, "snd_device_name_free_hint"));
 
-    if (!_snd_device_name_hint || !_snd_device_name_get_hint || !_snd_device_name_free_hint)
+    if (_snd_device_name_hint == nullptr || _snd_device_name_get_hint == nullptr || _snd_device_name_free_hint == nullptr)
     {
-        dlclose(lib);
+        ::dlclose(lib);
         return;
     }
 
@@ -161,29 +162,29 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
     int err = _snd_device_name_hint(-1, "pcm", reinterpret_cast<void***>(&hints));
     if (err != 0)
     {
-        dlclose(lib);
+        ::dlclose(lib);
         return;
     }
 
     char** n = hints;
-    while (*n)
+    while (*n != nullptr)
     {
         char* name = _snd_device_name_get_hint(*n, "NAME");
-        if (strncmp(name, "surround", 8) == 0 || strcmp(name, "null") == 0)
+        if (strncmp(name, "surround", 8) == 0 || std::strcmp(name, "null") == 0)
         {
             std::free(name);
-            n++;
+            ++n;
             continue;
         }
         char* desc = _snd_device_name_get_hint(*n, "DESC");
         char* ioid = _snd_device_name_get_hint(*n, "IOID");
-        if (!ioid || strcmp(ioid, "Input") == 0)
+        if (ioid == nullptr || std::strcmp(ioid, "Input") == 0)
         {
-            char* l1 = strtok(desc, "\n");
-            char* l2 = strtok(nullptr, "\n");
-            char* tmp = strtok(l1, ",");
+            char* l1 = std::strtok(desc, "\n");
+            char* l2 = std::strtok(nullptr, "\n");
+            char* tmp = std::strtok(l1, ",");
             char* actualName = tmp;
-            while ((tmp = strtok(nullptr, ",")))
+            while ((tmp = std::strtok(nullptr, ",")))
             {
                 actualName = tmp;
             }
@@ -191,23 +192,23 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs)
                 actualName++;
             AudioInputDevice dev;
             dev.id = std::string(name);
-            if (l2)
+            if (l2 != nullptr)
             {
                 char buf[256];
-                snprintf(buf, sizeof(buf), "%s (%s)", actualName, l2);
+                std::snprintf(buf, sizeof(buf), "%s (%s)", actualName, l2);
                 dev.displayName = std::string(buf);
             }
             else
             {
                 dev.displayName = std::string(actualName);
             }
-            devs.emplace_back(dev);
+            devs.emplace_back(std::move(dev));
         }
         std::free(name);
         std::free(desc);
         std::free(ioid);
-        n++;
+        ++n;
     }
 
-    dlclose(lib);
+    ::dlclose(lib);
 }

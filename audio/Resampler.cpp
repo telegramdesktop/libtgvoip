@@ -3,6 +3,7 @@
 //
 
 #include "Resampler.h"
+
 #include <cmath>
 #include <cstring>
 

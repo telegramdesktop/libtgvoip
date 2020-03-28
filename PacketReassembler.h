@@ -5,13 +5,12 @@
 #ifndef TGVOIP_PACKETREASSEMBLER_H
 #define TGVOIP_PACKETREASSEMBLER_H
 
+#include "logging.h"
+#include "Buffers.h"
+
 #include <functional>
 #include <memory>
-#include <unordered_map>
 #include <vector>
-
-#include "Buffers.h"
-#include "logging.h"
 
 namespace tgvoip
 {

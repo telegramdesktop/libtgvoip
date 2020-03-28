@@ -2,10 +2,11 @@
 // Created by Grishka on 19/03/2019.
 //
 
-#include "VideoPacketSender.h"
-#include "../PrivateDefines.h"
 #include "../logging.h"
+#include "../PrivateDefines.h"
+#include "VideoPacketSender.h"
 #include "VideoFEC.h"
+
 #include <algorithm>
 
 using namespace tgvoip;

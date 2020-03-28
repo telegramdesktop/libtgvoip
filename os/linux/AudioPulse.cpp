@@ -4,9 +4,12 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioPulse.h"
 #include "../../logging.h"
+#include "AudioPulse.h"
+
 #include <dlfcn.h>
+
+#include <cstring>
 
 #define DECLARE_DL_FUNCTION(name) decltype(name)* AudioPulse::_import_##name = nullptr
 #define CHECK_DL_ERROR(res, msg)     \
@@ -24,7 +27,7 @@
     if (res != 0)                                  \
     {                                              \
         LOGE(msg " failed: %s", pa_strerror(res)); \
-        failed = true;                             \
+        m_failed = true;                           \
         return;                                    \
     }
 
@@ -171,25 +174,25 @@ AudioPulse::AudioPulse(std::string inputDevice, std::string outputDevice)
         lres = readlink("/proc/curproc/exe", exePath, sizeof(exePath));
     if (lres > 0)
     {
-        strcpy(exeName, basename(exePath));
+        std::strcpy(exeName, ::basename(exePath));
     }
     else
 #endif
     {
-        snprintf(exeName, sizeof(exeName), "Process %d", getpid());
+        std::snprintf(exeName, sizeof(exeName), "Process %d", ::getpid());
     }
     pa_proplist* proplist = pa_proplist_new();
     pa_proplist_sets(proplist, PA_PROP_MEDIA_ROLE, "phone");
     m_context = pa_context_new_with_proplist(m_mainloopApi, exeName, proplist);
     pa_proplist_free(proplist);
-    if (!m_context)
+    if (m_context == nullptr)
     {
         LOGE("Error initializing PulseAudio (pa_context_new)");
         m_failed = true;
         return;
     }
     pa_context_set_state_callback(
-        m_context, [](pa_context* m_context, void* arg)
+        m_context, [](pa_context* context, void* arg)
         {
             AudioPulse* self = reinterpret_cast<AudioPulse*>(arg);
             pa_threaded_mainloop_signal(self->m_mainloop, 0);
@@ -226,24 +229,22 @@ AudioPulse::AudioPulse(std::string inputDevice, std::string outputDevice)
 
 AudioPulse::~AudioPulse()
 {
-    if (m_mainloop && m_didStart)
+    if (m_mainloop != nullptr && m_didStart)
     {
         if (m_isLocked)
             pa_threaded_mainloop_unlock(m_mainloop);
         pa_threaded_mainloop_stop(m_mainloop);
     }
 
-    if (m_input)
-        delete m_input;
-    if (m_output)
-        delete m_output;
+    delete m_input;
+    delete m_output;
 
-    if (m_context)
+    if (m_context != nullptr)
     {
         pa_context_disconnect(m_context);
         pa_context_unref(m_context);
     }
-    if (m_mainloop)
+    if (m_mainloop != nullptr)
         pa_threaded_mainloop_free(m_mainloop);
 }
 
@@ -274,7 +275,7 @@ bool AudioPulse::DoOneOperation(std::function<pa_operation*(pa_context*)> f)
 
     pa_context_connect(ctx, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
     pa_context_set_state_callback(
-        ctx, [](pa_context* m_context, void* arg)
+        ctx, [](pa_context* context, void* arg)
         {
             pa_context_state_t state;
             int* pa_ready = reinterpret_cast<int*>(arg);

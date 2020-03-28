@@ -4,12 +4,14 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
 #include "CongestionControl.h"
 #include "PrivateDefines.h"
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
-#include "logging.h"
+
 #include <cassert>
+#include <cstring>
 #include <limits>
 
 using namespace tgvoip;

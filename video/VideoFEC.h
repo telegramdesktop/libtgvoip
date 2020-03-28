@@ -6,7 +6,6 @@
 #define LIBTGVOIP_VIDEOFEC_H
 
 #include "../Buffers.h"
-#include <vector>
 
 namespace tgvoip
 {
@@ -16,8 +15,10 @@ namespace video
 
 namespace ParityFEC
 {
-    Buffer Encode(const std::vector<Buffer>& packets);
-    Buffer Decode(const std::vector<Buffer>& dataPackets, const Buffer& fecPacket);
+
+Buffer Encode(const std::vector<Buffer>& packets);
+Buffer Decode(const std::vector<Buffer>& dataPackets, const Buffer& fecPacket);
+
 } // namespace ParityFEC
 
 class CM256FEC

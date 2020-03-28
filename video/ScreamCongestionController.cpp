@@ -2,9 +2,10 @@
 // Created by Grishka on 25/02/2019.
 //
 
-#include "ScreamCongestionController.h"
-#include "../VoIPController.h"
 #include "../logging.h"
+#include "../VoIPController.h"
+#include "ScreamCongestionController.h"
+
 #include <algorithm>
 #include <cmath>
 

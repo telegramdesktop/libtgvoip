@@ -4,8 +4,9 @@
 // you should have received with this source code distribution.
 //
 
-#include "VoIPServerConfig.h"
 #include "logging.h"
+#include "VoIPServerConfig.h"
+
 #include <locale>
 #include <sstream>
 #include <cstdlib>

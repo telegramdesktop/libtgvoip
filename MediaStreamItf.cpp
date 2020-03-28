@@ -4,14 +4,15 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
 #include "PrivateDefines.h"
 #include "MediaStreamItf.h"
 #include "EchoCanceller.h"
-#include "logging.h"
-#include <algorithm>
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <utility>
 
 using namespace tgvoip;
@@ -92,13 +93,13 @@ std::size_t AudioMixer::OutputCallback(std::uint8_t* data, std::size_t length, v
     return 960 * 2;
 }
 
-void AudioMixer::AddInput(std::shared_ptr<MediaStreamItf> input)
+void AudioMixer::AddInput(MediaStreamItfPtr input)
 {
     MutexGuard m(m_inputsMutex);
     m_inputs.emplace(std::move(input), 1);
 }
 
-void AudioMixer::RemoveInput(std::shared_ptr<MediaStreamItf> input)
+void AudioMixer::RemoveInput(const MediaStreamItfPtr& input)
 {
     MutexGuard m(m_inputsMutex);
     auto it = m_inputs.find(input);
@@ -106,7 +107,7 @@ void AudioMixer::RemoveInput(std::shared_ptr<MediaStreamItf> input)
         m_inputs.erase(it);
 }
 
-void AudioMixer::SetInputVolume(std::shared_ptr<MediaStreamItf> input, float volumeDB)
+void AudioMixer::SetInputVolume(const MediaStreamItfPtr& input, float volumeDB)
 {
     MutexGuard m(m_inputsMutex);
     auto it = m_inputs.find(input);
@@ -115,7 +116,7 @@ void AudioMixer::SetInputVolume(std::shared_ptr<MediaStreamItf> input, float vol
         if (volumeDB == -std::numeric_limits<float>::infinity())
             it->second = 0;
         else
-            it->second = expf(volumeDB / 20.0f * logf(10.0f));
+            it->second = std::exp(volumeDB / 20.0f * std::log(10.0f));
     }
 }
 

@@ -9,16 +9,14 @@
 
 #include "threading.h"
 #include "utils.h"
+
 #include <array>
-#include <cassert>
 #include <bitset>
-#include <limits>
-#include <cstddef>
-#include <stdexcept>
+#include <cassert>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <limits>
+#include <stdexcept>
 
 namespace tgvoip
 {
@@ -50,10 +48,11 @@ public:
     BufferInputStream GetPartBuffer(std::size_t m_length, bool advance);
 
 private:
-    void EnsureEnoughRemaining(std::size_t need);
     const std::uint8_t* m_buffer;
     std::size_t m_length;
     std::size_t m_offset;
+
+    void EnsureEnoughRemaining(std::size_t need);
 };
 
 class BufferOutputStream

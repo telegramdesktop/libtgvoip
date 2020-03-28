@@ -4,8 +4,8 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioIO.h"
 #include "../logging.h"
+#include "AudioIO.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -44,7 +44,6 @@
 
 using namespace tgvoip;
 using namespace tgvoip::audio;
-using namespace std;
 
 AudioIO* AudioIO::Create(std::string inputDevice, std::string outputDevice)
 {

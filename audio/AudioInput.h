@@ -8,6 +8,7 @@
 #define LIBTGVOIP_AUDIOINPUT_H
 
 #include "../MediaStreamItf.h"
+
 #include <cstdint>
 #include <string>
 #include <vector>

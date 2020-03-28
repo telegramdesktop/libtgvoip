@@ -7,16 +7,17 @@
 #ifndef LIBTGVOIP_OPUSDECODER_H
 #define LIBTGVOIP_OPUSDECODER_H
 
+#include "threading.h"
+#include "utils.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
 #include "EchoCanceller.h"
 #include "JitterBuffer.h"
 #include "MediaStreamItf.h"
-#include "threading.h"
-#include "utils.h"
+
 #include <atomic>
-#include <memory>
 #include <cstdio>
+#include <memory>
 #include <vector>
 
 struct OpusDecoder;
@@ -31,10 +32,9 @@ public:
     virtual void Start();
     virtual void Stop();
 
-    OpusDecoder(const std::shared_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC);
-    OpusDecoder(const std::unique_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC);
     OpusDecoder(MediaStreamItf* dst, bool isAsync, bool needEC);
     virtual ~OpusDecoder();
+
     std::size_t HandleCallback(std::uint8_t* data, std::size_t len);
     void SetEchoCanceller(EchoCanceller* canceller);
     void SetFrameDuration(std::uint32_t duration);
@@ -45,33 +45,40 @@ public:
     void RemoveAudioEffect(effects::AudioEffect* effect);
 
 private:
-    ::OpusDecoder* m_dec;
-    ::OpusDecoder* m_ecDec;
     BlockingQueue<Buffer>* m_decodedQueue;
     BufferPool<960 * 2, 32> m_bufferPool;
+    std::vector<effects::AudioEffect*> m_postProcEffects;
     std::uint8_t* m_buffer;
-    std::uint8_t* m_lastDecoded;
     std::uint8_t* m_processedBuffer;
-    std::size_t m_outputBufferSize;
-    std::atomic<bool> m_running;
+    std::uint8_t* m_lastDecoded;
+
+    ::OpusDecoder* m_dec;
+    ::OpusDecoder* m_ecDec;
+    EchoCanceller* m_echoCanceller;
+    AudioLevelMeter* m_levelMeter;
+    std::shared_ptr<JitterBuffer> m_jitterBuffer;
+
     Thread* m_thread;
     Semaphore* m_semaphore;
-    std::uint32_t m_frameDuration;
-    EchoCanceller* m_echoCanceller;
-    std::shared_ptr<JitterBuffer> m_jitterBuffer;
-    AudioLevelMeter* m_levelMeter;
-    int m_consecutiveLostPackets;
-    bool m_enableDTX;
+
+    std::size_t m_outputBufferSize;
     std::size_t m_silentPacketCount;
-    std::vector<effects::AudioEffect*> m_postProcEffects;
-    std::atomic<bool> m_async;
+    std::size_t m_nextLen;
+    std::ptrdiff_t m_remainingDataLen;
+
+    std::uint32_t m_frameDuration;
+    unsigned int m_packetsPerFrame;
+    int m_consecutiveLostPackets;
+
+    std::int16_t m_prevLastSample;
     alignas(2) std::uint8_t m_nextBuffer[8192];
     alignas(2) std::uint8_t m_decodeBuffer[8192];
-    std::size_t m_nextLen;
-    unsigned int m_packetsPerFrame;
-    std::ptrdiff_t m_remainingDataLen;
+
+    std::atomic<bool> m_running;
+    std::atomic<bool> m_async;
+    bool m_enableDTX;
     bool m_prevWasEC;
-    std::int16_t m_prevLastSample;
+
 
     void Initialize(bool isAsync, bool needEC);
     void RunThread();

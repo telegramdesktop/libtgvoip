@@ -2,22 +2,24 @@
 // Created by Grishka on 29.03.17.
 //
 
-#include <algorithm>
-#include <stdexcept>
-#include <cstdlib>
-#include <cstring>
+#include "logging.h"
+#include "PrivateDefines.h"
+#include "Buffers.h"
+#include "NetworkSocket.h"
+#include "VoIPController.h"
+#include "VoIPServerConfig.h"
+
 #if defined(_WIN32)
 #include "os/windows/NetworkSocketWinsock.h"
 #include <winsock2.h>
 #else
 #include "os/posix/NetworkSocketPosix.h"
 #endif
-#include "PrivateDefines.h"
-#include "Buffers.h"
-#include "NetworkSocket.h"
-#include "VoIPController.h"
-#include "VoIPServerConfig.h"
-#include "logging.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
 
 #define MIN_UDP_PORT 16384
 #define MAX_UDP_PORT 32768
@@ -29,8 +31,8 @@ NetworkAddress::NetworkAddress() = default;
 NetworkPacket::NetworkPacket(Buffer data, const NetworkAddress& address, std::uint16_t port, NetworkProtocol protocol)
     : data(std::move(data))
     , address(address)
-    , port(port)
     , protocol(protocol)
+    , port(port)
 {
 }
 
@@ -597,7 +599,7 @@ std::uint16_t NetworkSocketSOCKS5Proxy::GetConnectedPort()
 bool NetworkSocketSOCKS5Proxy::OnReadyToSend()
 {
     //LOGV("on ready to send, state=%d", state);
-    if (m_state == ConnectionState::Initial)
+    if (m_state == ConnectionState::INITIAL)
     {
         BufferOutputStream p(16);
         p.WriteUInt8(std::uint8_t{5}); // VER
@@ -617,7 +619,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToSend()
             NetworkAddress::Empty(),
             0,
             NetworkProtocol::TCP});
-        m_state = ConnectionState::WaitingForAuthMethod;
+        m_state = ConnectionState::WAITING_FOR_AUTH_METHOD;
         return false;
     }
     return m_udp ? m_udp->OnReadyToSend() : m_tcp->OnReadyToSend();
@@ -629,13 +631,13 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
     std::uint8_t buf[1024];
     switch (m_state)
     {
-    case ConnectionState::Initial:
+    case ConnectionState::INITIAL:
         LOGE("NetworkSocketSOCKS5Proxy: connection state Initial");
         break;
-    case ConnectionState::Connected:
+    case ConnectionState::CONNECTED:
         LOGE("NetworkSocketSOCKS5Proxy: connection state Connected");
         break;
-    case ConnectionState::WaitingForAuthMethod:
+    case ConnectionState::WAITING_FOR_AUTH_METHOD:
     {
         std::size_t l = m_tcp->Receive(buf, sizeof(buf));
         if (l < 2 || m_tcp->IsFailed())
@@ -673,7 +675,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
                 0,
                 NetworkProtocol::TCP
             });
-            m_state = ConnectionState::WaitingForAuthResult;
+            m_state = ConnectionState::WAITING_FOR_AUTH_RESULT;
         }
         else
         {
@@ -683,7 +685,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
         }
         return false;
     }
-    case ConnectionState::WaitingForAuthResult:
+    case ConnectionState::WAITING_FOR_AUTH_RESULT:
     {
         std::size_t l = m_tcp->Receive(buf, sizeof(buf));
         if (l < 2 || m_tcp->IsFailed())
@@ -711,7 +713,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
         SendConnectionCommand();
         return false;
     }
-    case ConnectionState::WaitingForCommandResult:
+    case ConnectionState::WAITING_FOR_COMMAND_RESULT:
     {
         std::size_t l = m_tcp->Receive(buf, sizeof(buf));
         switch (m_protocol)
@@ -740,7 +742,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
                 return false;
             }
             LOGV("socks5: connect succeeded");
-            m_state = ConnectionState::Connected;
+            m_state = ConnectionState::CONNECTED;
             m_tcp = new NetworkSocketTCPObfuscated(m_tcp);
             m_readyToSend = true;
             return m_tcp->OnReadyToSend();
@@ -805,7 +807,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive()
                     return false;
                 }
                 m_connectedPort = ntohs(in.ReadUInt16());
-                m_state = ConnectionState::Connected;
+                m_state = ConnectionState::CONNECTED;
                 m_readyToSend = true;
                 LOGV("socks5: udp associate successful, given endpoint %s:%d", m_connectedAddress.ToString().c_str(), m_connectedPort);
             }
@@ -860,10 +862,10 @@ void NetworkSocketSOCKS5Proxy::SendConnectionCommand()
         0,
         NetworkProtocol::TCP
     });
-    m_state = ConnectionState::WaitingForCommandResult;
+    m_state = ConnectionState::WAITING_FOR_COMMAND_RESULT;
 }
 
 bool NetworkSocketSOCKS5Proxy::NeedSelectForSending()
 {
-    return m_state == ConnectionState::Initial || m_state == ConnectionState::Connected;
+    return m_state == ConnectionState::INITIAL || m_state == ConnectionState::CONNECTED;
 }

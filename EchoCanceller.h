@@ -7,11 +7,13 @@
 #ifndef LIBTGVOIP_ECHOCANCELLER_H
 #define LIBTGVOIP_ECHOCANCELLER_H
 
+#include "threading.h"
+#include "utils.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
 #include "MediaStreamItf.h"
-#include "threading.h"
-#include "utils.h"
+
+#include <cstdint>
 
 namespace webrtc
 {
@@ -39,22 +41,23 @@ public:
     void SetVoiceDetectionEnabled(bool enabled);
 
 private:
+#ifndef TGVOIP_NO_DSP
+    BufferPool<960 * 2, 10> m_farendBufferPool;
+    BlockingQueue<Buffer>* m_farendQueue;
+    Thread* m_bufferFarendThread;
+    webrtc::AudioProcessing* m_apm = nullptr;
+    webrtc::AudioFrame* m_audioFrame = nullptr;
+    bool m_didBufferFarend;
+    bool m_running;
+
+    void RunBufferFarendThread();
+#endif
+
     bool m_enableAEC;
     bool m_enableAGC;
     bool m_enableNS;
     bool m_enableVAD = false;
     bool m_isOn;
-#ifndef TGVOIP_NO_DSP
-    webrtc::AudioProcessing* m_apm = nullptr;
-    webrtc::AudioFrame* m_audioFrame = nullptr;
-    bool m_didBufferFarend;
-    Thread* m_bufferFarendThread;
-    BlockingQueue<Buffer>* m_farendQueue;
-    BufferPool<960 * 2, 10> m_farendBufferPool;
-    bool m_running;
-
-    void RunBufferFarendThread();
-#endif
 };
 
 namespace effects

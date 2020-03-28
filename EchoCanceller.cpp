@@ -4,16 +4,17 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
+#include "EchoCanceller.h"
+#include "VoIPServerConfig.h"
+#include "audio/AudioInput.h"
+#include "audio/AudioOutput.h"
+
 #ifndef TGVOIP_NO_DSP
 #include "webrtc_dsp/api/audio/audio_frame.h"
 #include "webrtc_dsp/modules/audio_processing/include/audio_processing.h"
 #endif
 
-#include "EchoCanceller.h"
-#include "VoIPServerConfig.h"
-#include "audio/AudioInput.h"
-#include "audio/AudioOutput.h"
-#include "logging.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>

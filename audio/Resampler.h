@@ -6,7 +6,7 @@
 #define LIBTGVOIP_RESAMPLER_H
 
 #include <cstdint>
-#include <cstdlib>
+#include <cstddef>
 
 namespace tgvoip
 {

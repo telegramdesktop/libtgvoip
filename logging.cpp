@@ -4,10 +4,6 @@
 // you should have received with this source code distribution.
 //
 
-#include <cstdarg>
-#include <cstdio>
-#include <ctime>
-
 #include "VoIPController.h"
 
 #ifdef __ANDROID__
@@ -20,6 +16,10 @@
 #include "os/darwin/DarwinSpecific.h"
 #include <TargetConditionals.h>
 #endif
+
+#include <cstdarg>
+#include <cstdio>
+#include <ctime>
 
 FILE* tgvoipLogFile = nullptr;
 
@@ -66,7 +66,7 @@ void tgvoip_log_file_write_header(FILE* file)
         snprintf(systemVersion, sizeof(systemVersion), "Android %s (%s %s)", sysRel, deviceVendor, deviceModel);
 #else
         struct utsname sysname;
-        uname(&sysname);
+        ::uname(&sysname);
         std::string sysver(sysname.sysname);
         sysver += " ";
         sysver += sysname.release;

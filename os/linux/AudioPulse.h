@@ -21,6 +21,7 @@ namespace tgvoip
 
 namespace audio
 {
+
 class AudioPulse : public AudioIO
 {
 public:

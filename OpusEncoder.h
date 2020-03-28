@@ -7,15 +7,16 @@
 #ifndef LIBTGVOIP_OPUSENCODER_H
 #define LIBTGVOIP_OPUSENCODER_H
 
+#include "threading.h"
+#include "utils.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
 #include "EchoCanceller.h"
 #include "MediaStreamItf.h"
-#include "threading.h"
-#include "utils.h"
 
 #include <atomic>
 #include <cstdint>
+#include <vector>
 
 struct OpusEncoder;
 
@@ -49,30 +50,35 @@ public:
     int GetComplexity() const;
 
 private:
+    std::vector<effects::AudioEffect*> m_postProcEffects;
+    BlockingQueue<Buffer> m_queue;
+    BufferPool<960 * 2, 10> m_bufferPool;
+
     MediaStreamItf* m_source;
     ::OpusEncoder* m_enc;
     ::OpusEncoder* m_secondaryEncoder;
-    unsigned char m_buffer[4096];
+    EchoCanceller* m_echoCanceller;
+    AudioLevelMeter* m_levelMeter;
+    Thread* m_thread;
+
+    CallbackType m_callback;
+
     std::atomic<std::uint32_t> m_requestedBitrate;
     std::uint32_t m_currentBitrate;
-    Thread* m_thread;
-    BlockingQueue<Buffer> m_queue;
-    BufferPool<960 * 2, 10> m_bufferPool;
-    EchoCanceller* m_echoCanceller;
-    std::atomic<int> m_complexity;
-    std::atomic<bool> m_running;
     std::uint32_t m_frameDuration;
-    int m_packetLossPercent;
-    AudioLevelMeter* m_levelMeter;
-    std::atomic<bool> m_secondaryEncoderEnabled;
-    bool m_vadMode = false;
     std::uint32_t m_vadNoVoiceBitrate;
-    std::vector<effects::AudioEffect*> m_postProcEffects;
+    std::atomic<int> m_complexity;
+    int m_packetLossPercent;
     int m_secondaryEnabledBandwidth;
     int m_vadModeVoiceBandwidth;
     int m_vadModeNoVoiceBandwidth;
+
+    unsigned char m_buffer[4096];
+
+    std::atomic<bool> m_running;
+    std::atomic<bool> m_secondaryEncoderEnabled;
     bool m_wasSecondaryEncoderEnabled = false;
-    CallbackType m_callback;
+    bool m_vadMode = false;
 
     static std::size_t Callback(std::uint8_t* data, std::size_t len, void* param);
     void RunThread();

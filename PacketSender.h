@@ -6,8 +6,9 @@
 #define LIBTGVOIP_PACKETSENDER_H
 
 #include "VoIPController.h"
-#include <functional>
+
 #include <cstdint>
+#include <functional>
 
 namespace tgvoip
 {

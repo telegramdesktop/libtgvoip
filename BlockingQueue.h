@@ -9,9 +9,10 @@
 
 #include "threading.h"
 #include "utils.h"
-#include <queue>
+
 #include <cstdlib>
 #include <functional>
+#include <queue>
 
 namespace tgvoip
 {
@@ -87,8 +88,6 @@ public:
 private:
     T GetInternal()
     {
-        //if(queue.size()==0)
-        //	return NULL;
         T r = std::move(m_queue.front());
         m_queue.pop();
         return r;
@@ -96,7 +95,6 @@ private:
 
     std::queue<T> m_queue;
     std::size_t m_capacity;
-    //tgvoip_lock_t lock;
     mutable Semaphore m_semaphore;
     mutable Mutex m_mutex;
     std::function<void(T)> m_overflowCallback;

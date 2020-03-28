@@ -9,10 +9,13 @@
 
 #include "../../Buffers.h"
 #include "../../NetworkSocket.h"
-#include <mutex>
+
 #include <pthread.h>
 #include <sys/select.h>
-#include <vector>
+
+#include <cstdint>
+#include <mutex>
+#include <string>
 
 namespace tgvoip
 {
@@ -27,8 +30,8 @@ public:
     virtual void CancelSelect();
 
 private:
-    int pipeRead;
-    int pipeWrite;
+    int m_pipeRead;
+    int m_pipeWrite;
 };
 
 class NetworkSocketPosix : public NetworkSocket
@@ -63,17 +66,21 @@ protected:
     virtual void SetMaxPriority() override;
 
 private:
-    std::atomic<int> m_fd;
-    std::mutex m_mutexFd;
-    bool m_needUpdateNat64Prefix;
-    bool m_nat64Present;
+    Buffer m_recvBuffer = Buffer(2048);
+    NetworkPacket m_pendingOutgoingPacket = NetworkPacket::Empty();
+    NetworkAddress m_tcpConnectedAddress = NetworkAddress::Empty();
+
     double m_switchToV6at;
+    std::mutex m_mutexFd;
+
+    std::atomic<int> m_fd;
+
+    std::uint16_t m_tcpConnectedPort;
+
     std::atomic<bool> m_isV4Available;
     std::atomic<bool> m_closing;
-    NetworkAddress m_tcpConnectedAddress = NetworkAddress::Empty();
-    std::uint16_t m_tcpConnectedPort;
-    NetworkPacket m_pendingOutgoingPacket = NetworkPacket::Empty();
-    Buffer m_recvBuffer = Buffer(2048);
+    bool m_needUpdateNat64Prefix;
+    bool m_nat64Present;
 
     static int GetDescriptorFromSocket(NetworkSocket* socket);
 };

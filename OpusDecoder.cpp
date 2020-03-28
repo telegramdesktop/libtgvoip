@@ -4,12 +4,14 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
 #include "OpusDecoder.h"
 #include "audio/Resampler.h"
-#include "logging.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
@@ -21,18 +23,6 @@
 #define PACKET_SIZE (960 * 2)
 
 using namespace tgvoip;
-
-tgvoip::OpusDecoder::OpusDecoder(const std::shared_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC)
-{
-    dst->SetCallback(OpusDecoder::Callback, this);
-    Initialize(isAsync, needEC);
-}
-
-tgvoip::OpusDecoder::OpusDecoder(const std::unique_ptr<MediaStreamItf>& dst, bool isAsync, bool needEC)
-{
-    dst->SetCallback(OpusDecoder::Callback, this);
-    Initialize(isAsync, needEC);
-}
 
 tgvoip::OpusDecoder::OpusDecoder(MediaStreamItf* dst, bool isAsync, bool needEC)
 {
@@ -125,7 +115,7 @@ std::size_t tgvoip::OpusDecoder::HandleCallback(std::uint8_t* data, std::size_t 
             m_semaphore->Release();
             if (m_silentPacketCount > 0)
             {
-                m_silentPacketCount--;
+                --m_silentPacketCount;
                 if (m_levelMeter)
                     m_levelMeter->Update(reinterpret_cast<std::int16_t*>(data), 0);
                 return 0;
@@ -148,7 +138,7 @@ std::size_t tgvoip::OpusDecoder::HandleCallback(std::uint8_t* data, std::size_t 
             int duration = DecodeNextFrame();
             m_remainingDataLen = static_cast<std::size_t>(duration) / 20 * 960 * 2;
         }
-        if (m_silentPacketCount > 0 || m_remainingDataLen == 0 || !m_processedBuffer)
+        if (m_silentPacketCount > 0 || m_remainingDataLen == 0 || m_processedBuffer == nullptr)
         {
             if (m_silentPacketCount > 0)
                 m_silentPacketCount--;
@@ -164,7 +154,7 @@ std::size_t tgvoip::OpusDecoder::HandleCallback(std::uint8_t* data, std::size_t 
             std::memmove(m_processedBuffer, m_processedBuffer + 960 * 2, static_cast<std::size_t>(m_remainingDataLen));
         }
     }
-    if (m_levelMeter)
+    if (m_levelMeter != nullptr)
         m_levelMeter->Update(reinterpret_cast<std::int16_t*>(data), len / 2);
     return len;
 }
@@ -333,7 +323,7 @@ void tgvoip::OpusDecoder::AddAudioEffect(effects::AudioEffect* effect)
 
 void tgvoip::OpusDecoder::RemoveAudioEffect(effects::AudioEffect* effect)
 {
-    std::vector<effects::AudioEffect*>::iterator it = std::find(m_postProcEffects.begin(), m_postProcEffects.end(), effect);
+    auto it = std::find(m_postProcEffects.begin(), m_postProcEffects.end(), effect);
     if (it != m_postProcEffects.end())
         m_postProcEffects.erase(it);
 }

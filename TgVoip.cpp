@@ -1,10 +1,9 @@
-#include <mutex>
-#include <cstdarg>
-
 #include "TgVoip.h"
-
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
+
+#include <mutex>
+#include <cstdarg>
 
 #ifndef TGVOIP_USE_CUSTOM_CRYPTO
 extern "C"
@@ -188,9 +187,9 @@ TgVoipImpl::TgVoipImpl(
         case TgVoipEndpointType::TcpRelay:
             mappedType = tgvoip::Endpoint::Type::TCP_RELAY;
             break;
-        default:
-            mappedType = tgvoip::Endpoint::Type::UDP_RELAY;
-            break;
+//        default:
+//            mappedType = tgvoip::Endpoint::Type::UDP_RELAY;
+//            break;
         }
 
         tgvoip::IPv4Address address(endpoint.host.ipv4);
@@ -208,7 +207,7 @@ TgVoipImpl::TgVoipImpl(
     case TgVoipDataSaving::Always:
         mappedDataSaving = tgvoip::DataSaving::ALWAYS;
         break;
-    default:
+    case TgVoipDataSaving::Never:
         mappedDataSaving = tgvoip::DataSaving::NEVER;
         break;
     }
@@ -293,9 +292,9 @@ void TgVoipImpl::setNetworkType(TgVoipNetworkType networkType)
     case TgVoipNetworkType::Dialup:
         mappedType = tgvoip::NetType::DIALUP;
         break;
-    default:
-        mappedType = tgvoip::NetType::UNKNOWN;
-        break;
+//    default:
+//        mappedType = tgvoip::NetType::UNKNOWN;
+//        break;
     }
 
     m_controller->SetNetworkType(mappedType);
@@ -318,7 +317,8 @@ void TgVoipImpl::setEchoCancellationStrength(int strength)
 
 std::string TgVoipImpl::getLastError()
 {
-    switch (m_controller->GetLastError())
+    tgvoip::Error error = m_controller->GetLastError();
+    switch (error)
     {
     case tgvoip::Error::INCOMPATIBLE:
         return "Error::INCOMPATIBLE";
@@ -328,9 +328,10 @@ std::string TgVoipImpl::getLastError()
         return "Error::AUDIO_IO";
     case tgvoip::Error::PROXY:
         return "Error::PROXY";
-    default:
+    case tgvoip::Error::UNKNOWN:
         return "Error::UNKNOWN";
     }
+    throw std::runtime_error("Error " + std::to_string(static_cast<int>(error)) + " is not one of enum values!");
 }
 
 std::string TgVoipImpl::getDebugInfo()
@@ -404,9 +405,9 @@ void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgv
         case tgvoip::State::RECONNECTING:
             mappedState = TgVoipState::Reconnecting;
             break;
-        default:
-            mappedState = TgVoipState::Estabilished;
-            break;
+//        default:
+//            mappedState = TgVoipState::Estabilished;
+//            break;
         }
 
         self->m_onStateUpdated(mappedState);
@@ -423,10 +424,6 @@ void TgVoipImpl::signalBarsCallback(tgvoip::VoIPController* controller, int sign
         self->m_onSignalBarsUpdated(signalBars);
     }
 }
-
-
-
-
 
 static std::function<void(std::string const&)> globalLoggingFunction;
 

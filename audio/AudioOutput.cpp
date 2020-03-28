@@ -4,8 +4,9 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioOutput.h"
 #include "../logging.h"
+#include "AudioOutput.h"
+
 #include <cstdlib>
 
 #ifdef HAVE_CONFIG_H

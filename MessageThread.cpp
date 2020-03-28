@@ -2,8 +2,11 @@
 // Created by Grishka on 17.06.2018.
 //
 
+#include "logging.h"
+#include "MessageThread.h"
+#include "VoIPController.h"
+
 #include <cassert>
-#include <cfloat>
 #include <cmath>
 #include <cstdint>
 #include <ctime>
@@ -11,10 +14,6 @@
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
-
-#include "MessageThread.h"
-#include "VoIPController.h"
-#include "logging.h"
 
 using namespace tgvoip;
 

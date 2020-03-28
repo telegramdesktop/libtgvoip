@@ -5,9 +5,10 @@
 #ifndef LIBTGVOIP_VIDEOPACKETSENDER_H
 #define LIBTGVOIP_VIDEOPACKETSENDER_H
 
+#include "../threading.h"
 #include "../Buffers.h"
 #include "../PacketSender.h"
-#include "../threading.h"
+
 #include <memory>
 #include <cstdint>
 #include <vector>
@@ -33,36 +34,41 @@ public:
 private:
     struct SentVideoFrame
     {
+        std::vector<std::uint32_t> unacknowledgedPackets;
         std::uint32_t seq;
         std::uint32_t fragmentCount;
-        std::vector<std::uint32_t> unacknowledgedPackets;
         std::uint32_t fragmentsInQueue;
     };
+
     struct QueuedPacket
     {
         VoIPController::PendingOutgoingPacket packet;
         std::uint32_t seq;
     };
 
-    void SendFrame(const Buffer& frame, std::uint32_t flags, std::uint32_t rotation);
-    InitVideoRes GetVideoResolutionForCurrentBitrate();
-
-    VideoSource* m_source = nullptr;
-    std::shared_ptr<VoIPController::Stream> m_stm;
     video::ScreamCongestionController m_videoCongestionControl;
-    double m_firstVideoFrameTime = 0.0;
-    std::uint32_t m_videoFrameCount = 0;
     std::vector<SentVideoFrame> m_sentVideoFrames;
-    bool m_videoKeyframeRequested = false;
-    std::uint32_t m_sendVideoPacketID = MessageThread::INVALID_ID;
-    std::uint32_t m_videoPacketLossCount = 0;
-    std::uint32_t m_currentVideoBitrate = 0;
+    std::vector<Buffer> m_packetsForFEC;
+
+    std::shared_ptr<VoIPController::Stream> m_stm;
+    VideoSource* m_source = nullptr;
+
+    std::size_t m_fecFrameCount = 0;
+
+    double m_firstVideoFrameTime = 0.0;
     double m_lastVideoResolutionChangeTime = 0.0;
     double m_sourceChangeTime = 0.0;
 
-    std::vector<Buffer> m_packetsForFEC;
-    std::size_t m_fecFrameCount = 0;
+    std::uint32_t m_videoFrameCount = 0;
+    std::uint32_t m_sendVideoPacketID = MessageThread::INVALID_ID;
+    std::uint32_t m_videoPacketLossCount = 0;
+    std::uint32_t m_currentVideoBitrate = 0;
     std::uint32_t m_frameSeq = 0;
+
+    bool m_videoKeyframeRequested = false;
+
+    void SendFrame(const Buffer& frame, std::uint32_t flags, std::uint32_t rotation);
+    InitVideoRes GetVideoResolutionForCurrentBitrate();
 };
 
 } // namespace video

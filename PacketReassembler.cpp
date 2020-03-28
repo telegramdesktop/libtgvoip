@@ -2,9 +2,9 @@
 // Created by Grishka on 19.03.2018.
 //
 
+#include "logging.h"
 #include "PacketReassembler.h"
 #include "PrivateDefines.h"
-#include "logging.h"
 #include "video/VideoFEC.h"
 
 #include <cassert>
@@ -47,12 +47,7 @@ void PacketReassembler::AddFragment(Buffer pkt, unsigned int fragmentIndex, unsi
     std::uint32_t fseq = (m_lastFrameSeq & 0xFFFFFF00) | static_cast<std::uint32_t>(_fseq);
     if (static_cast<std::uint8_t>(m_lastFrameSeq) > _fseq)
         fseq += 256;
-    //LOGV("fseq: %u", (unsigned int)fseq);
 
-    /*if(pts<maxTimestamp){
-		LOGW("Received fragment doesn't belong here (ts=%u < maxTs=%u)", pts, maxTimestamp);
-		return;
-	}*/
     if (m_lastFrameSeq > 3 && fseq < m_lastFrameSeq - 3)
     {
         LOGW("Packet too late (fseq=%u, lastFseq=%u)", fseq, m_lastFrameSeq);
@@ -239,26 +234,21 @@ PacketReassembler::Packet::Packet(std::uint32_t seq, std::uint32_t timestamp, st
 
 void PacketReassembler::Packet::AddFragment(Buffer pkt, std::uint32_t fragmentIndex)
 {
-    //LOGV("Add fragment %u/%u to packet %u", fragmentIndex, partCount, timestamp);
     if (parts.size() == fragmentIndex)
     {
         parts.emplace_back(std::move(pkt));
-        //LOGV("add1");
     }
     else if (parts.size() > fragmentIndex)
     {
         assert(parts[fragmentIndex].IsEmpty());
         parts[fragmentIndex] = std::move(pkt);
-        //LOGV("add2");
     }
     else
     {
         parts.resize(fragmentIndex + 1);
         parts[fragmentIndex] = std::move(pkt);
-        //LOGV("add3");
     }
     ++receivedPartCount;
-    //assert(parts.size()>=receivedPartCount);
     if (parts.size() < receivedPartCount)
         LOGW("Received %u parts but parts.size is %u", static_cast<unsigned>(receivedPartCount), static_cast<unsigned>(parts.size()));
 }
@@ -275,7 +265,6 @@ Buffer PacketReassembler::Packet::Reassemble()
     for (unsigned int i = 0; i < partCount; ++i)
     {
         out.WriteBytes(parts[i]);
-        //parts[i]=Buffer();
     }
     return Buffer(std::move(out));
 }

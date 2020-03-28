@@ -6,9 +6,10 @@
 #define LIBTGVOIP_VIDEOSOURCE_H
 
 #include "../Buffers.h"
+
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -45,13 +46,16 @@ public:
     void SetRotation(unsigned int rotation);
 
 protected:
+    std::vector<Buffer> m_csd;
+    std::string m_error;
+
     CallbackType m_callback;
     std::function<void(bool)> m_streamStateCallback;
-    std::string m_error;
-    std::vector<Buffer> m_csd;
+
     unsigned int m_width = 0;
     unsigned int m_height = 0;
     unsigned int m_rotation = 0;
+
     bool m_failed = false;
 };
 

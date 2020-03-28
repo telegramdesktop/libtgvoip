@@ -4,11 +4,11 @@
 // you should have received with this source code distribution.
 //
 
-#include "AudioIOCallback.h"
-#include "../VoIPController.h"
 #include "../logging.h"
+#include "../VoIPController.h"
+#include "AudioIOCallback.h"
 
-#include <sstream>
+#include <cstring>
 
 using namespace tgvoip;
 using namespace tgvoip::audio;

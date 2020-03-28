@@ -7,8 +7,9 @@
 #ifndef LIBTGVOIP_CONGESTIONCONTROL_H
 #define LIBTGVOIP_CONGESTIONCONTROL_H
 
-#include "Buffers.h"
 #include "threading.h"
+#include "Buffers.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include <array>
@@ -53,16 +54,20 @@ private:
     HistoricBuffer<double, 100> m_rttHistory;
     HistoricBuffer<std::size_t, 30> m_inflightHistory;
     std::array<tgvoip_congestionctl_packet_t, 100> m_inflightPackets;
+
     double m_tmpRtt = 0;
-    int m_tmpRttCount = 0;
-    std::uint32_t m_lossCount = 0;
-    mutable double m_lastActionTime = 0;
     double m_lastActionRtt = 0;
     double m_stateTransitionTime = 0;
-    std::uint32_t m_lastSentSeq = 0;
-    std::uint32_t m_tickCount = 0;
+    mutable double m_lastActionTime = 0;
+
     std::size_t m_inflightDataSize = 0;
     std::size_t m_cwnd;
+
+    int m_tmpRttCount = 0;
+    std::uint32_t m_lossCount = 0;
+    std::uint32_t m_lastSentSeq = 0;
+    std::uint32_t m_tickCount = 0;
+
 };
 
 } // namespace tgvoip

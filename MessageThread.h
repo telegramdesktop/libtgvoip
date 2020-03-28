@@ -7,6 +7,7 @@
 
 #include "threading.h"
 #include "utils.h"
+
 #include <atomic>
 #include <functional>
 #include <mutex>
@@ -42,20 +43,21 @@ private:
         bool operator<(const Message& other) const;
     };
 
-    std::atomic<bool> m_running;
     std::set<Message> m_queue;
     mutable Mutex m_queueMutex;
     mutable Mutex m_queueAccessMutex;
-
-    std::uint32_t m_lastMessageID = 1;
-    mutable std::mutex m_mutexLastMessageID;
-    bool m_cancelCurrent = false;
 
 #ifdef _WIN32
     HANDLE event;
 #else
     pthread_cond_t cond;
 #endif
+
+    mutable std::mutex m_mutexLastMessageID;
+    std::uint32_t m_lastMessageID = 1;
+
+    std::atomic<bool> m_running;
+    bool m_cancelCurrent = false;
 
     void Run();
     void InsertMessageInternal(const Message& message);

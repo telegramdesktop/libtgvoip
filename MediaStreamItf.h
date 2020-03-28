@@ -7,15 +7,15 @@
 #ifndef LIBTGVOIP_MEDIASTREAMINPUT_H
 #define LIBTGVOIP_MEDIASTREAMINPUT_H
 
+#include "threading.h"
 #include "BlockingQueue.h"
 #include "Buffers.h"
-#include "threading.h"
+
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
-#include <cstdint>
-#include <cstring>
 #include <unordered_map>
-#include <functional>
 
 namespace tgvoip
 {
@@ -31,54 +31,42 @@ public:
     virtual void Stop() = 0;
     void SetCallback(CallbackType callback, void* param);
 
-    //protected:
     std::size_t InvokeCallback(std::uint8_t* data, std::size_t length) const;
 
     virtual ~MediaStreamItf() = default;
 
 private:
-    CallbackType m_callback = nullptr;
     mutable std::mutex m_mutexCallback;
+    CallbackType m_callback = nullptr;
     void* m_callbackParam = nullptr;
 };
 
 class AudioMixer : public MediaStreamItf
 {
 public:
+    using MediaStreamItfPtr = std::shared_ptr<MediaStreamItf>;
+
     AudioMixer();
     ~AudioMixer() override;
     void SetOutput(MediaStreamItf* output);
     void Start() override;
     void Stop() override;
-    void AddInput(std::shared_ptr<MediaStreamItf> input);
-    void RemoveInput(std::shared_ptr<MediaStreamItf> input);
-    void SetInputVolume(std::shared_ptr<MediaStreamItf> input, float volumeDB);
+    void AddInput(MediaStreamItfPtr input);
+    void RemoveInput(const MediaStreamItfPtr& input);
+    void SetInputVolume(const MediaStreamItfPtr& input, float volumeDB);
     void SetEchoCanceller(EchoCanceller* aec);
 
 private:
-//    struct MixerInput
-//    {
-//        std::shared_ptr<MediaStreamItf> source;
-//        float multiplier;
-
-//        struct Hash
-//        {
-//            std::size_t operator()(const MixerInput& value) const noexcept
-//            {
-//                std::size_t h1 = std::hash<std::shared_ptr<MediaStreamItf>>{}(value.source);
-//                std::size_t h2 = std::hash<float>{}(value.multiplier);
-//                return h1 ^ (h2 << 1);
-//            }
-//        };
-//    };
-
-    mutable Mutex m_inputsMutex;
-    std::unordered_map<std::shared_ptr<MediaStreamItf>, float> m_inputs;
-    Thread* m_thread = nullptr;
     BufferPool<960 * 2, 16> m_bufferPool;
     BlockingQueue<Buffer> m_processedQueue;
+    std::unordered_map<MediaStreamItfPtr, float> m_inputs;
+
+    mutable Mutex m_inputsMutex;
     Semaphore m_semaphore;
+
+    Thread* m_thread = nullptr;
     EchoCanceller* m_echoCanceller = nullptr;
+
     bool m_running;
 
     void RunThread();
@@ -105,8 +93,8 @@ public:
 private:
     std::int16_t m_absMax;
     std::int16_t m_count;
-    std::int8_t m_currentLevel;
     std::int16_t m_currentLevelFullRange;
+    std::int8_t m_currentLevel;
 };
 
 } // namespace tgvoip

@@ -4,13 +4,13 @@
 // you should have received with this source code distribution.
 //
 
-#include "Buffers.h"
 #include "logging.h"
+#include "Buffers.h"
+
 #include <cassert>
-#include <exception>
-#include <stdexcept>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 
 using namespace tgvoip;
 

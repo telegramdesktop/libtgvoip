@@ -4,10 +4,9 @@
 // you should have received with this source code distribution.
 //
 
-#ifndef _WIN32
-#include <sys/time.h>
-#include <unistd.h>
-#endif
+#include "json11.hpp"
+#include "logging.h"
+#include "threading.h"
 #include "Buffers.h"
 #include "OpusDecoder.h"
 #include "OpusEncoder.h"
@@ -15,27 +14,30 @@
 #include "PrivateDefines.h"
 #include "VoIPController.h"
 #include "VoIPServerConfig.h"
-#include "json11.hpp"
-#include "logging.h"
-#include "threading.h"
 #include "video/VideoPacketSender.h"
-#include <algorithm>
-#include <cassert>
-#include <cerrno>
-#include <exception>
-#include <cfloat>
-#include <cinttypes>
-#include <cmath>
-#include <sstream>
-#include <stdexcept>
-#include <cstring>
-#include <ctime>
-#include <cwchar>
+
+#ifndef _WIN32
+#include <sys/time.h>
+#include <unistd.h>
+#endif
+
 #if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else
 #include "opus.h"
 #endif
+
+#include <algorithm>
+#include <cassert>
+#include <cerrno>
+#include <cinttypes>
+#include <cmath>
+#include <cstring>
+#include <ctime>
+#include <cwchar>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
 
 inline int pad4(int x)
 {
@@ -46,7 +48,6 @@ inline int pad4(int x)
 }
 
 using namespace tgvoip;
-// using namespace std; // Already used in BlockingQueue.h.
 
 #ifdef __APPLE__
 #include "os/darwin/AudioUnitIO.h"
@@ -560,25 +561,25 @@ std::string VoIPController::GetDebugString()
         case Endpoint::Type::TCP_RELAY:
             type = "TCP_RELAY";
             break;
-        default:
-            type = "UNKNOWN";
-            break;
+//        default:
+//            type = "UNKNOWN";
+//            break;
         }
-        snprintf(buffer,
-                 sizeof(buffer),
-                 "%s:%u %dms %d 0x%" PRIx64 " [%s%s]\n",
-                 endpoint.address.IsEmpty() ? ("[" + endpoint.v6address.ToString() + "]").c_str() : endpoint.address.ToString().c_str(),
-                 endpoint.port,
-                 static_cast<int>(endpoint.m_averageRTT * 1000),
-                 endpoint.m_udpPongCount,
-                 static_cast<std::uint64_t>(endpoint.id),
-                 type.c_str(),
-                 m_currentEndpoint == endpoint.id ? ", IN_USE" : "");
+        std::snprintf(buffer,
+                      sizeof(buffer),
+                      "%s:%u %dms %d 0x%" PRIx64 " [%s%s]\n",
+                      endpoint.address.IsEmpty() ? ("[" + endpoint.v6address.ToString() + "]").c_str() : endpoint.address.ToString().c_str(),
+                      endpoint.port,
+                      static_cast<int>(endpoint.m_averageRTT * 1000),
+                      endpoint.m_udpPongCount,
+                      static_cast<std::uint64_t>(endpoint.id),
+                      type.c_str(),
+                      m_currentEndpoint == endpoint.id ? ", IN_USE" : "");
         r += buffer;
     }
     if (m_shittyInternetMode)
     {
-        snprintf(buffer, sizeof(buffer), "ShittyInternetMode: level %d\n", m_extraEcLevel);
+        std::snprintf(buffer, sizeof(buffer), "ShittyInternetMode: level %d\n", m_extraEcLevel);
         r += buffer;
     }
     double avgLate[3];
@@ -590,7 +591,7 @@ std::string VoIPController::GetDebugString()
         jitterBuffer->GetAverageLateCount(avgLate);
     else
         std::memset(avgLate, 0, 3 * sizeof(double));
-    snprintf(
+    std::snprintf(
         buffer,
         sizeof(buffer),
         "Jitter buffer: %d/%.2f | %.1f, %.1f, %.1f\n"
@@ -642,9 +643,9 @@ std::string VoIPController::GetDebugString()
     if (m_config.enableVideoSend)
     {
         std::shared_ptr<Stream> vstm = GetStreamByType(StreamType::VIDEO, true);
-        if (vstm && vstm->enabled && m_videoPacketSender)
+        if (vstm != nullptr && vstm->enabled && m_videoPacketSender)
         {
-            snprintf(buffer, sizeof(buffer), "\nVideo out: %ux%u '%c%c%c%c' %u kbit", vstm->width, vstm->height, PRINT_FOURCC(vstm->codec), m_videoPacketSender->GetBitrate());
+            std::snprintf(buffer, sizeof(buffer), "\nVideo out: %ux%u '%c%c%c%c' %u kbit", vstm->width, vstm->height, PRINT_FOURCC(vstm->codec), m_videoPacketSender->GetBitrate());
             r += buffer;
         }
     }
@@ -653,16 +654,16 @@ std::string VoIPController::GetDebugString()
         r += "\nPeer codecs: ";
         for (std::uint32_t codec : m_peerVideoDecoders)
         {
-            snprintf(buffer, sizeof(buffer), "'%c%c%c%c' ", PRINT_FOURCC(codec));
+            std::snprintf(buffer, sizeof(buffer), "'%c%c%c%c' ", PRINT_FOURCC(codec));
             r += buffer;
         }
     }
     if (m_config.enableVideoReceive)
     {
         std::shared_ptr<Stream> vstm = GetStreamByType(StreamType::VIDEO, false);
-        if (vstm && vstm->enabled)
+        if (vstm != nullptr && vstm->enabled)
         {
-            snprintf(buffer, sizeof(buffer), "\nVideo in: %ux%u '%c%c%c%c'", vstm->width, vstm->height, PRINT_FOURCC(vstm->codec));
+            std::snprintf(buffer, sizeof(buffer), "\nVideo in: %ux%u '%c%c%c%c'", vstm->width, vstm->height, PRINT_FOURCC(vstm->codec));
             r += buffer;
         }
     }
@@ -1059,7 +1060,7 @@ std::vector<std::uint8_t> VoIPController::GetPersistentState()
     if (m_proxyProtocol == Proxy::SOCKS5)
     {
         char pbuf[128];
-        snprintf(pbuf, sizeof(pbuf), "%s:%u", m_proxyAddress.c_str(), m_proxyPort);
+        std::snprintf(pbuf, sizeof(pbuf), "%s:%u", m_proxyAddress.c_str(), m_proxyPort);
         obj.insert({"proxy", Json::object {{"server", std::string(pbuf)}, {"udp", m_proxySupportsUDP}, {"tcp", m_proxySupportsTCP}}});
     }
     std::string _jstr = Json(obj).dump();
@@ -1811,7 +1812,7 @@ void VoIPController::InitUDPProxy()
         m_udpSocket = m_realUdpSocket;
     }
     char sbuf[128];
-    snprintf(sbuf, sizeof(sbuf), "%s:%u", m_proxyAddress.c_str(), m_proxyPort);
+    std::snprintf(sbuf, sizeof(sbuf), "%s:%u", m_proxyAddress.c_str(), m_proxyPort);
     std::string proxyHostPort(sbuf);
     if (proxyHostPort == m_lastTestedProxyServer && !m_proxySupportsUDP)
     {
@@ -3046,8 +3047,8 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
                         case VideoRotation::_270:
                             rotation = 270;
                             break;
-                        default: // unreachable on sane CPUs
-                            std::abort();
+//                        default: // unreachable on sane CPUs
+//                            std::abort();
                         }
                     }
                     pdata.CopyFrom(buffer + in.GetOffset(), 0, sdlen);
@@ -3635,9 +3636,10 @@ std::string VoIPController::NetworkTypeToString(NetType type)
         return "dialup";
     case NetType::OTHER_MOBILE:
         return "other_mobile";
-    default:
+    case NetType::UNKNOWN:
         return "unknown";
     }
+    throw std::invalid_argument("NetType " + std::to_string(static_cast<int>(type)) + " is not one of enum values!");
 }
 
 std::string VoIPController::GetPacketTypeString(PktType type)
@@ -4252,7 +4254,7 @@ void VoIPController::SendRelayPings()
         Endpoint* minPingRelay = _preferredRelay;
         double minPing = _preferredRelay->m_averageRTT * (_preferredRelay->type == Endpoint::Type::TCP_RELAY ? 2 : 1);
         if (minPing == 0.0) // force the switch to an available relay, if any
-            minPing = DBL_MAX;
+            minPing = std::numeric_limits<double>::max();
         for (std::pair<const std::int64_t, Endpoint>& _endpoint : m_endpoints)
         {
             Endpoint& endpoint = _endpoint.second;
@@ -4687,10 +4689,10 @@ void VoIPController::TickJitterBufferAndCongestionControl()
 Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& address,
                    const IPv6Address& v6address, Type type, const std::uint8_t peerTag[16])
     : id(id)
-    , port(port)
     , address(NetworkAddress::IPv4(address.addr))
     , v6address(NetworkAddress::IPv6(v6address.addr))
     , type(type)
+    , port(port)
 {
     std::memcpy(this->peerTag, peerTag, 16);
     if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))
@@ -4700,10 +4702,10 @@ Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& addre
 Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress& address,
                    const NetworkAddress& v6address, Type type, const std::uint8_t peerTag[16])
     : id(id)
-    , port(port)
     , address(address)
     , v6address(v6address)
     , type(type)
+    , port(port)
 {
     std::memcpy(this->peerTag, peerTag, 16);
     if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))

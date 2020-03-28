@@ -4,11 +4,13 @@
 // you should have received with this source code distribution.
 //
 
+#include "logging.h"
 #include "OpusEncoder.h"
 #include "VoIPServerConfig.h"
-#include "logging.h"
+
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
 #include <opus/opus.h>
 #else

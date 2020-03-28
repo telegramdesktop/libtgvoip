@@ -4,12 +4,11 @@
 // you should have received with this source code distribution.
 //
 
-#include "NetworkSocketPosix.h"
+#include "../../logging.h"
 #include "../../Buffers.h"
 #include "../../VoIPController.h"
-#include "../../logging.h"
-#include <cassert>
-#include <cerrno>
+#include "NetworkSocketPosix.h"
+
 #include <fcntl.h>
 #include <net/if.h>
 #include <netdb.h>
@@ -29,17 +28,21 @@ extern jclass jniUtilitiesClass;
 #include <ifaddrs.h>
 #endif
 
+#include <cassert>
+#include <cerrno>
+#include <cstring>
+
 using namespace tgvoip;
 
 NetworkSocketPosix::NetworkSocketPosix(NetworkProtocol protocol)
     : NetworkSocket(protocol)
+    , m_switchToV6at(0.0)
     , m_fd(-1)
-    , m_needUpdateNat64Prefix(true)
-    , m_nat64Present(false)
-    , m_switchToV6at(0)
+    , m_tcpConnectedPort(0)
     , m_isV4Available(false)
     , m_closing(false)
-    , m_tcpConnectedPort(0)
+    , m_needUpdateNat64Prefix(true)
+    , m_nat64Present(false)
 {
     if (protocol == NetworkProtocol::TCP)
         m_timeout = 10.0;
@@ -65,16 +68,16 @@ void NetworkSocketPosix::SetMaxPriority()
     }
 #elif defined(__linux__)
     int prio = 6;
-    int res = setsockopt(m_fd, SOL_SOCKET, SO_PRIORITY, &prio, sizeof(prio));
+    int res = ::setsockopt(m_fd, SOL_SOCKET, SO_PRIORITY, &prio, sizeof(prio));
     if (res < 0)
     {
-        LOGE("error setting priority: %d / %s", errno, strerror(errno));
+        LOGE("error setting priority: %d / %s", errno, std::strerror(errno));
     }
     prio = 46 << 2;
-    res = setsockopt(m_fd, SOL_IP, IP_TOS, &prio, sizeof(prio));
+    res = ::setsockopt(m_fd, SOL_IP, IP_TOS, &prio, sizeof(prio));
     if (res < 0)
     {
-        LOGE("error setting ip tos: %d / %s", errno, strerror(errno));
+        LOGE("error setting ip tos: %d / %s", errno, std::strerror(errno));
     }
 #else
     LOGI("cannot set socket priority");
@@ -101,10 +104,10 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                 LOGV("Updating NAT64 prefix");
                 m_nat64Present = false;
                 addrinfo* addr0;
-                int res = getaddrinfo("ipv4only.arpa", nullptr, nullptr, &addr0);
+                int res = ::getaddrinfo("ipv4only.arpa", nullptr, nullptr, &addr0);
                 if (res != 0)
                 {
-                    LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerror(res));
+                    LOGW("Error updating NAT64 prefix: %d / %s", res, ::gai_strerror(res));
                 }
                 else
                 {
@@ -126,21 +129,21 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
                                 addr171 = translatedAddr->sin6_addr.s6_addr;
                             }
                             char buf[INET6_ADDRSTRLEN];
-                            LOGV("Got translated address: %s", inet_ntop(AF_INET6, &translatedAddr->sin6_addr, buf, sizeof(buf)));
+                            LOGV("Got translated address: %s", ::inet_ntop(AF_INET6, &translatedAddr->sin6_addr, buf, sizeof(buf)));
                         }
                     }
-                    if (addr170 && addr171 && memcmp(addr170, addr171, 12) == 0)
+                    if (addr170 && addr171 && std::memcmp(addr170, addr171, 12) == 0)
                     {
                         m_nat64Present = true;
                         std::memcpy(m_nat64Prefix, addr170, 12);
                         char buf[INET6_ADDRSTRLEN];
-                        LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
+                        LOGV("Found nat64 prefix from %s", ::inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
                     }
                     else
                     {
                         LOGV("Didn't find nat64");
                     }
-                    freeaddrinfo(addr0);
+                    ::freeaddrinfo(addr0);
                 }
                 m_needUpdateNat64Prefix = false;
             }
@@ -181,14 +184,14 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
             }
             else
             {
-                LOGV("Socket %d not ready to send", int(m_fd));
+                LOGV("Socket %d not ready to send", m_fd.load());
                 m_pendingOutgoingPacket = std::move(packet);
                 m_readyToSend = false;
             }
         }
         else
         {
-            LOGE("error sending: %d / %s", errno, strerror(errno));
+            LOGE("error sending: %d / %s", errno, std::strerror(errno));
             if (errno == ENETUNREACH && !m_isV4Available && VoIPController::GetCurrentTime() < m_switchToV6at)
             {
                 m_switchToV6at = VoIPController::GetCurrentTime();
@@ -205,7 +208,7 @@ void NetworkSocketPosix::Send(NetworkPacket packet)
         }
         else
         {
-            LOGV("Socket %d not ready to send", int(m_fd));
+            LOGV("Socket %d not ready to send", m_fd.load());
             m_pendingOutgoingPacket = std::move(packet);
             m_readyToSend = false;
         }
@@ -237,8 +240,8 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
         int addrLen = sizeof(sockaddr_in6);
         sockaddr_in6 srcAddr;
         ssize_t len;
-        len = recvfrom(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0,
-                       reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
+        len = ::recvfrom(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0,
+                         reinterpret_cast<sockaddr*>(&srcAddr), reinterpret_cast<socklen_t*>(&addrLen));
         if (len > 0)
         {
             if (!m_isV4Available && IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr))
@@ -247,7 +250,7 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
                 LOGI("Detected IPv4 connectivity, will not try IPv6");
             }
             NetworkAddress addr = NetworkAddress::Empty();
-            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (m_nat64Present && memcmp(m_nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
+            if (IN6_IS_ADDR_V4MAPPED(&srcAddr.sin6_addr) || (m_nat64Present && std::memcmp(m_nat64Prefix, srcAddr.sin6_addr.s6_addr, 12) == 0))
             {
                 in_addr v4addr = *(reinterpret_cast<in_addr*>(&srcAddr.sin6_addr.s6_addr[12]));
                 addr = NetworkAddress::IPv4(v4addr.s_addr);
@@ -260,20 +263,20 @@ NetworkPacket NetworkSocketPosix::Receive(std::size_t maxLen)
             {
                 Buffer::CopyOf(m_recvBuffer, 0, static_cast<std::size_t>(len)),
                 addr,
-                ntohs(srcAddr.sin6_port),
+                ::ntohs(srcAddr.sin6_port),
                 NetworkProtocol::UDP
             };
         }
-        LOGE("error receiving %d / %s", errno, strerror(errno));
+        LOGE("error receiving %d / %s", errno, std::strerror(errno));
         return NetworkPacket::Empty();
         //LOGV("Received %d bytes from %s:%d at %.5lf", len, inet_ntoa(srcAddr.sin_addr), ntohs(srcAddr.sin_port), GetCurrentTime());
     }
     case NetworkProtocol::TCP:
     {
-        ssize_t res = recv(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0);
+        ssize_t res = ::recv(m_fd, *m_recvBuffer, std::min(m_recvBuffer.Length(), maxLen), 0);
         if (res <= 0)
         {
-            LOGE("Error receiving from TCP socket: %d / %s", errno, strerror(errno));
+            LOGE("Error receiving from TCP socket: %d / %s", errno, std::strerror(errno));
             m_failed = true;
             return NetworkPacket::Empty();
         }
@@ -293,26 +296,26 @@ void NetworkSocketPosix::Open()
 {
     if (m_protocol != NetworkProtocol::UDP)
         return;
-    m_fd = socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    m_fd = ::socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (m_fd < 0)
     {
-        LOGE("error creating socket: %d / %s", errno, strerror(errno));
+        LOGE("error creating socket: %d / %s", errno, std::strerror(errno));
         m_failed = true;
         return;
     }
     int flag = 0;
-    int res = setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, &flag, sizeof(flag));
+    int res = ::setsockopt(m_fd, IPPROTO_IPV6, IPV6_V6ONLY, &flag, sizeof(flag));
     if (res < 0)
     {
-        LOGE("error enabling dual stack socket: %d / %s", errno, strerror(errno));
+        LOGE("error enabling dual stack socket: %d / %s", errno, std::strerror(errno));
         m_failed = true;
         return;
     }
 
     SetMaxPriority();
-    if (fcntl(m_fd, F_SETFL, O_NONBLOCK) == -1)
+    if (::fcntl(m_fd, F_SETFL, O_NONBLOCK) == -1)
     {
-        LOGE("error setting nonblock flag on socket: %d / %s", errno, strerror(errno));
+        LOGE("error setting nonblock flag on socket: %d / %s", errno, std::strerror(errno));
         m_failed = true;
         return;
     }
@@ -324,18 +327,16 @@ void NetworkSocketPosix::Open()
 
     int tries = 0;
     sockaddr_in6 addr;
-    //addr.sin6_addr.s_addr=0;
     std::memset(&addr, 0, sizeof(sockaddr_in6));
-    //addr.sin6_len=sizeof(sa_family_t);
     addr.sin6_family = AF_INET6;
-    for (tries = 0; tries < 10; tries++)
+    for (tries = 0; tries < 10; ++tries)
     {
         addr.sin6_port = htons(GenerateLocalPort());
         res = ::bind(m_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in6));
-        LOGV("trying bind to port %u", ntohs(addr.sin6_port));
+        LOGV("trying bind to port %u", ::ntohs(addr.sin6_port));
         if (res < 0)
         {
-            LOGE("error binding to port %u: %d / %s", ntohs(addr.sin6_port), errno, strerror(errno));
+            LOGE("error binding to port %u: %d / %s", ::ntohs(addr.sin6_port), errno, std::strerror(errno));
         }
         else
         {
@@ -348,15 +349,15 @@ void NetworkSocketPosix::Open()
         res = ::bind(m_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in6));
         if (res < 0)
         {
-            LOGE("error binding to port %u: %d / %s", ntohs(addr.sin6_port), errno, strerror(errno));
+            LOGE("error binding to port %u: %d / %s", ::ntohs(addr.sin6_port), errno, std::strerror(errno));
             //SetState(State::FAILED);
             m_failed = true;
             return;
         }
     }
     std::size_t addrLen = sizeof(sockaddr_in6);
-    getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
-    LOGD("Bound to local UDP port %u", ntohs(addr.sin6_port));
+    ::getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
+    LOGD("Bound to local UDP port %u", ::ntohs(addr.sin6_port));
 
     m_needUpdateNat64Prefix = true;
     m_isV4Available = false;
@@ -375,8 +376,8 @@ void NetworkSocketPosix::Close()
     std::lock_guard<std::mutex> lock(m_mutexFd);
     if (m_fd >= 0)
     {
-        shutdown(m_fd, SHUT_RDWR);
-        close(m_fd);
+        ::shutdown(m_fd, SHUT_RDWR);
+        ::close(m_fd);
         m_fd = -1;
     }
 }
@@ -393,7 +394,7 @@ void NetworkSocketPosix::Connect(const NetworkAddress& address, std::uint16_t po
     {
         v4.sin_family = AF_INET;
         v4.sin_addr.s_addr = address.addr.ipv4;
-        v4.sin_port = htons(port);
+        v4.sin_port = ::htons(port);
         addr = reinterpret_cast<sockaddr*>(&v4);
         addrLen = sizeof(v4);
     }
@@ -407,27 +408,27 @@ void NetworkSocketPosix::Connect(const NetworkAddress& address, std::uint16_t po
         addr = reinterpret_cast<sockaddr*>(&v6);
         addrLen = sizeof(v6);
     }
-    m_fd = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+    m_fd = ::socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (m_fd < 0)
     {
-        LOGE("Error creating TCP socket: %d / %s", errno, strerror(errno));
+        LOGE("Error creating TCP socket: %d / %s", errno, std::strerror(errno));
         m_failed = true;
         return;
     }
     int opt = 1;
-    setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+    ::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
     timeval timeout;
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
-    setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    ::setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     timeout.tv_sec = 60;
-    setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    fcntl(m_fd, F_SETFL, O_NONBLOCK);
-    int res = connect(m_fd, reinterpret_cast<const sockaddr*>(addr), static_cast<socklen_t>(addrLen));
+    ::setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    ::fcntl(m_fd, F_SETFL, O_NONBLOCK);
+    int res = ::connect(m_fd, reinterpret_cast<const sockaddr*>(addr), static_cast<socklen_t>(addrLen));
     if (res != 0 && errno != EINVAL && errno != EINPROGRESS)
     {
-        LOGW("error connecting TCP socket to %s:%u: %d / %s; %d / %s", address.ToString().c_str(), port, res, strerror(res), errno, strerror(errno));
-        close(m_fd);
+        LOGW("error connecting TCP socket to %s:%u: %d / %s; %d / %s", address.ToString().c_str(), port, res, std::strerror(res), errno, std::strerror(errno));
+        ::close(m_fd);
         m_failed = true;
         return;
     }
@@ -495,7 +496,7 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
     }
 #else
     struct ifaddrs* interfaces;
-    if (getifaddrs(&interfaces) == 0)
+    if (::getifaddrs(&interfaces) == 0)
     {
         struct ifaddrs* interface;
         for (interface = interfaces; interface; interface = interface->ifa_next)
@@ -507,7 +508,7 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
             {
                 if (addr->sin_family == AF_INET)
                 {
-                    if ((ntohl(addr->sin_addr.s_addr) & 0xFFFF0000) == 0xA9FE0000)
+                    if ((::ntohl(addr->sin_addr.s_addr) & 0xFFFF0000) == 0xA9FE0000)
                         continue;
                     if (v4addr != nullptr)
                         *v4addr = NetworkAddress::IPv4(addr->sin_addr.s_addr);
@@ -524,7 +525,7 @@ std::string NetworkSocketPosix::GetLocalInterfaceInfo(NetworkAddress* v4addr, Ne
                 }
             }
         }
-        freeifaddrs(interfaces);
+        ::freeifaddrs(interfaces);
     }
 #endif
     return name;
@@ -534,8 +535,8 @@ std::uint16_t NetworkSocketPosix::GetLocalPort()
 {
     sockaddr_in6 addr;
     std::size_t addrLen = sizeof(sockaddr_in6);
-    getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
-    return ntohs(addr.sin6_port);
+    ::getsockname(m_fd, reinterpret_cast<sockaddr*>(&addr), reinterpret_cast<socklen_t*>(&addrLen));
+    return ::ntohs(addr.sin6_port);
 }
 
 std::string NetworkSocketPosix::V4AddressToString(std::uint32_t address)
@@ -543,7 +544,7 @@ std::string NetworkSocketPosix::V4AddressToString(std::uint32_t address)
     char buf[INET_ADDRSTRLEN];
     in_addr addr;
     addr.s_addr = address;
-    inet_ntop(AF_INET, &addr, buf, sizeof(buf));
+    ::inet_ntop(AF_INET, &addr, buf, sizeof(buf));
     return std::string(buf);
 }
 
@@ -552,21 +553,21 @@ std::string NetworkSocketPosix::V6AddressToString(const std::uint8_t* address)
     char buf[INET6_ADDRSTRLEN];
     in6_addr addr;
     std::memcpy(addr.s6_addr, address, 16);
-    inet_ntop(AF_INET6, &addr, buf, sizeof(buf));
+    ::inet_ntop(AF_INET6, &addr, buf, sizeof(buf));
     return std::string(buf);
 }
 
 std::uint32_t NetworkSocketPosix::StringToV4Address(const std::string& address)
 {
     in_addr addr;
-    inet_pton(AF_INET, address.c_str(), &addr);
+    ::inet_pton(AF_INET, address.c_str(), &addr);
     return addr.s_addr;
 }
 
 void NetworkSocketPosix::StringToV6Address(const std::string& address, std::uint8_t* out)
 {
     in6_addr addr;
-    inet_pton(AF_INET6, address.c_str(), &addr);
+    ::inet_pton(AF_INET6, address.c_str(), &addr);
     std::memcpy(out, addr.s6_addr, 16);
 }
 
@@ -577,7 +578,7 @@ NetworkAddress NetworkSocketPosix::ResolveDomainName(const std::string& name)
     int res = getaddrinfo(name.c_str(), nullptr, nullptr, &addr0);
     if (res != 0)
     {
-        LOGW("Error updating NAT64 prefix: %d / %s", res, gai_strerror(res));
+        LOGW("Error updating NAT64 prefix: %d / %s", res, ::gai_strerror(res));
     }
     else
     {
@@ -591,7 +592,7 @@ NetworkAddress NetworkSocketPosix::ResolveDomainName(const std::string& name)
                 break;
             }
         }
-        freeaddrinfo(addr0);
+        ::freeaddrinfo(addr0);
     }
     return ret;
 }
@@ -611,9 +612,9 @@ void NetworkSocketPosix::SetTimeouts(int sendTimeout, int recvTimeout)
     timeval timeout;
     timeout.tv_sec = sendTimeout;
     timeout.tv_usec = 0;
-    setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    ::setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     timeout.tv_sec = recvTimeout;
-    setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    ::setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
 bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<NetworkSocket*>& writeFds,
@@ -626,14 +627,14 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
     FD_ZERO(&writeSet);
     FD_ZERO(&errorSet);
     SocketSelectCancellerPosix* canceller = dynamic_cast<SocketSelectCancellerPosix*>(_canceller);
-    if (canceller)
-        FD_SET(canceller->pipeRead, &readSet);
+    if (canceller != nullptr)
+        FD_SET(canceller->m_pipeRead, &readSet);
 
-    int maxfd = canceller ? canceller->pipeRead : 0;
+    int maxfd = (canceller != nullptr) ? canceller->m_pipeRead : 0;
 
-    for (NetworkSocket*& s : readFds)
+    for (NetworkSocket* socket : readFds)
     {
-        int sfd = GetDescriptorFromSocket(s);
+        int sfd = GetDescriptorFromSocket(socket);
         if (sfd <= 0)
         {
             LOGW("can't select on one of sockets because it's not a NetworkSocketPosix instance");
@@ -644,9 +645,9 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
             maxfd = sfd;
     }
 
-    for (NetworkSocket*& s : writeFds)
+    for (NetworkSocket* socket : writeFds)
     {
-        int sfd = GetDescriptorFromSocket(s);
+        int sfd = GetDescriptorFromSocket(socket);
         if (sfd <= 0)
         {
             LOGW("can't select on one of sockets because it's not a NetworkSocketPosix instance");
@@ -659,31 +660,31 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
 
     bool anyFailed = false;
 
-    for (NetworkSocket*& s : errorFds)
+    for (NetworkSocket* socket : errorFds)
     {
-        int sfd = GetDescriptorFromSocket(s);
+        int sfd = GetDescriptorFromSocket(socket);
         if (sfd <= 0)
         {
             LOGW("can't select on one of sockets because it's not a NetworkSocketPosix instance");
             continue;
         }
-        if (s->m_timeout > 0 && VoIPController::GetCurrentTime() - s->m_lastSuccessfulOperationTime > s->m_timeout)
+        if (socket->m_timeout > 0 && VoIPController::GetCurrentTime() - socket->m_lastSuccessfulOperationTime > socket->m_timeout)
         {
             LOGW("Socket %d timed out", sfd);
-            s->m_failed = true;
+            socket->m_failed = true;
         }
-        anyFailed |= s->IsFailed();
+        anyFailed |= socket->IsFailed();
         FD_SET(sfd, &errorSet);
         if (maxfd < sfd)
             maxfd = sfd;
     }
 
-    select(maxfd + 1, &readSet, &writeSet, &errorSet, nullptr);
+    ::select(maxfd + 1, &readSet, &writeSet, &errorSet, nullptr);
 
-    if (canceller && FD_ISSET(canceller->pipeRead, &readSet) && !anyFailed)
+    if (canceller != nullptr && FD_ISSET(canceller->m_pipeRead, &readSet) && !anyFailed)
     {
         char c;
-        (void)read(canceller->pipeRead, &c, 1);
+        (void)::read(canceller->m_pipeRead, &c, 1);
         return false;
     }
     else if (anyFailed)
@@ -692,53 +693,41 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
         FD_ZERO(&writeSet);
     }
 
-    std::list<NetworkSocket*>::iterator itr = readFds.begin();
-    while (itr != readFds.end())
+    //std::list<NetworkSocket*>::iterator itr = readFds.begin();
+    for (auto it = readFds.begin(); it != readFds.end();)
     {
-        int sfd = GetDescriptorFromSocket(*itr);
+        int sfd = GetDescriptorFromSocket(*it);
         if (FD_ISSET(sfd, &readSet))
-            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
-        if (sfd == 0 || !FD_ISSET(sfd, &readSet) || !(*itr)->OnReadyToReceive())
-        {
-            itr = readFds.erase(itr);
-        }
+            (*it)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+        if (sfd == 0 || !FD_ISSET(sfd, &readSet) || !(*it)->OnReadyToReceive())
+            it = readFds.erase(it);
         else
-        {
-            ++itr;
-        }
+            ++it;
     }
 
-    itr = writeFds.begin();
-    while (itr != writeFds.end())
+    for (auto it = writeFds.begin(); it != writeFds.end();)
     {
-        int sfd = GetDescriptorFromSocket(*itr);
+        int sfd = GetDescriptorFromSocket(*it);
         if (sfd == 0 || !FD_ISSET(sfd, &writeSet))
         {
-            itr = writeFds.erase(itr);
+            it = writeFds.erase(it);
+            continue;
         }
+        LOGV("Socket %d is ready to send", sfd);
+        (*it)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+        if ((*it)->OnReadyToSend())
+            ++it;
         else
-        {
-            LOGV("Socket %d is ready to send", sfd);
-            (*itr)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
-            if ((*itr)->OnReadyToSend())
-                ++itr;
-            else
-                itr = writeFds.erase(itr);
-        }
+            it = writeFds.erase(it);
     }
 
-    itr = errorFds.begin();
-    while (itr != errorFds.end())
+    for (auto it = errorFds.begin(); it != errorFds.end();)
     {
-        int sfd = GetDescriptorFromSocket(*itr);
-        if ((sfd == 0 || !FD_ISSET(sfd, &errorSet)) && !(*itr)->IsFailed())
-        {
-            itr = errorFds.erase(itr);
-        }
+        int sfd = GetDescriptorFromSocket(*it);
+        if ((sfd == 0 || !FD_ISSET(sfd, &errorSet)) && !(*it)->IsFailed())
+            it = errorFds.erase(it);
         else
-        {
-            ++itr;
-        }
+            ++it;
     }
     //LOGV("select fds left: read=%d, write=%d, error=%d", (int)readFds.size(), (int)writeFds.size(), (int)errorFds.size());
 
@@ -748,35 +737,35 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
 SocketSelectCancellerPosix::SocketSelectCancellerPosix()
 {
     int p[2];
-    int pipeRes = pipe(p);
+    int pipeRes = ::pipe(p);
     if (pipeRes != 0)
     {
         LOGE("pipe() failed");
         std::abort();
     }
-    pipeRead = p[0];
-    pipeWrite = p[1];
+    m_pipeRead = p[0];
+    m_pipeWrite = p[1];
 }
 
 SocketSelectCancellerPosix::~SocketSelectCancellerPosix()
 {
-    close(pipeRead);
-    close(pipeWrite);
+    ::close(m_pipeRead);
+    ::close(m_pipeWrite);
 }
 
 void SocketSelectCancellerPosix::CancelSelect()
 {
     char c = 1;
-    (void)write(pipeWrite, &c, 1);
+    (void)::write(m_pipeWrite, &c, 1);
 }
 
 int NetworkSocketPosix::GetDescriptorFromSocket(NetworkSocket* socket)
 {
     NetworkSocketPosix* sp = dynamic_cast<NetworkSocketPosix*>(socket);
-    if (sp)
+    if (sp != nullptr)
         return sp->m_fd;
     NetworkSocketWrapper* sw = dynamic_cast<NetworkSocketWrapper*>(socket);
-    if (sw)
+    if (sw != nullptr)
         return GetDescriptorFromSocket(sw->GetWrapped());
     return 0;
 }

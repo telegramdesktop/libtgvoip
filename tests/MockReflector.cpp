@@ -5,7 +5,9 @@
 //
 
 #include "MockReflector.h"
+
 #include <arpa/inet.h>
+
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -29,14 +31,14 @@ struct UdpReflectorSelfInfo
 
 MockReflector::MockReflector(const std::string& bindAddress, std::uint16_t bindPort)
 {
-    sfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    assert(sfd != -1);
+    m_sfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    assert(m_sfd != -1);
     sockaddr_in bindAddr;
     std::memset(&bindAddr, 0, sizeof(bindAddr));
     bindAddr.sin_family = AF_INET;
     bindAddr.sin_port = htons(bindPort);
     inet_aton(bindAddress.c_str(), &bindAddr.sin_addr);
-    int res = bind(sfd, reinterpret_cast<struct sockaddr*>(&bindAddr), sizeof(bindAddr));
+    int res = bind(m_sfd, reinterpret_cast<struct sockaddr*>(&bindAddr), sizeof(bindAddr));
     assert(res == 0);
 }
 
@@ -65,11 +67,11 @@ MockReflector::ClientPair::ClientPair()
 
 void MockReflector::Start()
 {
-    if (running)
+    if (m_running)
         return;
-    running = true;
+    m_running = true;
     pthread_create(
-        &thread, nullptr, [](void* arg) -> void*
+        &m_thread, nullptr, [](void* arg) -> void*
         {
             reinterpret_cast<MockReflector*>(arg)->RunThread();
             return nullptr;
@@ -79,25 +81,25 @@ void MockReflector::Start()
 
 void MockReflector::Stop()
 {
-    running = false;
-    shutdown(sfd, SHUT_RDWR);
-    close(sfd);
-    pthread_join(thread, nullptr);
+    m_running = false;
+    shutdown(m_sfd, SHUT_RDWR);
+    close(m_sfd);
+    pthread_join(m_thread, nullptr);
 }
 
 void MockReflector::SetDropAllPackets(bool drop)
 {
-    dropAllPackets = drop;
+    m_dropAllPackets = drop;
 }
 
 void MockReflector::RunThread()
 {
-    while (running)
+    while (m_running)
     {
         std::array<std::uint8_t, 1500> buf;
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
-        ssize_t len = recvfrom(sfd, buf.data(), sizeof(buf), 0, reinterpret_cast<struct sockaddr*>(&addr), &addrlen);
+        ssize_t len = recvfrom(m_sfd, buf.data(), sizeof(buf), 0, reinterpret_cast<struct sockaddr*>(&addr), &addrlen);
         if (len <= 0)
             return;
         if (len >= 32)
@@ -107,7 +109,7 @@ void MockReflector::RunThread()
             std::copy(buf.begin(), buf.begin() + 16, peerTag.begin());
             std::memcpy(specialID, buf.data() + 16, 16);
             std::uint64_t tagID = *reinterpret_cast<std::uint64_t*>(peerTag.data());
-            ClientPair c = clients[tagID];
+            ClientPair c = m_clients[tagID];
             sockaddr_in* dest;
             if (peerTag[15] & 1)
             {
@@ -119,7 +121,7 @@ void MockReflector::RunThread()
                 c.addr0 = addr;
                 dest = &c.addr1;
             }
-            clients[tagID] = c;
+            m_clients[tagID] = c;
 
             if (specialID[0] == -1 && specialID[1] == -1 && specialID[2] == -1)
             {
@@ -137,19 +139,19 @@ void MockReflector::RunThread()
                     response.my_ip_padding2 = 0xFFFF0000;
                     response.my_ip = static_cast<std::uint32_t>(addr.sin_addr.s_addr);
                     response.my_port = ntohs(addr.sin_port);
-                    sendto(sfd, &response, sizeof(response), 0, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
+                    sendto(m_sfd, &response, sizeof(response), 0, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
                     continue;
                 }
             }
 
-            if (dest->sin_family == AF_INET && !dropAllPackets)
+            if (dest->sin_family == AF_INET && !m_dropAllPackets)
             {
                 if (peerTag[15] & 1)
                     buf[15] &= 0xFE;
                 else
                     buf[15] |= 1;
 
-                sendto(sfd, buf.data(), static_cast<std::size_t>(len), 0, reinterpret_cast<struct sockaddr*>(dest), sizeof(sockaddr_in));
+                sendto(m_sfd, buf.data(), static_cast<std::size_t>(len), 0, reinterpret_cast<struct sockaddr*>(dest), sizeof(sockaddr_in));
             }
         }
     }

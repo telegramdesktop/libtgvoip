@@ -8,8 +8,9 @@
 #define LIBTGVOIP_AUDIOOUTPUT_H
 
 #include "../MediaStreamItf.h"
-#include <memory>
+
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,7 +33,6 @@ public:
     static std::int32_t GetEstimatedDelay();
     virtual std::string GetCurrentDevice() const;
     virtual void SetCurrentDevice(std::string deviceID);
-    //static std::unique_ptr<AudioOutput> Create(std::string deviceID, void* platformSpecific);
     static void EnumerateDevices(std::vector<AudioOutputDevice>& devs);
     bool IsInitialized() const;
 

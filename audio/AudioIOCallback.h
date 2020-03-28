@@ -7,11 +7,11 @@
 #ifndef LIBTGVOIP_AUDIO_IO_CALLBACK
 #define LIBTGVOIP_AUDIO_IO_CALLBACK
 
+#include "../threading.h"
 #include "AudioIO.h"
+
 #include <atomic>
 #include <functional>
-
-#include "../threading.h"
 
 namespace tgvoip
 {

@@ -65,8 +65,8 @@ struct NetworkPacket
 
     Buffer data;
     NetworkAddress address;
-    std::uint16_t port;
     NetworkProtocol protocol;
+    std::uint16_t port;
 
     static NetworkPacket Empty();
     bool IsEmpty() const;
@@ -124,8 +124,8 @@ protected:
     double m_lastSuccessfulOperationTime = 0.0;
     double m_timeout = 0.0;
     NetworkProtocol m_protocol;
-    std::atomic<bool> m_failed;
     std::uint8_t m_nat64Prefix[12];
+    std::atomic<bool> m_failed;
     bool m_readyToSend = false;
 };
 
@@ -184,22 +184,24 @@ public:
     bool NeedSelectForSending();
 
 private:
-    void SendConnectionCommand();
-    enum ConnectionState
+    enum class ConnectionState
     {
-        Initial,
-        WaitingForAuthMethod,
-        WaitingForAuthResult,
-        WaitingForCommandResult,
-        Connected
+        INITIAL,
+        WAITING_FOR_AUTH_METHOD,
+        WAITING_FOR_AUTH_RESULT,
+        WAITING_FOR_COMMAND_RESULT,
+        CONNECTED,
     };
+
     NetworkSocket* m_tcp;
     NetworkSocket* m_udp;
     std::string m_username;
     std::string m_password;
     NetworkAddress m_connectedAddress = NetworkAddress::Empty();
+    ConnectionState m_state = ConnectionState::INITIAL;
     std::uint16_t m_connectedPort = 0;
-    ConnectionState m_state = ConnectionState::Initial;
+
+    void SendConnectionCommand();
 };
 
 } // namespace tgvoip

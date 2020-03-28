@@ -7,8 +7,9 @@
 #ifndef LIBTGVOIP_AUDIOINPUTALSA_H
 #define LIBTGVOIP_AUDIOINPUTALSA_H
 
-#include "../../audio/AudioInput.h"
 #include "../../threading.h"
+#include "../../audio/AudioInput.h"
+
 #include <alsa/asoundlib.h>
 
 namespace tgvoip

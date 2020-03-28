@@ -7,8 +7,9 @@
 #ifndef LIBTGVOIP_AUDIOINPUTPULSE_H
 #define LIBTGVOIP_AUDIOINPUTPULSE_H
 
-#include "../../audio/AudioInput.h"
 #include "../../threading.h"
+#include "../../audio/AudioInput.h"
+
 #include <pulse/pulseaudio.h>
 
 #define DECLARE_DL_FUNCTION(name) typeof(name)* _import_##name
@@ -22,7 +23,7 @@ namespace audio
 class AudioInputPulse : public AudioInput
 {
 public:
-    AudioInputPulse(pa_context* context, pa_threaded_mainloop* mainloop, std::string devID);
+    AudioInputPulse(pa_context* m_context, pa_threaded_mainloop* m_mainloop, std::string devID);
     virtual ~AudioInputPulse();
     virtual void Start();
     virtual void Stop();
@@ -31,21 +32,22 @@ public:
     static bool EnumerateDevices(std::vector<AudioInputDevice>& devs);
 
 private:
+    pa_threaded_mainloop* m_mainloop;
+    pa_context* m_context;
+    pa_stream* m_stream = nullptr;
+
+    std::size_t m_remainingDataSize = 0;
+    std::uint8_t m_remainingData[960 * 8 * 2];
+
+    bool m_isRecording = false;
+    bool m_isConnected = false;
+    bool m_didStart = false;
+    bool m_isLocked = false;
+
     static void StreamStateCallback(pa_stream* s, void* arg);
-    static void StreamReadCallback(pa_stream* stream, std::size_t requested_bytes, void* userdata);
-    void StreamReadCallback(pa_stream* stream, std::size_t requestedBytes);
+    static void StreamReadCallback(pa_stream* m_stream, std::size_t requested_bytes, void* userdata);
+    void StreamReadCallback(pa_stream* m_stream, std::size_t requestedBytes);
     pa_stream* CreateAndInitStream();
-
-    pa_threaded_mainloop* mainloop;
-    pa_context* context;
-    pa_stream* stream;
-
-    bool isRecording;
-    bool isConnected;
-    bool didStart;
-    bool isLocked;
-    std::uint8_t remainingData[960 * 8 * 2];
-    std::size_t remainingDataSize;
 };
 
 } // namespace audio
