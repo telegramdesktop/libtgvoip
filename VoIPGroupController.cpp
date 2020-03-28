@@ -6,7 +6,7 @@
 
 #include "logging.h"
 #include "PrivateDefines.h"
-#include "VoIPController.h"
+#include "VoIPGroupController.h"
 #include "VoIPServerConfig.h"
 
 #include <cassert>
@@ -17,9 +17,9 @@
 using namespace tgvoip;
 
 VoIPGroupController::VoIPGroupController(std::int32_t timeDifference)
-    : m_userSelfID(0)
-    , m_audioMixer(new AudioMixer())
+    : m_audioMixer(new AudioMixer())
     , m_timeDifference(timeDifference)
+    , m_userSelfID(0)
 {
     std::memset(&m_callbacks, 0, sizeof(m_callbacks));
     LOGV("Created VoIPGroupController; timeDifference=%d", timeDifference);
@@ -393,7 +393,12 @@ void VoIPGroupController::SendPacket(std::uint8_t* data, std::size_t len, Endpoi
 
     if (srcPacket.type == PktType::STREAM_DATA || srcPacket.type == PktType::STREAM_DATA_X2 || srcPacket.type == PktType::STREAM_DATA_X3)
     {
-        PacketIdMapping mapping = {srcPacket.seq, *reinterpret_cast<std::uint16_t*>(sig + 14), 0};
+        PacketIdMapping mapping =
+        {
+            .ackTime = 0.0,
+            .seq = srcPacket.seq,
+            .id = *reinterpret_cast<std::uint16_t*>(sig + 14),
+        };
         MutexGuard m(m_sentPacketsMutex);
         m_recentSentPackets.emplace_back(mapping);
         while (m_recentSentPackets.size() > 64)

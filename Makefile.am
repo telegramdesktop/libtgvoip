@@ -5,6 +5,8 @@ CFLAGS = -Wall -DHAVE_CONFIG_H -Wno-unknown-pragmas
 lib_LTLIBRARIES = libtgvoip.la
 
 SRC = TgVoip.cpp \
+AudioDevice.cpp \
+Endpoint.cpp \
 VoIPController.cpp \
 Buffers.cpp \
 CongestionControl.cpp \
@@ -34,8 +36,12 @@ video/ScreamCongestionController.cpp \
 json11.cpp
 
 TGVOIP_HDRS = \
+AudioDevice.h \
+Endpoint.h \
 TgVoip.h \
+VoIPControllerDeclarations.h \
 VoIPController.h \
+VoIPGroupController.h \
 Buffers.h \
 BlockingQueue.h \
 PrivateDefines.h \

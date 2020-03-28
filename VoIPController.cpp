@@ -77,16 +77,6 @@ extern jclass jniUtilitiesClass;
 
 extern FILE* tgvoipLogFile;
 
-IPv4Address::IPv4Address(std::string addr)
-    : addr(std::move(addr))
-{
-}
-
-IPv6Address::IPv6Address(std::string addr)
-    : addr(std::move(addr))
-{
-}
-
 #pragma mark - Public API
 
 VoIPController::VoIPController()
@@ -709,22 +699,6 @@ std::string VoIPController::GetDebugLog()
         });
 #endif
     }
-    /*vector<json11::Json> lpkts;
-	for(DebugLoggedPacket& lpkt:debugLoggedPackets){
-		lpkts.push_back(json11::Json::array{lpkt.timestamp, lpkt.seq, lpkt.length});
-	}
-	return json11::Json(json11::Json::object{
-			{"log_type", "out_packet_stats"},
-			{"libtgvoip_version", LIBTGVOIP_VERSION},
-			{"network", network},
-			{"protocol_version", std::min(peerVersion, PROTOCOL_VERSION)},
-			{"total_losses", json11::Json::object{
-                    {"s", (std::int32_t)conctl->GetSendLossCount()},
-                    {"r", (std::int32_t)recvLossCount}
-			}},
-			{"call_duration", GetCurrentTime()-connectionInitTime},
-			{"out_packet_stats", lpkts}
-	}).dump();*/
 
     std::vector<json11::Json> endpointsJson;
     for (auto& [_, endpoint] : m_endpoints)
@@ -1315,10 +1289,10 @@ void VoIPController::HandleAudioInput(std::uint8_t* data, std::size_t len, std::
         std::size_t pktLength = pkt.GetLength();
         PendingOutgoingPacket p
         {
-            /*.seq=*/GenerateOutSeq(),
-            /*.type=*/PktType::STREAM_DATA,
-            /*.len=*/pktLength,
-            /*.data=*/Buffer(std::move(pkt)),
+            /*.seq=*/     GenerateOutSeq(),
+            /*.type=*/    PktType::STREAM_DATA,
+            /*.len=*/     pktLength,
+            /*.data=*/    Buffer(std::move(pkt)),
             /*.endpoint=*/0,
         };
 
@@ -1765,10 +1739,10 @@ void VoIPController::SendInit()
         std::size_t outLength = out.GetLength();
         SendOrEnqueuePacket(PendingOutgoingPacket
         {
-            /*.seq=*/initSeq,
-            /*.type=*/PktType::INIT,
-            /*.len=*/outLength,
-            /*.data=*/Buffer(std::move(out)),
+            /*.seq=*/     initSeq,
+            /*.type=*/    PktType::INIT,
+            /*.len=*/     outLength,
+            /*.data=*/    Buffer(std::move(out)),
             /*.endpoint=*/endpoint.id
         });
     }
@@ -2373,10 +2347,6 @@ void VoIPController::ProcessIncomingPacket(NetworkPacket& packet, Endpoint& srcE
         }
     }
 
-    /*decryptedAudioBlock random_id:long random_bytes:string flags:# voice_call_id:flags.2?int128 in_seq_no:flags.4?int out_seq_no:flags.4?int
- * recent_received_mask:flags.5?int proto:flags.3?int extra:flags.1?string raw_data:flags.0?string = DecryptedAudioBlock
-simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedAudioBlock;
-*/
     std::uint32_t ackId, pseq, acks;
     PktType type;
     std::uint8_t pflags;
@@ -2750,10 +2720,10 @@ simpleAudioBlock random_id:long random_bytes:string raw_data:string = DecryptedA
         std::size_t outLength = out.GetLength();
         SendOrEnqueuePacket(PendingOutgoingPacket
         {
-            /*.seq=*/GenerateOutSeq(),
-            /*.type=*/PktType::INIT_ACK,
-            /*.len=*/outLength,
-            /*.data=*/Buffer(std::move(out)),
+            /*.seq=*/     GenerateOutSeq(),
+            /*.type=*/    PktType::INIT_ACK,
+            /*.len=*/     outLength,
+            /*.data=*/    Buffer(std::move(out)),
             /*.endpoint=*/0
         });
         if (!m_receivedInit)
@@ -3234,17 +3204,6 @@ void VoIPController::ProcessExtraData(Buffer& data)
     case ExtraType::STREAM_CSD:
     {
         LOGI("Received codec specific data");
-        /*
-		os.WriteByte(stream.id);
-		os.WriteByte(static_cast<unsigned char>(stream.codecSpecificData.size()));
-		for(Buffer& b:stream.codecSpecificData){
-			assert(b.Length()<255);
-			os.WriteByte(static_cast<unsigned char>(b.Length()));
-			os.WriteBytes(b);
-		}
-		Buffer buf(move(os));
-        SendExtra(buf, ExtraType::STREAM_CSD);
-		 */
         std::uint8_t streamID = in.ReadUInt8();
         for (std::shared_ptr<Stream>& stream : m_incomingStreams)
         {
@@ -4223,10 +4182,10 @@ void VoIPController::SendRelayPings()
                 LOGV("Sending ping to %s", endpoint.GetAddress().ToString().c_str());
                 SendOrEnqueuePacket(PendingOutgoingPacket
                 {
-                    /*.seq=*/(endpoint.m_lastPingSeq = GenerateOutSeq()),
-                    /*.type=*/PktType::PING,
-                    /*.len=*/0,
-                    /*.data=*/Buffer(),
+                    /*.seq=*/     (endpoint.m_lastPingSeq = GenerateOutSeq()),
+                    /*.type=*/    PktType::PING,
+                    /*.len=*/     0,
+                    /*.data=*/    Buffer(),
                     /*.endpoint=*/endpoint.id
                 });
                 endpoint.m_lastPingTime = GetCurrentTime();
@@ -4555,10 +4514,10 @@ void VoIPController::SendNopPacket()
         return;
     SendOrEnqueuePacket(PendingOutgoingPacket
     {
-        /*.seq=*/(m_firstSentPing = GenerateOutSeq()),
-        /*.type=*/PktType::NOP,
-        /*.len=*/0,
-        /*.data=*/Buffer(),
+        /*.seq=*/     (m_firstSentPing = GenerateOutSeq()),
+        /*.type=*/    PktType::NOP,
+        /*.len=*/     0,
+        /*.data=*/    Buffer(),
         /*.endpoint=*/0
     });
 }
@@ -4632,124 +4591,4 @@ void VoIPController::TickJitterBufferAndCongestionControl()
             }
         }
     }
-}
-
-#pragma mark - Endpoint
-
-Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const IPv4Address& address,
-                   const IPv6Address& v6address, Type type, const std::uint8_t peerTag[16])
-    : id(id)
-    , address(NetworkAddress::IPv4(address.addr))
-    , v6address(NetworkAddress::IPv6(v6address.addr))
-    , type(type)
-    , port(port)
-{
-    std::memcpy(this->peerTag, peerTag, 16);
-    if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))
-        this->type = Type::TCP_RELAY;
-}
-
-Endpoint::Endpoint(std::int64_t id, std::uint16_t port, const NetworkAddress& address,
-                   const NetworkAddress& v6address, Type type, const std::uint8_t peerTag[16])
-    : id(id)
-    , address(address)
-    , v6address(v6address)
-    , type(type)
-    , port(port)
-{
-    std::memcpy(this->peerTag, peerTag, 16);
-    if (type == Type::UDP_RELAY && ServerConfig::GetSharedInstance()->GetBoolean("force_tcp", false))
-        this->type = Type::TCP_RELAY;
-}
-
-Endpoint::Endpoint()
-    : address(NetworkAddress::Empty())
-    , v6address(NetworkAddress::Empty())
-{
-}
-
-const NetworkAddress& Endpoint::GetAddress() const
-{
-    return IsIPv6Only() ? v6address : address;
-}
-
-NetworkAddress& Endpoint::GetAddress()
-{
-    return IsIPv6Only() ? v6address : address;
-}
-
-bool Endpoint::IsIPv6Only() const
-{
-    return address.IsEmpty() && !v6address.IsEmpty();
-}
-
-std::int64_t Endpoint::CleanID() const
-{
-    std::int64_t _id = id;
-    if (type == Type::TCP_RELAY)
-    {
-        _id = _id ^ (static_cast<std::int64_t>(FOURCC('T', 'C', 'P', ' ')) << 32);
-    }
-    if (IsIPv6Only())
-    {
-        _id = _id ^ (static_cast<std::int64_t>(FOURCC('I', 'P', 'v', '6')) << 32);
-    }
-    return _id;
-}
-
-Endpoint::~Endpoint()
-{
-    if (m_socket)
-    {
-        m_socket->Close();
-    }
-}
-
-#pragma mark - AudioInputTester
-
-AudioInputTester::AudioInputTester(std::string deviceID)
-    : m_deviceID(std::move(deviceID))
-{
-    m_io = audio::AudioIO::Create(m_deviceID, "default");
-    if (m_io->Failed())
-    {
-        LOGE("Audio IO failed");
-        return;
-    }
-    m_input = m_io->GetInput();
-    m_input->SetCallback([](std::uint8_t* data, std::size_t size, void* ctx) -> std::size_t
-    {
-        reinterpret_cast<AudioInputTester*>(ctx)->Update(reinterpret_cast<std::int16_t*>(data), size / 2);
-        return 0;
-    },
-    this);
-    m_input->Start();
-}
-
-AudioInputTester::~AudioInputTester()
-{
-    m_input->Stop();
-    delete m_io;
-}
-
-void AudioInputTester::Update(std::int16_t* samples, std::size_t count)
-{
-    for (std::size_t i = 0; i < count; i++)
-    {
-        std::int16_t s = static_cast<std::int16_t>(std::abs(samples[i]));
-        if (s > m_maxSample)
-            m_maxSample = s;
-    }
-}
-
-float AudioInputTester::GetAndResetLevel()
-{
-    float s = m_maxSample;
-    m_maxSample = 0;
-    return s / std::numeric_limits<std::int16_t>::max();
-}
-
-bool AudioInputTester::Failed() const
-{
-    return (m_io != nullptr) && m_io->Failed();
 }
