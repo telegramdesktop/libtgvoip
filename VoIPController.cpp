@@ -958,9 +958,9 @@ void VoIPController::SetConfig(const Config& cfg)
     {
         tgvoipLogFile = nullptr;
     }
-    if (m_statsDump)
+    if (m_statsDump != nullptr)
     {
-        fclose(m_statsDump);
+        std::fclose(m_statsDump);
         m_statsDump = nullptr;
     }
     if (!m_config.statsDumpFilePath.empty())
@@ -973,8 +973,8 @@ void VoIPController::SetConfig(const Config& cfg)
             statsDump = nullptr;
         }
 #endif
-        if (m_statsDump)
-            fprintf(m_statsDump, "Time\tRTT\tLRSeq\tLSSeq\tLASeq\tLostR\tLostS\tCWnd\tBitrate\tLoss%%\tJitter\tJDelay\tAJDelay\n");
+        if (m_statsDump != nullptr)
+            std::fprintf(m_statsDump, "Time\tRTT\tLRSeq\tLSSeq\tLASeq\tLostR\tLostS\tCWnd\tBitrate\tLoss%%\tJitter\tJDelay\tAJDelay\n");
     }
     else
     {
@@ -1067,7 +1067,7 @@ void VoIPController::InitializeTimers()
             if (m_statsDump != nullptr && m_incomingStreams.size() == 1)
             {
                 std::shared_ptr<JitterBuffer>& jitterBuffer = m_incomingStreams[0]->jitterBuffer;
-                fprintf(m_statsDump, "%.3f\t%.3f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n",
+                std::fprintf(m_statsDump, "%.3f\t%.3f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n",
                     GetCurrentTime() - m_connectionInitTime,
                     m_endpoints.at(m_currentEndpoint).m_rtts[0],
                     m_lastRemoteSeq,
