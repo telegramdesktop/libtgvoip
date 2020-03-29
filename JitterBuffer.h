@@ -55,6 +55,7 @@ private:
     {
         OK = 1,
         MISSING,
+        REPLACED,
     };
 
     static std::size_t CallbackIn(std::uint8_t* data, std::size_t len, void* param);
@@ -82,11 +83,18 @@ private:
     double m_avgDelay = 0;
 
     std::map<std::uint32_t, jitter_packet_t> m_slots;
+
+    // if there is no slot with requested timestamp in m_slots,
+    // attempt to find previous a slot with close previous timestamp
+    std::map<std::uint32_t, jitter_packet_t> m_slotsHistory;
+
     HistoricBuffer<unsigned int, HISTORY_SIZE, double> m_delayHistory;
     HistoricBuffer<unsigned int, HISTORY_SIZE, double> m_lateHistory;
     HistoricBuffer<double, HISTORY_SIZE> m_deviationHistory;
 
     std::uint32_t m_nextTimestamp = 0;
+    // if m_nextTimestamp is too little, we need to use this because of
+    // restrictions of unsigned arithmetics
     std::uint32_t m_addToTimestamp = 0;
     std::uint32_t m_step;
     std::uint32_t m_delay = 6;
@@ -95,6 +103,8 @@ private:
     std::uint32_t m_maxAllowedSlots;
     std::uint32_t m_lastPutTimestamp;
     std::uint32_t m_lossesToReset;
+
+    std::uint32_t m_replaceRadius = 2;
 
     unsigned int m_lostCount = 0;
     unsigned int m_lostSinceReset = 0;
