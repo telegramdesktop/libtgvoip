@@ -104,7 +104,7 @@ private:
     std::uint32_t m_lastPutTimestamp;
     std::uint32_t m_lossesToReset;
 
-    std::uint32_t m_replaceRadius = 2;
+    std::uint32_t m_replaceRadius = 1;
 
     unsigned int m_lostCount = 0;
     unsigned int m_lostSinceReset = 0;
