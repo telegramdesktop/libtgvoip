@@ -9,11 +9,7 @@
 #include <algorithm>
 #include "logging.h"
 #include "VoIPServerConfig.h"
-#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
-#include <opus/opus.h>
-#else
-#include "opus.h"
-#endif
+#include <opus.h>
 
 namespace{
 	int serverConfigValueToBandwidth(int config){
