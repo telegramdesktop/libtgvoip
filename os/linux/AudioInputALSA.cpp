@@ -170,6 +170,6 @@ void AudioInputALSA::EnumerateDevices(std::vector<AudioInputDevice>& devs){
 		free(ioid);
 		n++;
 	}
-
+        _snd_device_name_free_hint((void**)hints);
 	dlclose(lib);
 }
