@@ -46,7 +46,7 @@
 #include <vector>
 #include <deque>
 
-#define LIBTGVOIP_VERSION "2.6"
+#define LIBTGVOIP_VERSION "2.7"
 
 #ifdef _WIN32
 #undef GetCurrentTime
