@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-CFLAGS = -Wall -DHAVE_CONFIG_H -Wno-unknown-pragmas
+CFLAGS = $(OPUS_CFLAGS) -Wall -DHAVE_CONFIG_H -Wno-unknown-pragmas
 
 lib_LTLIBRARIES = libtgvoip.la
 
@@ -751,7 +751,7 @@ else
 CFLAGS += -DTGVOIP_NO_DSP
 endif
 
-libtgvoip_la_LDFLAGS = -version-number @LIBTGVOIP_MAJOR_VERSION@:@LIBTGVOIP_MINOR_VERSION@:@LIBTGVOIP_PATCH_VERSION@
+libtgvoip_la_LDFLAGS = $(OPUS_LIBS) -version-number @LIBTGVOIP_MAJOR_VERSION@:@LIBTGVOIP_MINOR_VERSION@:@LIBTGVOIP_PATCH_VERSION@
 libtgvoip_la_SOURCES = $(SRC) $(TGVOIP_HDRS)
 tgvoipincludedir = $(includedir)/tgvoip
 nobase_tgvoipinclude_HEADERS = $(TGVOIP_HDRS)
