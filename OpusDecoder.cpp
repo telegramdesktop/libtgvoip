@@ -10,7 +10,11 @@
 #include <assert.h>
 #include <math.h>
 #include <algorithm>
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
+#include <opus/opus.h>
+#else
 #include <opus.h>
+#endif
 
 #include "VoIPController.h"
 

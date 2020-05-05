@@ -29,7 +29,11 @@
 #include <sstream>
 #include <inttypes.h>
 #include <float.h>
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
+#include <opus/opus.h>
+#else
 #include <opus.h>
+#endif
 
 
 inline int pad4(int x){
