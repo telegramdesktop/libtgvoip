@@ -7,7 +7,9 @@
 #ifndef __VOIPCONTROLLER_H
 #define __VOIPCONTROLLER_H
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
