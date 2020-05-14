@@ -188,7 +188,11 @@ public:
         controller_->Connect();
     }
 
-    ~TgVoipImpl() override = default;
+    ~TgVoipImpl() {
+        if (controller_) {
+            stop();
+        }
+    }
 
     void setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated) override {
         onStateUpdated_ = onStateUpdated;
