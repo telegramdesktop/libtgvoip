@@ -80,7 +80,7 @@ public:
     TgVoipImpl(
         std::vector<TgVoipEndpoint> const &endpoints,
         TgVoipPersistentState const &persistentState,
-        std::unique_ptr<TgVoipProxy> const &proxy,
+        TgVoipProxy const *proxy,
         TgVoipConfig const &config,
         TgVoipEncryptionKey const &encryptionKey,
         TgVoipNetworkType initialNetworkType
@@ -380,11 +380,11 @@ std::string TgVoip::getVersion() {
     return tgvoip::VoIPController::GetVersion();
 }
 
-TgVoip *TgVoip::makeInstance(
+std::unique_ptr<TgVoip> TgVoip::makeInstance(
     TgVoipConfig const &config,
     TgVoipPersistentState const &persistentState,
     std::vector<TgVoipEndpoint> const &endpoints,
-    std::unique_ptr<TgVoipProxy> const &proxy,
+    TgVoipProxy const *proxy,
     TgVoipNetworkType initialNetworkType,
     TgVoipEncryptionKey const &encryptionKey
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
@@ -396,7 +396,7 @@ TgVoip *TgVoip::makeInstance(
     TgVoipAudioDataCallbacks const &audioDataCallbacks
 #endif
 ) {
-    return new TgVoipImpl(
+    return std::make_unique<TgVoipImpl>(
         endpoints,
         persistentState,
         proxy,
