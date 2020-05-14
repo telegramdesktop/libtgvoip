@@ -79,6 +79,7 @@ struct TgVoipConfig {
     bool enableAEC = false;
     bool enableNS = false;
     bool enableAGC = false;
+    bool enableVolumeControl = false;
     bool enableCallUpgrade = false;
 #ifndef _WIN32
     std::string logPath;
@@ -153,6 +154,11 @@ public:
     virtual void setMuteMicrophone(bool muteMicrophone) = 0;
     virtual void setAudioOutputGainControlEnabled(bool enabled) = 0;
     virtual void setEchoCancellationStrength(int strength) = 0;
+    virtual void setAudioInputDevice(std::string id) = 0;
+    virtual void setAudioOutputDevice(std::string id) = 0;
+    virtual void setInputVolume(float level) = 0;
+    virtual void setOutputVolume(float level) = 0;
+    virtual void setAudioOutputDuckingEnabled(bool enabled) = 0;
 
     virtual std::string getLastError() = 0;
     virtual std::string getDebugInfo() = 0;

@@ -172,6 +172,7 @@ public:
             config.enableAGC,
             config.enableCallUpgrade
         );
+        mappedConfig.enableVolumeControl = config.enableVolumeControl;
         mappedConfig.logFilePath = config.logPath;
         mappedConfig.statsDumpFilePath = {};
 
@@ -260,6 +261,24 @@ public:
 
     void setEchoCancellationStrength(int strength) override {
         controller_->SetEchoCancellationStrength(strength);
+    }
+
+    void setAudioInputDevice(std::string id) override {
+        controller_->SetCurrentAudioInput(id);
+    }
+    void setAudioOutputDevice(std::string id) override {
+        controller_->SetCurrentAudioOutput(id);
+    }
+    void setInputVolume(float level) override {
+        controller_->SetInputVolume(level);
+    }
+    void setOutputVolume(float level) override {
+        controller_->SetOutputVolume(level);
+    }
+    void setAudioOutputDuckingEnabled(bool enabled) override {
+#if defined(__APPLE__) && defined(TARGET_OS_OSX)
+        controller_->SetAudioOutputDuckingEnabled(enabled);
+#endif
     }
 
     std::string getLastError() override {
