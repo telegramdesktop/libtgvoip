@@ -342,7 +342,7 @@ public:
                     mappedState = TgVoipState::WaitInitAck;
                     break;
                 case tgvoip::STATE_ESTABLISHED:
-                    mappedState = TgVoipState::Estabilished;
+                    mappedState = TgVoipState::Established;
                     break;
                 case tgvoip::STATE_FAILED:
                     mappedState = TgVoipState::Failed;
@@ -351,7 +351,7 @@ public:
                     mappedState = TgVoipState::Reconnecting;
                     break;
                 default:
-                    mappedState = TgVoipState::Estabilished;
+                    mappedState = TgVoipState::Established;
                     break;
             }
 

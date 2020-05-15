@@ -97,7 +97,7 @@ struct TgVoipEncryptionKey {
 enum class TgVoipState {
     WaitInit,
     WaitInitAck,
-    Estabilished,
+    Established,
     Failed,
     Reconnecting
 };
