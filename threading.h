@@ -94,6 +94,8 @@ private:
 
 #elif defined(_WIN32)
 
+#define TGVOIP_WIN32_THREADING
+
 #include <Windows.h>
 #include <cassert>
 

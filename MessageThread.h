@@ -47,7 +47,7 @@ private:
     mutable Mutex m_queueMutex;
     mutable Mutex m_queueAccessMutex;
 
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
     HANDLE event;
 #else
     pthread_cond_t cond;

@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <ctime>
 
-#ifndef _WIN32
+#ifndef TGVOIP_WIN32_THREADING
 #include <sys/time.h>
 #endif
 
@@ -23,7 +23,7 @@ MessageThread::MessageThread()
 {
     SetName("MessageThread");
 
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
 #if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
     event = CreateEvent(nullptr, false, false, nullptr);
 #else
@@ -37,7 +37,7 @@ MessageThread::MessageThread()
 MessageThread::~MessageThread()
 {
     Stop();
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
     CloseHandle(event);
 #else
     ::pthread_cond_destroy(&cond);
@@ -49,7 +49,7 @@ void MessageThread::Stop()
     if (m_running)
     {
         m_running = false;
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
         SetEvent(event);
 #else
         ::pthread_cond_signal(&cond);
@@ -72,7 +72,7 @@ void MessageThread::Run()
 
         if (waitTimeout > 0.0)
         {
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
             queueMutex.Unlock();
             DWORD actualWaitTimeout = waitTimeout == DBL_MAX ? INFINITE : ((DWORD)round(waitTimeout * 1000.0));
 #if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
@@ -146,7 +146,7 @@ std::uint32_t MessageThread::Post(std::function<void()> func, double delay, doub
     InsertMessageInternal(message);
     if (!IsCurrent())
     {
-#ifdef _WIN32
+#ifdef TGVOIP_WIN32_THREADING
         SetEvent(event);
 #else
         ::pthread_cond_signal(&cond);

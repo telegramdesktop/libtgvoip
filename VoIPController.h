@@ -28,7 +28,9 @@
 #include "video/VideoRenderer.h"
 #include "video/VideoSource.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
