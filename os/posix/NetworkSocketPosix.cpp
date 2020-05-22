@@ -699,8 +699,15 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
     for (auto it = readFds.begin(); it != readFds.end();)
     {
         int sfd = GetDescriptorFromSocket(*it);
+        if (sfd < 0)
+        {
+            it = writeFds.erase(it);
+            continue;
+        }
+
         if (FD_ISSET(sfd, &readSet))
             (*it)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+
         if (sfd == 0 || !FD_ISSET(sfd, &readSet) || !(*it)->OnReadyToReceive())
             it = readFds.erase(it);
         else
@@ -710,13 +717,15 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
     for (auto it = writeFds.begin(); it != writeFds.end();)
     {
         int sfd = GetDescriptorFromSocket(*it);
-        if (sfd == 0 || !FD_ISSET(sfd, &writeSet))
+        if (sfd <= 0 || !FD_ISSET(sfd, &writeSet))
         {
             it = writeFds.erase(it);
             continue;
         }
+
         LOGV("Socket %d is ready to send", sfd);
         (*it)->m_lastSuccessfulOperationTime = VoIPController::GetCurrentTime();
+
         if ((*it)->OnReadyToSend())
             ++it;
         else
@@ -726,7 +735,7 @@ bool NetworkSocketPosix::Select(std::list<NetworkSocket*>& readFds, std::list<Ne
     for (auto it = errorFds.begin(); it != errorFds.end();)
     {
         int sfd = GetDescriptorFromSocket(*it);
-        if ((sfd == 0 || !FD_ISSET(sfd, &errorSet)) && !(*it)->IsFailed())
+        if ((sfd <= 0 || !FD_ISSET(sfd, &errorSet)) && !(*it)->IsFailed())
             it = errorFds.erase(it);
         else
             ++it;
