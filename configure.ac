@@ -25,9 +25,9 @@ AM_PROG_AS
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([crypto], [SHA1], [], [AC_MSG_FAILURE([libssl-dev is required but not found])])
+PKG_CHECK_MODULES(CRYPTO, [libcrypto])
 AC_CHECK_LIB([m], [floorf])
-AC_CHECK_LIB([opus], [opus_decoder_create], [], [AC_MSG_FAILURE([libopus-dev is required but not found])])
+PKG_CHECK_MODULES(OPUS, [opus])
 AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_CANONICAL_HOST

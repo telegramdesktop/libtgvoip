@@ -8,14 +8,15 @@
 #include "OpusEncoder.h"
 #include "VoIPServerConfig.h"
 
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
+#include <opus/opus.h>
+#else
+#include <opus.h>
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
-#include <opus/opus.h>
-#else
-#include "opus.h"
-#endif
 
 namespace
 {

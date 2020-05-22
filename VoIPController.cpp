@@ -21,10 +21,10 @@
 #include <unistd.h>
 #endif
 
-#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
 #include <opus/opus.h>
 #else
-#include "opus.h"
+#include <opus.h>
 #endif
 
 #include <algorithm>

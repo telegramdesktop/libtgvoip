@@ -656,6 +656,13 @@ TARGET_CPU_X86_TRUE
 LIBTGVOIP_PATCH_VERSION
 LIBTGVOIP_MINOR_VERSION
 LIBTGVOIP_MAJOR_VERSION
+OPUS_LIBS
+OPUS_CFLAGS
+CRYPTO_LIBS
+CRYPTO_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
+PKG_CONFIG
 am__fastdepCCAS_FALSE
 am__fastdepCCAS_TRUE
 CCASDEPMODE
@@ -824,7 +831,14 @@ CXXCPP
 OBJCXX
 OBJCXXFLAGS
 CCAS
-CCASFLAGS'
+CCASFLAGS
+PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
+CRYPTO_CFLAGS
+CRYPTO_LIBS
+OPUS_CFLAGS
+OPUS_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1492,6 +1506,16 @@ Some influential environment variables:
   OBJCXXFLAGS Objective C++ compiler flags
   CCAS        assembler compiler command (defaults to CC)
   CCASFLAGS   assembler compiler flags (defaults to CFLAGS)
+  PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
+  CRYPTO_CFLAGS
+              C compiler flags for CRYPTO, overriding pkg-config
+  CRYPTO_LIBS linker flags for CRYPTO, overriding pkg-config
+  OPUS_CFLAGS C compiler flags for OPUS, overriding pkg-config
+  OPUS_LIBS   linker flags for OPUS, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -17451,56 +17475,217 @@ fi
 
 
 # Checks for libraries.
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SHA1 in -lcrypto" >&5
-$as_echo_n "checking for SHA1 in -lcrypto... " >&6; }
-if ${ac_cv_lib_crypto_SHA1+:} false; then :
+
+
+
+
+
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_PKG_CONFIG+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcrypto  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char SHA1 ();
-int
-main ()
-{
-return SHA1 ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_crypto_SHA1=yes
-else
-  ac_cv_lib_crypto_SHA1=no
+  ;;
+esac
 fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_SHA1" >&5
-$as_echo "$ac_cv_lib_crypto_SHA1" >&6; }
-if test "x$ac_cv_lib_crypto_SHA1" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBCRYPTO 1
-_ACEOF
-
-  LIBS="-lcrypto $LIBS"
-
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+$as_echo "$PKG_CONFIG" >&6; }
 else
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_ac_pt_PKG_CONFIG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+$as_echo "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+$as_echo_n "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+		PKG_CONFIG=""
+	fi
+fi
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CRYPTO" >&5
+$as_echo_n "checking for CRYPTO... " >&6; }
+
+if test -n "$CRYPTO_CFLAGS"; then
+    pkg_cv_CRYPTO_CFLAGS="$CRYPTO_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcrypto\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libcrypto") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_CRYPTO_CFLAGS=`$PKG_CONFIG --cflags "libcrypto" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$CRYPTO_LIBS"; then
+    pkg_cv_CRYPTO_LIBS="$CRYPTO_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcrypto\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libcrypto") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_CRYPTO_LIBS=`$PKG_CONFIG --libs "libcrypto" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        CRYPTO_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libcrypto" 2>&1`
+        else
+	        CRYPTO_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libcrypto" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$CRYPTO_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (libcrypto) were not met:
+
+$CRYPTO_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables CRYPTO_CFLAGS
+and CRYPTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "libssl-dev is required but not found
-See \`config.log' for more details" "$LINENO" 5; }
-fi
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
 
+Alternatively, you may set the environment variables CRYPTO_CFLAGS
+and CRYPTO_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+else
+	CRYPTO_CFLAGS=$pkg_cv_CRYPTO_CFLAGS
+	CRYPTO_LIBS=$pkg_cv_CRYPTO_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for floorf in -lm" >&5
 $as_echo_n "checking for floorf in -lm... " >&6; }
 if ${ac_cv_lib_m_floorf+:} false; then :
@@ -17546,56 +17731,97 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for opus_decoder_create in -lopus" >&5
-$as_echo_n "checking for opus_decoder_create in -lopus... " >&6; }
-if ${ac_cv_lib_opus_opus_decoder_create+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lopus  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char opus_decoder_create ();
-int
-main ()
-{
-return opus_decoder_create ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_opus_opus_decoder_create=yes
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OPUS" >&5
+$as_echo_n "checking for OPUS... " >&6; }
+
+if test -n "$OPUS_CFLAGS"; then
+    pkg_cv_OPUS_CFLAGS="$OPUS_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"opus\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "opus") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_OPUS_CFLAGS=`$PKG_CONFIG --cflags "opus" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
-  ac_cv_lib_opus_opus_decoder_create=no
+  pkg_failed=yes
 fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+ else
+    pkg_failed=untried
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_opus_opus_decoder_create" >&5
-$as_echo "$ac_cv_lib_opus_opus_decoder_create" >&6; }
-if test "x$ac_cv_lib_opus_opus_decoder_create" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBOPUS 1
-_ACEOF
-
-  LIBS="-lopus $LIBS"
-
+if test -n "$OPUS_LIBS"; then
+    pkg_cv_OPUS_LIBS="$OPUS_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"opus\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "opus") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_OPUS_LIBS=`$PKG_CONFIG --libs "opus" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        OPUS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "opus" 2>&1`
+        else
+	        OPUS_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "opus" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$OPUS_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (opus) were not met:
+
+$OPUS_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables OPUS_CFLAGS
+and OPUS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "libopus-dev is required but not found
-See \`config.log' for more details" "$LINENO" 5; }
-fi
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
 
+Alternatively, you may set the environment variables OPUS_CFLAGS
+and OPUS_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+else
+	OPUS_CFLAGS=$pkg_cv_OPUS_CFLAGS
+	OPUS_LIBS=$pkg_cv_OPUS_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
 $as_echo_n "checking for pthread_create in -lpthread... " >&6; }
 if ${ac_cv_lib_pthread_pthread_create+:} false; then :
@@ -20451,7 +20677,9 @@ $as_echo X/"$am_mf" |
     { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "Something went wrong bootstrapping makefile fragments
-    for automatic dependency tracking.  Try re-running configure with the
+    for automatic dependency tracking.  If GNU make was not used, consider
+    re-running the configure script with MAKE=\"gmake\" (or whatever is
+    necessary).  You can also try re-running configure with the
     '--disable-dependency-tracking' option to at least be able to build
     the package (albeit without support for automatic dependency tracking).
 See \`config.log' for more details" "$LINENO" 5; }
