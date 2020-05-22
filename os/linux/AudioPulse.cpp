@@ -8,6 +8,7 @@
 #include "AudioPulse.h"
 
 #include <dlfcn.h>
+#include <libgen.h>
 
 #include <cstring>
 
