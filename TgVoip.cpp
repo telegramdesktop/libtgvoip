@@ -421,10 +421,12 @@ TgVoipFinalState TgVoipImpl::stop()
 
 void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgvoip::State state)
 {
+    assert(controller != nullptr);
+    assert(controller->implData != nullptr);
     TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
     std::lock_guard<std::mutex> lock(self->m_mutexOnStateUpdated);
 
-    if (self->m_onStateUpdated)
+    if (self->m_onStateUpdated != nullptr)
     {
         TgVoipState mappedState;
         switch (state)
@@ -455,13 +457,13 @@ void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgv
 
 void TgVoipImpl::signalBarsCallback(tgvoip::VoIPController* controller, int signalBars)
 {
+    assert(controller != nullptr);
+    assert(controller->implData != nullptr);
     TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
     std::lock_guard<std::mutex> lock(self->m_mutexOnSignalBarsUpdated);
 
-    if (self->m_onSignalBarsUpdated)
-    {
+    if (self->m_onSignalBarsUpdated != nullptr)
         self->m_onSignalBarsUpdated(signalBars);
-    }
 }
 
 static std::function<void(std::string const&)> globalLoggingFunction;

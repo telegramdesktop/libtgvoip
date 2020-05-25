@@ -86,8 +86,6 @@ VoIPController::VoIPController()
     , m_selectCanceller(SocketSelectCanceller::Create())
     , m_rawSendQueue(64)
 {
-    m_unsentStreamPackets.store(0);
-
     ServerConfig* serverConfigInstance = ServerConfig::GetSharedInstance();
     m_maxAudioBitrate        = static_cast<std::uint32_t>(serverConfigInstance->GetInt("audio_max_bitrate", 20000));
     m_maxAudioBitrateGPRS    = static_cast<std::uint32_t>(serverConfigInstance->GetInt("audio_max_bitrate_gprs", 8000));
