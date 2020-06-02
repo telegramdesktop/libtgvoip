@@ -1166,7 +1166,7 @@ void VoIPController::StartAudio(){
 	if(!micMuted){
 		audioInput->Start();
 		if(!audioInput->IsInitialized()){
-			LOGE("Erorr initializing audio capture");
+			LOGE("Error initializing audio capture");
 			lastError=ERROR_AUDIO_IO;
 
 			SetState(STATE_FAILED);
