@@ -342,7 +342,7 @@ AudioProcessingImpl::AudioProcessingImpl(
                                    std::move(capture_analyzer))),
       constants_(config.Get<ExperimentalAgc>().startup_min_volume,
                  config.Get<ExperimentalAgc>().clipped_level_min,
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
                  /* enabled= */ false,
                  /* enabled_agc2_level_estimator= */ false,
                  /* digital_adaptive_disabled= */ false,
@@ -353,7 +353,7 @@ AudioProcessingImpl::AudioProcessingImpl(
                  config.Get<ExperimentalAgc>().digital_adaptive_disabled,
                  config.Get<ExperimentalAgc>().analyze_before_aec),
 #endif
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
       capture_(false),
 #else
       capture_(config.Get<ExperimentalNs>().enabled),

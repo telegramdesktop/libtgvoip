@@ -3334,7 +3334,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
@@ -3375,7 +3405,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
@@ -3468,7 +3528,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
@@ -3637,7 +3727,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
@@ -3807,7 +3927,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
@@ -3894,7 +4044,37 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREPROCESSOR_DEFINITIONS = "TGVOIP_USE_CUSTOM_CRYPTO=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+					DWEBRTC_NS_FLOAT,
+					WEBRTC_POSIX,
+					WEBRTC_HAS_NEON,
+					WEBRTC_MAC,
+					"WebRtcAgc_UpdateAgcThresholds=WebRtcAgc_UpdateAgcThresholds1",
+					"WebRtcAgc_Init=WebRtcAgc_Init1",
+					"rtc_FatalMessage=rtc_FatalMessage1",
+					"WebRtcAgc_Process=WebRtcAgc_Process1",
+					"webrtc=webrtc1",
+					"rtc=rtc1",
+					"WebRtcAgc_ProcessVad=WebRtcAgc_ProcessVad1",
+					"WebRtcAgc_InitVad=WebRtcAgc_InitVad1",
+					"WebRtcAgc_CalculateGainTable=WebRtcAgc_CalculateGainTable1",
+					"WebRtcAgc_AddFarendToDigital=WebRtcAgc_AddFarendToDigital1",
+					"WebRtcAgc_InitDigital=WebRtcAgc_InitDigital1",
+					"WebRtcAgc_AddMic=WebRtcAgc_AddMic1",
+					"WebRtcAgc_VirtualMic=WebRtcAgc_VirtualMic1",
+					"WebRtcAgc_AddFarend=WebRtcAgc_AddFarend1",
+					"WebRtcAgc_Free=WebRtcAgc_Free1",
+					"WebRtcAgc_Create=WebRtcAgc_Create1",
+					"WebRtcAgc_ExpCurve=WebRtcAgc_ExpCurve1",
+					"WebRtcAgc_get_config=WebRtcAgc_get_config1",
+					"WebRtcAgc_set_config=WebRtcAgc_set_config1",
+					"WebRtcAgc_ProcessAnalog=WebRtcAgc_ProcessAnalog1",
+					"WebRtcAgc_SpeakerInactiveCtrl=WebRtcAgc_SpeakerInactiveCtrl1",
+					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
+					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
+					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"../../thrid-party/opus/include/opus",
