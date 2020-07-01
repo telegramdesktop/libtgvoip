@@ -25,9 +25,9 @@ AM_PROG_AS
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([crypto], [SHA1], [], [AC_MSG_FAILURE([libssl-dev is required but not found])])
+PKG_CHECK_MODULES(CRYPTO, [libcrypto])
 AC_CHECK_LIB([m], [floorf])
-AC_CHECK_LIB([opus], [opus_decoder_create], [], [AC_MSG_FAILURE([libopus-dev is required but not found])])
+PKG_CHECK_MODULES(OPUS, [opus])
 AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_CANONICAL_HOST
@@ -70,21 +70,13 @@ AS_IF([test "x$os_osx" != xyes && test "x$enable_audio_callback" != xyes], [ # L
 	])
 
 	AS_IF([test "x$with_pulse" != xno], [
-		AC_CHECK_LIB([pulse], [pa_context_new], [
-			AS_ECHO_N( ) # what is the proper way to check for a library without linking it?
-		], [
-			AC_MSG_FAILURE([libpulse-dev is required during build, but you don't have it installed. Use --without-pulse to disable PulseAudio support.])
-		])
+		PKG_CHECK_MODULES(PULSE, [libpulse])
 	], [
 		AC_DEFINE([WITHOUT_PULSE], [1], [Define to disable PulseAudio support])
 	])
 
 	AS_IF([test "x$with_alsa" != xno], [
-		AC_CHECK_LIB([asound], [snd_pcm_open], [
-			AS_ECHO_N( ) # what is the proper way to check for a library without linking it?
-		], [
-			AC_MSG_FAILURE([libasound-dev is required during build, but you don't have it installed. Use --without-alsa to disable ALSA support.])
-		])
+		PKG_CHECK_MODULES(ALSA, [alsa])
 	], [
 		AC_DEFINE([WITHOUT_ALSA], [1], [Define to disable ALSA support])
 	])

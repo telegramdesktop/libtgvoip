@@ -8,7 +8,7 @@
 
 struct TgVoipProxy {
     std::string host;
-    uint16_t port;
+    uint16_t port = 0;
     std::string login;
     std::string password;
 };
@@ -20,17 +20,17 @@ enum class TgVoipEndpointType {
     TcpRelay
 };
 
-struct TgVoipEdpointHost {
+struct TgVoipEndpointHost {
     std::string ipv4;
     std::string ipv6;
 };
 
 struct TgVoipEndpoint {
-    int64_t endpointId;
-    TgVoipEdpointHost host;
-    uint16_t port;
-    TgVoipEndpointType type;
-    unsigned char peerTag[16];
+    int64_t endpointId = 0;
+    TgVoipEndpointHost host;
+    uint16_t port = 0;
+    TgVoipEndpointType type = TgVoipEndpointType();
+    unsigned char peerTag[16] = { 0 };
 };
 
 enum class TgVoipNetworkType {
@@ -60,59 +60,60 @@ struct TgVoipPersistentState {
 
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
 struct TgVoipCrypto {
-    void (*rand_bytes)(uint8_t* buffer, size_t length);
-    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output);
-    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num);
-    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
-    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv);
+    void (*rand_bytes)(uint8_t* buffer, size_t length) = nullptr;
+    void (*sha1)(uint8_t* msg, size_t length, uint8_t* output) = nullptr;
+    void (*sha256)(uint8_t* msg, size_t length, uint8_t* output) = nullptr;
+    void (*aes_ige_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv) = nullptr;
+    void (*aes_ige_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv) = nullptr;
+    void (*aes_ctr_encrypt)(uint8_t* inout, size_t length, uint8_t* key, uint8_t* iv, uint8_t* ecount, uint32_t* num) = nullptr;
+    void (*aes_cbc_encrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv) = nullptr;
+    void (*aes_cbc_decrypt)(uint8_t* in, uint8_t* out, size_t length, uint8_t* key, uint8_t* iv) = nullptr;
 };
 #endif
 
 struct TgVoipConfig {
-    double initializationTimeout;
-    double receiveTimeout;
-    TgVoipDataSaving dataSaving;
-    bool enableP2P;
-    bool enableAEC;
-    bool enableNS;
-    bool enableAGC;
-    bool enableCallUpgrade;
+    double initializationTimeout = 0.;
+    double receiveTimeout = 0.;
+    TgVoipDataSaving dataSaving = TgVoipDataSaving();
+    bool enableP2P = false;
+    bool enableAEC = false;
+    bool enableNS = false;
+    bool enableAGC = false;
+    bool enableVolumeControl = false;
+    bool enableCallUpgrade = false;
 #ifndef _WIN32
     std::string logPath;
 #else
     std::wstring logPath;
 #endif
-    int maxApiLayer;
+    int maxApiLayer = 0;
 };
 
 struct TgVoipEncryptionKey {
     std::vector<uint8_t> value;
-    bool isOutgoing;
+    bool isOutgoing = false;
 };
 
 enum class TgVoipState {
     WaitInit,
     WaitInitAck,
-    Estabilished,
+    Established,
     Failed,
     Reconnecting
 };
 
 struct TgVoipTrafficStats {
-    uint64_t bytesSentWifi;
-    uint64_t bytesReceivedWifi;
-    uint64_t bytesSentMobile;
-    uint64_t bytesReceivedMobile;
+    uint64_t bytesSentWifi = 0;
+    uint64_t bytesReceivedWifi = 0;
+    uint64_t bytesSentMobile = 0;
+    uint64_t bytesReceivedMobile = 0;
 };
 
 struct TgVoipFinalState {
     TgVoipPersistentState persistentState;
     std::string debugLog;
     TgVoipTrafficStats trafficStats;
-    bool isRatingSuggested;
+    bool isRatingSuggested = false;
 };
 
 struct TgVoipAudioDataCallbacks {
@@ -130,11 +131,11 @@ public:
     static void setGlobalServerConfig(std::string const &serverConfig);
     static int getConnectionMaxLayer();
     static std::string getVersion();
-    static TgVoip *makeInstance(
+    static std::unique_ptr<TgVoip> makeInstance(
         TgVoipConfig const &config,
         TgVoipPersistentState const &persistentState,
         std::vector<TgVoipEndpoint> const &endpoints,
-        std::unique_ptr<TgVoipProxy> const &proxy,
+        TgVoipProxy const *proxy,
         TgVoipNetworkType initialNetworkType,
         TgVoipEncryptionKey const &encryptionKey
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
@@ -153,6 +154,11 @@ public:
     virtual void setMuteMicrophone(bool muteMicrophone) = 0;
     virtual void setAudioOutputGainControlEnabled(bool enabled) = 0;
     virtual void setEchoCancellationStrength(int strength) = 0;
+    virtual void setAudioInputDevice(std::string id) = 0;
+    virtual void setAudioOutputDevice(std::string id) = 0;
+    virtual void setInputVolume(float level) = 0;
+    virtual void setOutputVolume(float level) = 0;
+    virtual void setAudioOutputDuckingEnabled(bool enabled) = 0;
 
     virtual std::string getLastError() = 0;
     virtual std::string getDebugInfo() = 0;

@@ -70,7 +70,6 @@ private:
     unsigned int m_packetsPerFrame;
     int m_consecutiveLostPackets;
 
-    std::int16_t m_prevLastSample;
     alignas(2) std::uint8_t m_nextBuffer[8192];
     alignas(2) std::uint8_t m_decodeBuffer[8192];
 

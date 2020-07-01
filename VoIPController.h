@@ -28,7 +28,9 @@
 #include "video/VideoRenderer.h"
 #include "video/VideoSource.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #endif
@@ -149,7 +151,7 @@ public:
     /**
      * Use this field to store any of your context data associated with this call
      */
-    void* implData;
+    void* implData = nullptr;
 
     VoIPController();
     virtual ~VoIPController();
@@ -590,13 +592,13 @@ private:
     std::uint32_t m_lastSentSeq = 0;
 
     int m_dontSendPackets = 0;
-    Error m_lastError;
+    Error m_lastError = Error::UNKNOWN;
     std::uint32_t m_maxBitrate;
     std::int32_t m_peerVersion = 0;
     std::uint32_t m_peerCapabilities = 0;
     Proxy m_proxyProtocol = Proxy::NONE;
     std::int32_t m_connectionMaxLayer = 0;
-    std::atomic<std::uint32_t> m_unsentStreamPackets;
+    std::atomic<std::uint32_t> m_unsentStreamPackets = 0;
 
     int m_echoCancellationStrength = 1;
     int m_extraEcLevel = 0;

@@ -21,10 +21,10 @@
 #include <unistd.h>
 #endif
 
-#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
 #include <opus/opus.h>
 #else
-#include "opus.h"
+#include <opus.h>
 #endif
 
 #include <algorithm>
@@ -86,8 +86,6 @@ VoIPController::VoIPController()
     , m_selectCanceller(SocketSelectCanceller::Create())
     , m_rawSendQueue(64)
 {
-    m_unsentStreamPackets.store(0);
-
     ServerConfig* serverConfigInstance = ServerConfig::GetSharedInstance();
     m_maxAudioBitrate        = static_cast<std::uint32_t>(serverConfigInstance->GetInt("audio_max_bitrate", 20000));
     m_maxAudioBitrateGPRS    = static_cast<std::uint32_t>(serverConfigInstance->GetInt("audio_max_bitrate_gprs", 8000));

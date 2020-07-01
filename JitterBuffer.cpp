@@ -214,19 +214,30 @@ JitterBuffer::Status JitterBuffer::GetInternal(jitter_packet_t* pkt, std::uint32
     if (advance)
         Advance();
 
-    ++m_lostCount;
-    if (offset == 0)
+    if (m_lastPutTimestamp != 0)
     {
-        ++m_lostPackets;
-        ++m_lostSinceReset;
-    }
-    if (m_lostCount >= m_lossesToReset || (m_gotSinceReset > m_delay * 25 && m_lostSinceReset > m_gotSinceReset / 2))
-    {
-        LOGW("jitter: lost %d packets in a row, resetting", m_lostCount);
-        m_dontIncDelay = 16;
-        m_dontDecDelay += 128;
-        m_lostCount = 0;
-        ResetNonBlocking();
+        ++m_lostCount;
+        if (offset == 0)
+        {
+            ++m_lostPackets;
+            ++m_lostSinceReset;
+        }
+        if (m_lostCount >= m_lossesToReset || (m_gotSinceReset > m_delay * 25 && m_lostSinceReset > m_gotSinceReset / 2))
+        {
+            LOGW("jitter: lost %d packets in a row, resetting", m_lostCount);
+            m_dontIncDelay = 16;
+            m_dontDecDelay += 128;
+            std::uint32_t currentDelay = GetCurrentDelayNonBlocking();
+            if (currentDelay < m_delay)
+            {
+                if ((m_delay - currentDelay) * m_step < m_nextTimestamp)
+                    m_nextTimestamp -= (m_delay - currentDelay) * m_step;
+                else
+                    m_nextTimestamp = 0;
+            }
+            m_lostCount = 0;
+            ResetNonBlocking();
+        }
     }
 
     if (!(advance && offset == 0))
@@ -285,17 +296,17 @@ void JitterBuffer::PutInternal(const jitter_packet_t& pkt, const std::uint8_t* d
         return;
     }
 
-    if (overwriteExisting)
+    auto it = m_slots.find(pkt.timestamp);
+    if (it != m_slots.end())
     {
-        auto it = m_slots.find(pkt.timestamp);
-        if (it != m_slots.end())
+        if (overwriteExisting)
         {
             jitter_packet_t& slot = it->second;
             slot.buffer.CopyFrom(data, 0, pkt.size);
             slot.size = pkt.size;
             slot.isEC = pkt.isEC;
-            return;
         }
+        return;
     }
 
     ++m_gotSinceReset;

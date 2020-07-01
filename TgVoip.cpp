@@ -81,19 +81,19 @@ class TgVoipImpl : public TgVoip
 {
 public:
     TgVoipImpl(
-        std::vector<TgVoipEndpoint> const& endpoints,
-        TgVoipPersistentState const& persistentState,
-        std::unique_ptr<TgVoipProxy> const& proxy,
-        TgVoipConfig const& config,
-        TgVoipEncryptionKey const& encryptionKey,
+        const std::vector<TgVoipEndpoint>& endpoints,
+        const TgVoipPersistentState& persistentState,
+        const TgVoipProxy* proxy,
+        const TgVoipConfig& config,
+        const TgVoipEncryptionKey& encryptionKey,
         TgVoipNetworkType initialNetworkType
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
         ,
-        TgVoipCrypto const& crypto
+        const TgVoipCrypto& crypto
 #endif
 #ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
         ,
-        TgVoipAudioDataCallbacks const& audioDataCallbacks
+        const TgVoipAudioDataCallbacks& audioDataCallbacks
 #endif
     );
 
@@ -104,6 +104,13 @@ public:
     void setMuteMicrophone(bool muteMicrophone) override;
     void setAudioOutputGainControlEnabled(bool enabled) override;
     void setEchoCancellationStrength(int strength) override;
+
+    void setAudioInputDevice(std::string id) override;
+    void setAudioOutputDevice(std::string id) override;
+    void setInputVolume(float level) override;
+    void setOutputVolume(float level) override;
+    void setAudioOutputDuckingEnabled(bool enabled) override;
+
     std::string getLastError() override;
     std::string getDebugInfo() override;
     std::int64_t getPreferredRelayId() override;
@@ -122,19 +129,19 @@ private:
 };
 
 TgVoipImpl::TgVoipImpl(
-    std::vector<TgVoipEndpoint> const& endpoints,
-    TgVoipPersistentState const& persistentState,
-    std::unique_ptr<TgVoipProxy> const& proxy,
-    TgVoipConfig const& config,
-    TgVoipEncryptionKey const& encryptionKey,
+    const std::vector<TgVoipEndpoint>& endpoints,
+    const TgVoipPersistentState& persistentState,
+    const TgVoipProxy* proxy,
+    const TgVoipConfig& config,
+    const TgVoipEncryptionKey& encryptionKey,
     TgVoipNetworkType initialNetworkType
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
     ,
-    TgVoipCrypto const& crypto
+    const TgVoipCrypto& crypto
 #endif
 #ifdef TGVOIP_USE_CALLBACK_AUDIO_IO
     ,
-    TgVoipAudioDataCallbacks const& audioDataCallbacks
+    const TgVoipAudioDataCallbacks& audioDataCallbacks
 #endif
 )
 {
@@ -220,6 +227,7 @@ TgVoipImpl::TgVoipImpl(
         config.enableNS,
         config.enableAGC,
         config.enableCallUpgrade);
+    mappedConfig.enableVolumeControl = config.enableVolumeControl;
     mappedConfig.logFilePath = config.logPath;
     mappedConfig.statsDumpFilePath = {};
 
@@ -236,7 +244,11 @@ TgVoipImpl::TgVoipImpl(
     m_controller->Connect();
 }
 
-TgVoipImpl::~TgVoipImpl() = default;
+TgVoipImpl::~TgVoipImpl()
+{
+    if (m_controller != nullptr)
+        stop();
+}
 
 void TgVoipImpl::setOnStateUpdated(std::function<void(TgVoipState)> onStateUpdated)
 {
@@ -334,6 +346,33 @@ std::string TgVoipImpl::getLastError()
     throw std::runtime_error("Error " + std::to_string(static_cast<int>(error)) + " is not one of enum values!");
 }
 
+void TgVoipImpl::setAudioInputDevice(std::string id)
+{
+    m_controller->SetCurrentAudioInput(std::move(id));
+}
+
+void TgVoipImpl::setAudioOutputDevice(std::string id)
+{
+    m_controller->SetCurrentAudioOutput(std::move(id));
+}
+
+void TgVoipImpl::setInputVolume(float level)
+{
+    m_controller->SetInputVolume(level);
+}
+
+void TgVoipImpl::setOutputVolume(float level)
+{
+    m_controller->SetOutputVolume(level);
+}
+
+void TgVoipImpl::setAudioOutputDuckingEnabled(bool enabled)
+{
+#if defined(__APPLE__) && defined(TARGET_OS_OSX)
+    m_controller->SetAudioOutputDuckingEnabled(enabled);
+#endif
+}
+
 std::string TgVoipImpl::getDebugInfo()
 {
     return m_controller->GetDebugString();
@@ -382,10 +421,12 @@ TgVoipFinalState TgVoipImpl::stop()
 
 void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgvoip::State state)
 {
+    assert(controller != nullptr);
+    assert(controller->implData != nullptr);
     TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
     std::lock_guard<std::mutex> lock(self->m_mutexOnStateUpdated);
 
-    if (self->m_onStateUpdated)
+    if (self->m_onStateUpdated != nullptr)
     {
         TgVoipState mappedState;
         switch (state)
@@ -397,7 +438,7 @@ void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgv
             mappedState = TgVoipState::WaitInitAck;
             break;
         case tgvoip::State::ESTABLISHED:
-            mappedState = TgVoipState::Estabilished;
+            mappedState = TgVoipState::Established;
             break;
         case tgvoip::State::FAILED:
             mappedState = TgVoipState::Failed;
@@ -406,7 +447,7 @@ void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgv
             mappedState = TgVoipState::Reconnecting;
             break;
 //        default:
-//            mappedState = TgVoipState::Estabilished;
+//            mappedState = TgVoipState::Established;
 //            break;
         }
 
@@ -416,13 +457,13 @@ void TgVoipImpl::controllerStateCallback(tgvoip::VoIPController* controller, tgv
 
 void TgVoipImpl::signalBarsCallback(tgvoip::VoIPController* controller, int signalBars)
 {
+    assert(controller != nullptr);
+    assert(controller->implData != nullptr);
     TgVoipImpl* self = reinterpret_cast<TgVoipImpl*>(controller->implData);
     std::lock_guard<std::mutex> lock(self->m_mutexOnSignalBarsUpdated);
 
-    if (self->m_onSignalBarsUpdated)
-    {
+    if (self->m_onSignalBarsUpdated != nullptr)
         self->m_onSignalBarsUpdated(signalBars);
-    }
 }
 
 static std::function<void(std::string const&)> globalLoggingFunction;
@@ -467,13 +508,13 @@ std::string TgVoip::getVersion()
     return tgvoip::VoIPController::GetVersion();
 }
 
-TgVoip* TgVoip::makeInstance(
-    TgVoipConfig const& config,
-    TgVoipPersistentState const& persistentState,
-    std::vector<TgVoipEndpoint> const& endpoints,
-    std::unique_ptr<TgVoipProxy> const& proxy,
+std::unique_ptr<TgVoip> TgVoip::makeInstance(
+    const TgVoipConfig& config,
+    const TgVoipPersistentState& persistentState,
+    const std::vector<TgVoipEndpoint>& endpoints,
+    const TgVoipProxy* proxy,
     TgVoipNetworkType initialNetworkType,
-    TgVoipEncryptionKey const& encryptionKey
+    const TgVoipEncryptionKey& encryptionKey
 #ifdef TGVOIP_USE_CUSTOM_CRYPTO
     ,
     TgVoipCrypto const& crypto
@@ -484,7 +525,7 @@ TgVoip* TgVoip::makeInstance(
 #endif
 )
 {
-    return new TgVoipImpl(
+    return std::make_unique<TgVoipImpl>(
         endpoints,
         persistentState,
         proxy,

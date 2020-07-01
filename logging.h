@@ -81,7 +81,7 @@ void tgvoip_log_file_write_header(FILE* file);
         tgvoip_log_file_printf('E', msg, ##__VA_ARGS__);      \
     }
 
-#elif defined(_WIN32) && defined(_DEBUG)
+#elif defined(_WIN32) && !defined(__MINGW32__) && defined(_DEBUG)
 
 #include <cstdio>
 #include <windows.h>

@@ -8,14 +8,15 @@
 #include "OpusEncoder.h"
 #include "VoIPServerConfig.h"
 
+#if TGVOIP_INCLUDE_OPUS_PACKAGE
+#include <opus/opus.h>
+#else
+#include <opus.h>
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#if defined HAVE_CONFIG_H || defined TGVOIP_USE_INSTALLED_OPUS
-#include <opus/opus.h>
-#else
-#include "opus.h"
-#endif
 
 namespace
 {
@@ -139,7 +140,15 @@ void tgvoip::OpusEncoder::Encode(std::int16_t* data, std::size_t len)
         std::uint8_t secondaryBuffer[128];
         if (m_secondaryEncoderEnabled && m_secondaryEncoder != nullptr)
         {
-            secondaryLen = opus_encode(m_secondaryEncoder, data, static_cast<int>(len), secondaryBuffer, sizeof(secondaryBuffer));
+            std::int32_t secondaryEncoderResult = opus_encode(m_secondaryEncoder, data, static_cast<int>(len), secondaryBuffer, sizeof(secondaryBuffer));
+            if (secondaryEncoderResult <= 0)
+            {
+                LOGE("Error secondary encoding: %d", secondaryEncoderResult);
+            }
+            else
+            {
+                secondaryLen = secondaryEncoderResult;
+            }
         }
         InvokeCallback(m_buffer, static_cast<std::size_t>(r), secondaryBuffer, static_cast<std::size_t>(secondaryLen));
     }
