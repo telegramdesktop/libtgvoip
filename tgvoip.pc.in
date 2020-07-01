@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: tgvoip
 Description: VoIP library for Telegram clients
 Version: 2.4.4
-Requires.private: libcrypto opus alsa libpulse
+Requires.private: libcrypto opus
 Libs: -L${libdir} -ltgvoip -lpthread
 Libs.private: -ldl -lm
 Cflags: -I${includedir}/tgvoip
