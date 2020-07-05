@@ -46,18 +46,18 @@ AS_CASE([$host_cpu],
 	[armv7*], [cpu_armv7=yes]
 )
 AS_ECHO("Detected CPU: $host_cpu")
-AM_CONDITIONAL(TARGET_CPU_X86, test "x$cpu_x86" == xyes)
-AM_CONDITIONAL(TARGET_CPU_ARM, test "x$cpu_arm" == xyes)
-AM_CONDITIONAL(TARGET_CPU_ARMV7, test "x$cpu_armv7" == xyes)
+AM_CONDITIONAL(TARGET_CPU_X86, test "x$cpu_x86" = xyes)
+AM_CONDITIONAL(TARGET_CPU_ARM, test "x$cpu_arm" = xyes)
+AM_CONDITIONAL(TARGET_CPU_ARMV7, test "x$cpu_armv7" = xyes)
 AS_ECHO("Detected OS: $host_os")
 
 AS_CASE([$host_os],
 	[darwin*], [os_osx=yes]
 )
-AM_CONDITIONAL(TARGET_OS_OSX, test "x$os_osx" == xyes)
+AM_CONDITIONAL(TARGET_OS_OSX, test "x$os_osx" = xyes)
 
 AC_ARG_ENABLE([audio-callback], [AS_HELP_STRING([--enable-audio-callback], [enable callback-based audio I/O])], [], [enable_audio_callback=no])
-AM_CONDITIONAL(ENABLE_AUDIO_CALLBACK, test "x$enable_audio_callback" == xyes)
+AM_CONDITIONAL(ENABLE_AUDIO_CALLBACK, test "x$enable_audio_callback" = xyes)
 
 AS_IF([test "x$os_osx" != xyes && test "x$enable_audio_callback" != xyes], [ # Linux
 	AC_CHECK_LIB([dl], [dlopen])
@@ -65,7 +65,7 @@ AS_IF([test "x$os_osx" != xyes && test "x$enable_audio_callback" != xyes], [ # L
 	AC_ARG_WITH([pulse], [AS_HELP_STRING([--without-pulse], [disable PulseAudio support])], [], [with_pulse=yes])
 	AC_ARG_WITH([alsa], [AS_HELP_STRING([--without-alsa], [disable ALSA support])], [], [with_alsa=yes])
 
-	AS_IF([test "x$with_pulse" == xno && test "x$with_alsa" == xno], [
+	AS_IF([test "x$with_pulse" = xno && test "x$with_alsa" = xno], [
 		AC_MSG_FAILURE([You can only disable either ALSA or PulseAudio, not both]);
 	])
 
@@ -82,11 +82,11 @@ AS_IF([test "x$os_osx" != xyes && test "x$enable_audio_callback" != xyes], [ # L
 	])
 ]);
 
-AM_CONDITIONAL(WITH_PULSE, test "x$with_pulse" == xyes)
-AM_CONDITIONAL(WITH_ALSA, test "x$with_alsa" == xyes)
+AM_CONDITIONAL(WITH_PULSE, test "x$with_pulse" = xyes)
+AM_CONDITIONAL(WITH_ALSA, test "x$with_alsa" = xyes)
 
 AC_ARG_ENABLE([dsp], [AS_HELP_STRING([--disable-dsp], [disable signal processing (echo cancellation, noise suppression, and automatic gain control)])], [], [enable_dsp=yes])
-AM_CONDITIONAL(ENABLE_DSP, test "x$enable_dsp" == xyes)
+AM_CONDITIONAL(ENABLE_DSP, test "x$enable_dsp" = xyes)
 
 # Checks for header files.
 AC_FUNC_ALLOCA
