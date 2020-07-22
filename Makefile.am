@@ -386,7 +386,7 @@ SRC += \
 webrtc_dsp/rtc_base/logging_mac.mm \
 webrtc_dsp/rtc_base/logging_mac.h
 else
-CFLAGS += -DWEBRTC_LINUX
+CFLAGS += $(if $(filter linux%,@host_os@),-DWEBRTC_LINUX)
 endif
 
 if TARGET_CPU_X86
