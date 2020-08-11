@@ -5,8 +5,8 @@
 //
 
 #ifndef TGVOIP_NO_DSP
-#include "webrtc_dsp/modules/audio_processing/include/audio_processing.h"
-#include "webrtc_dsp/api/audio/audio_frame.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "api/audio/audio_frame.h"
 #endif
 
 #include "EchoCanceller.h"
@@ -28,7 +28,7 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC){
 	isOn=true;
 
 	webrtc::Config extraConfig;
-#ifdef TGVOIP_USE_DESKTOP_DSP
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 	extraConfig.Set(new webrtc::DelayAgnostic(true));
 #endif
 
@@ -43,28 +43,35 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC){
 #endif
 	config.high_pass_filter.enabled = enableAEC;
 	config.gain_controller2.enabled = enableAGC;
+
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 	apm->ApplyConfig(config);
 
-	webrtc::NoiseSuppression::Level nsLevel;
+	using Level = webrtc::NoiseSuppression::Level;
+#else
+	using Level = webrtc::AudioProcessing::Config::NoiseSuppression::Level;
+#endif
+	Level nsLevel;
 #ifdef __APPLE__
 	switch(ServerConfig::GetSharedInstance()->GetInt("webrtc_ns_level_vpio", 0)){
 #else
 	switch(ServerConfig::GetSharedInstance()->GetInt("webrtc_ns_level", 2)){
 #endif
 		case 0:
-			nsLevel=webrtc::NoiseSuppression::Level::kLow;
+			nsLevel=Level::kLow;
 			break;
 		case 1:
-			nsLevel=webrtc::NoiseSuppression::Level::kModerate;
+			nsLevel=Level::kModerate;
 			break;
 		case 3:
-			nsLevel=webrtc::NoiseSuppression::Level::kVeryHigh;
+			nsLevel=Level::kVeryHigh;
 			break;
 		case 2:
 		default:
-			nsLevel=webrtc::NoiseSuppression::Level::kHigh;
+			nsLevel=Level::kHigh;
 			break;
 	}
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 	apm->noise_suppression()->set_level(nsLevel);
 	apm->noise_suppression()->Enable(enableNS);
 	if(enableAGC){
@@ -74,6 +81,19 @@ EchoCanceller::EchoCanceller(bool enableAEC, bool enableNS, bool enableAGC){
 		apm->gain_control()->set_compression_gain_db(ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_compression_gain", 20));
 	}
 	apm->voice_detection()->set_likelihood(webrtc::VoiceDetection::Likelihood::kVeryLowLikelihood);
+#else
+	config.noise_suppression.level = nsLevel;
+	config.noise_suppression.enabled = enableNS;
+	if(enableAGC){
+		config.gain_controller1.mode = webrtc::AudioProcessing::Config::GainController1::kAdaptiveDigital;
+		config.gain_controller1.target_level_dbfs = ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_target_level", 9);
+		config.gain_controller1.enable_limiter = ServerConfig::GetSharedInstance()->GetBoolean("webrtc_agc_enable_limiter", true);
+		config.gain_controller1.compression_gain_db = ServerConfig::GetSharedInstance()->GetInt("webrtc_agc_compression_gain", 20);
+	}
+	config.voice_detection.enabled = true;
+
+	apm->ApplyConfig(config);
+#endif
 
 	audioFrame=new webrtc::AudioFrame();
 	audioFrame->samples_per_channel_=480;
@@ -110,7 +130,7 @@ void EchoCanceller::Stop(){
 
 
 void EchoCanceller::SpeakerOutCallback(unsigned char* data, size_t len){
-    if(len!=960*2 || !enableAEC || !isOn)
+	if(len!=960*2 || !enableAEC || !isOn)
 		return;
 #ifndef TGVOIP_NO_DSP
 	int16_t* buf=(int16_t*)farendBufferPool->Get();
@@ -155,17 +175,25 @@ void EchoCanceller::ProcessInput(int16_t* inOut, size_t numSamples, bool& hasVoi
 
 	memcpy(audioFrame->mutable_data(), inOut, 480*2);
 	if(enableAEC)
-    	apm->set_stream_delay_ms(delay);
+		apm->set_stream_delay_ms(delay);
 	apm->ProcessStream(audioFrame);
 	if(enableVAD)
-    	hasVoice=apm->voice_detection()->stream_has_voice();
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
+		hasVoice=apm->voice_detection()->stream_has_voice();
+#else
+		hasVoice= apm->GetStatistics().voice_detected.value_or(false);
+#endif
 	memcpy(inOut, audioFrame->data(), 480*2);
 	memcpy(audioFrame->mutable_data(), inOut+480, 480*2);
 	if(enableAEC)
-    	apm->set_stream_delay_ms(delay);
+		apm->set_stream_delay_ms(delay);
 	apm->ProcessStream(audioFrame);
 	if(enableVAD){
-    	hasVoice=hasVoice || apm->voice_detection()->stream_has_voice();
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
+		hasVoice=hasVoice || apm->voice_detection()->stream_has_voice();
+#else
+		hasVoice=hasVoice || apm->GetStatistics().voice_detected.value_or(false);
+#endif
 	}
 	memcpy(inOut+480, audioFrame->data(), 480*2);
 #endif
@@ -187,7 +215,13 @@ void EchoCanceller::SetAECStrength(int strength){
 void EchoCanceller::SetVoiceDetectionEnabled(bool enabled){
 	enableVAD=enabled;
 #ifndef TGVOIP_NO_DSP
+#ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 	apm->voice_detection()->Enable(enabled);
+#else
+	auto config = apm->GetConfig();
+	config.voice_detection.enabled = enabled;
+	apm->ApplyConfig(config);
+#endif
 #endif
 }
 
