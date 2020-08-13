@@ -35,6 +35,7 @@ AC_CANONICAL_HOST
 AC_SUBST(LIBTGVOIP_MAJOR_VERSION, libtgvoip_major_version)
 AC_SUBST(LIBTGVOIP_MINOR_VERSION, libtgvoip_minor_version)
 AC_SUBST(LIBTGVOIP_PATCH_VERSION, libtgvoip_patch_version)
+AC_SUBST(LIBTGVOIP_VERSION, libtgvoip_version)
 
 AS_CASE([$host_cpu],
 	[i?86], [cpu_x86=yes],
