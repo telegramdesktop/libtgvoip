@@ -3932,7 +3932,7 @@ Endpoint::~Endpoint(){
 #pragma mark - AudioInputTester
 
 AudioInputTester::AudioInputTester(std::string deviceID) : deviceID(std::move(deviceID)){
-	io=audio::AudioIO::Create(deviceID, "default");
+	io=audio::AudioIO::Create(this->deviceID, "default");
 	if(io->Failed()){
 		LOGE("Audio IO failed");
 		return;
