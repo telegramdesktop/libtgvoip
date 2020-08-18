@@ -217,13 +217,12 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 #ifdef TGVOIP_WINDOWS_DESKTOP
 	SafeRelease(&device);
 
-	IMMDeviceCollection *deviceCollection = NULL;
-
 	if(deviceID=="default"){
 		isDefaultDevice=true;
 		res=enumerator->GetDefaultAudioEndpoint(eCapture, eCommunications, &device);
 		CHECK_RES(res, "GetDefaultAudioEndpoint");
 	}else{
+		IMMDeviceCollection *deviceCollection = NULL;
 		isDefaultDevice=false;
 		res=enumerator->EnumAudioEndpoints(eCapture, DEVICE_STATE_ACTIVE, &deviceCollection);
 		CHECK_RES(res, "EnumAudioEndpoints");
@@ -250,10 +249,15 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 				break;
 			}
 		}
-	}
+		if (deviceCollection)
+			SafeRelease(&deviceCollection);
 
-	if(deviceCollection)
-		SafeRelease(&deviceCollection);
+		if (!device) {
+			LOGW("Requested device not found, using default");
+			ActuallySetCurrentDevice("default");
+			return;
+		}
+	}
 
 	if(!device){
 		LOGE("Didn't find capture device; failing");

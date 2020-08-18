@@ -214,13 +214,13 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 	SafeRelease(&device);
 
 
-	IMMDeviceCollection *deviceCollection = NULL;
-
 	if(deviceID=="default"){
 		isDefaultDevice=true;
 		res=enumerator->GetDefaultAudioEndpoint(eRender, eCommunications, &device);
 		CHECK_RES(res, "GetDefaultAudioEndpoint");
 	}else{
+		IMMDeviceCollection *deviceCollection = NULL;
+
 		isDefaultDevice=false;
 		res=enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &deviceCollection);
 		CHECK_RES(res, "EnumAudioEndpoints");
@@ -246,10 +246,14 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 				break;
 			}
 		}
+		if(deviceCollection)
+			SafeRelease(&deviceCollection);
+		if (!device) {
+			LOGW("Requested device not found, using default");
+			ActuallySetCurrentDevice("default");
+			return;
+		}
 	}
-
-	if(deviceCollection)
-		SafeRelease(&deviceCollection);
 
 	if(!device){
 		LOGE("Didn't find playback device; failing");
