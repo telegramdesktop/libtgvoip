@@ -248,9 +248,9 @@ void AudioInputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 				//device->AddRef();
 				break;
 			}
+			SafeRelease(&device);
 		}
-		if (deviceCollection)
-			SafeRelease(&deviceCollection);
+		SafeRelease(&deviceCollection);
 
 		if (!device) {
 			LOGW("Requested device not found, using default");
