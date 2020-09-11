@@ -216,19 +216,20 @@ void AudioOutputWASAPI::ActuallySetCurrentDevice(std::string deviceID){
 
 	if(deviceID=="default"){
 		isDefaultDevice=true;
-		IMMDevice* temp_device;
-		res = enumerator->GetDefaultAudioEndpoint(eRender, eCommunications, &temp_device);
+
+		IMMDevice* tempDevice;
+		res = enumerator->GetDefaultAudioEndpoint(eRender, eCommunications, &tempDevice);
 		CHECK_RES(res, "GetDefaultAudioEndpoint");
 
-		wchar_t* temp_devID;
-		res = temp_device->GetId(&temp_devID);
+		wchar_t* tempDevID;
+		res = tempDevice->GetId(&tempDevID);
 		CHECK_RES(res, "get default device id");
 
-		res = enumerator->GetDevice(temp_devID, &device);
+		res = enumerator->GetDevice(tempDevID, &device);
 		CHECK_RES(res, "GetDeviceByID");
 
-		CoTaskMemFree(temp_devID);
-		SafeRelease(&temp_device);
+		CoTaskMemFree(tempDevID);
+		SafeRelease(&tempDevice);
 
 	}else{
 		IMMDeviceCollection *deviceCollection = NULL;
