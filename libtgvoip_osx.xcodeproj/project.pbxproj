@@ -340,6 +340,7 @@
 		C2A87DE41F4B6AD3002D3F73 /* AudioUnitIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2A87DE31F4B6AD3002D3F73 /* AudioUnitIO.cpp */; };
 		D0230E9F24A10AC600C6AE29 /* TgVoip.h in Headers */ = {isa = PBXBuildFile; fileRef = D0230E9D24A10AC600C6AE29 /* TgVoip.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0230EA024A10AC600C6AE29 /* TgVoip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0230E9E24A10AC600C6AE29 /* TgVoip.cpp */; };
+		D0983E262568382200467703 /* libopus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E252568382100467703 /* libopus.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1083,6 +1084,7 @@
 		C2A87DE31F4B6AD3002D3F73 /* AudioUnitIO.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AudioUnitIO.cpp; path = os/darwin/AudioUnitIO.cpp; sourceTree = SOURCE_ROOT; };
 		D0230E9D24A10AC600C6AE29 /* TgVoip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TgVoip.h; sourceTree = "<group>"; };
 		D0230E9E24A10AC600C6AE29 /* TgVoip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TgVoip.cpp; sourceTree = "<group>"; };
+		D0983E252568382100467703 /* libopus.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libopus.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1098,6 +1100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0983E262568382200467703 /* libopus.framework in Frameworks */,
 				69DF15802237E96E00C1F8ED /* VideoToolbox.framework in Frameworks */,
 				692AB91F1E675F7000706ACC /* AudioToolbox.framework in Frameworks */,
 				692AB9201E675F7000706ACC /* AudioUnit.framework in Frameworks */,
@@ -2337,6 +2340,7 @@
 		692AB9061E675E8700706ACC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D0983E252568382100467703 /* libopus.framework */,
 				69DF157F2237E96E00C1F8ED /* VideoToolbox.framework */,
 				692AB91C1E675F7000706ACC /* AudioToolbox.framework */,
 				692AB91D1E675F7000706ACC /* AudioUnit.framework */,
@@ -3327,7 +3331,7 @@
 		69F8423F1E67540700C110F7 /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -3367,14 +3371,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3383,6 +3385,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
@@ -3401,7 +3404,7 @@
 		69F842401E67540700C110F7 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -3439,14 +3442,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3455,6 +3456,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
@@ -3525,7 +3527,7 @@
 		A7F282BC238EA9FB00742C20 /* Github */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -3563,14 +3565,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3579,6 +3579,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
@@ -3725,7 +3726,7 @@
 		D045B56622E0C29A005B6623 /* HockeyappMacAlpha */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -3765,14 +3766,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3781,6 +3780,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
@@ -3928,7 +3928,7 @@
 		D04D01C41E678C0D0086DDC0 /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -3967,14 +3967,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -3983,6 +3981,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
@@ -4047,7 +4046,7 @@
 		D04D01CC1E678C230086DDC0 /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "";
@@ -4086,14 +4085,12 @@
 					"WebRtcAgc_SaturationCtrl=WebRtcAgc_SaturationCtrl1",
 					"WebRtcAgc_ZeroCtrl=WebRtcAgc_ZeroCtrl1",
 					"WebRtcAgc_GetAddFarendError=WebRtcAgc_GetAddFarendError1",
+					"TGVOIP_INCLUDE_OPUS_PACKAGE=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"../../thrid-party/opus/include/opus",
-					"../../third-party/opus/include/opus",
+					"$PROJECT_DIR/../../core-xprojects/libopus/build/libopus/include",
 					webrtc_dsp/,
-					"../Telegram-Mac/third-party/opus/include/opus",
-					"../Telegram-Mac/thrid-party/opus/include/opus",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -4102,6 +4099,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DTGVOIP_USE_CUSTOM_CRYPTO",
 					"-DWEBRTC_POSIX",
