@@ -276,9 +276,9 @@ public:
         controller_->SetOutputVolume(level);
     }
     void setAudioOutputDuckingEnabled(bool enabled) override {
-#if defined(__APPLE__) && defined(TARGET_OS_OSX)
+#if defined(__APPLE__) && TARGET_OS_OSX
         controller_->SetAudioOutputDuckingEnabled(enabled);
-#endif
+#endif // TARGET_OS_OSX
     }
 
     std::string getLastError() override {
