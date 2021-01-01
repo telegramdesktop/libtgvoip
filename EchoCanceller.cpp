@@ -6,6 +6,7 @@
 
 #ifndef TGVOIP_NO_DSP
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/audio_frame_proxies.h"
 #include "api/audio/audio_frame.h"
 #endif
 
@@ -151,9 +152,9 @@ void EchoCanceller::RunBufferFarendThread(){
 		int16_t* samplesIn=farendQueue->GetBlocking();
 		if(samplesIn){
 			memcpy(frame.mutable_data(), samplesIn, 480*2);
-			apm->ProcessReverseStream(&frame);
+			webrtc::ProcessReverseAudioFrame(apm, &frame);
 			memcpy(frame.mutable_data(), samplesIn+480, 480*2);
-			apm->ProcessReverseStream(&frame);
+			webrtc::ProcessReverseAudioFrame(apm, &frame);
 			didBufferFarend=true;
 			farendBufferPool->Reuse(reinterpret_cast<unsigned char*>(samplesIn));
 		}
@@ -176,7 +177,7 @@ void EchoCanceller::ProcessInput(int16_t* inOut, size_t numSamples, bool& hasVoi
 	memcpy(audioFrame->mutable_data(), inOut, 480*2);
 	if(enableAEC)
 		apm->set_stream_delay_ms(delay);
-	apm->ProcessStream(audioFrame);
+	webrtc::ProcessAudioFrame(apm, audioFrame);
 	if(enableVAD)
 #ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 		hasVoice=apm->voice_detection()->stream_has_voice();
@@ -187,7 +188,7 @@ void EchoCanceller::ProcessInput(int16_t* inOut, size_t numSamples, bool& hasVoi
 	memcpy(audioFrame->mutable_data(), inOut+480, 480*2);
 	if(enableAEC)
 		apm->set_stream_delay_ms(delay);
-	apm->ProcessStream(audioFrame);
+	webrtc::ProcessAudioFrame(apm, audioFrame);
 	if(enableVAD){
 #ifdef TGVOIP_USE_DESKTOP_DSP_BUNDLED
 		hasVoice=hasVoice || apm->voice_detection()->stream_has_voice();
