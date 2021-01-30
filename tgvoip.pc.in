@@ -8,5 +8,5 @@ Description: VoIP library for Telegram clients
 Version: @LIBTGVOIP_VERSION@
 Requires.private: libcrypto opus
 Libs: -L${libdir} -ltgvoip -lpthread
-Libs.private: -ldl -lm
+Libs.private: -ltg_owt -ldl -lm
 Cflags: -I${includedir}/tgvoip
