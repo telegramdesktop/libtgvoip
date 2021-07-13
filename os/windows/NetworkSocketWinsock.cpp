@@ -88,14 +88,14 @@ void NetworkSocketWinsock::Send(NetworkPacket *packet){
 								if(v4part==0xAB0000C0 && !addr171){
 									addr171=translatedAddr->sin6_addr.s6_addr;
 								}
-								char buf[INET6_ADDRSTRLEN];
+								//char buf[INET6_ADDRSTRLEN];
 								//LOGV("Got translated address: %s", inet_ntop(AF_INET6, &translatedAddr->sin6_addr, buf, sizeof(buf)));
 							}
 						}
 						if(addr170 && addr171 && memcmp(addr170, addr171, 12)==0){
 							nat64Present=true;
 							memcpy(nat64Prefix, addr170, 12);
-							char buf[INET6_ADDRSTRLEN];
+							//char buf[INET6_ADDRSTRLEN];
 							//LOGV("Found nat64 prefix from %s", inet_ntop(AF_INET6, addr170, buf, sizeof(buf)));
 						}else{
 							LOGV("Didn't find nat64");
@@ -273,7 +273,6 @@ void NetworkSocketWinsock::Open(){
 			addr=(sockaddr*)&addr6;
 			addrLen=sizeof(addr6);
 		}else{
-			sockaddr_in addr4;
 			addr4.sin_addr.s_addr=0;
 			addr4.sin_family=AF_INET;
 			addr=(sockaddr*)&addr4;

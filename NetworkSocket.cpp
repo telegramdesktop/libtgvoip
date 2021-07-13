@@ -631,7 +631,7 @@ bool NetworkSocketSOCKS5Proxy::OnReadyToReceive(){
         		state=ConnectionState::Connected;
 				readyToSend=true;
 				LOGV("socks5: udp associate successful, given endpoint %s:%d", connectedAddress->ToString().c_str(), connectedPort);
-			}catch(std::out_of_range& x){
+			}catch(std::out_of_range&){
 				LOGW("socks5: udp associate response parse failed");
 				failed=true;
 			}

@@ -1636,7 +1636,7 @@ void VoIPController::RunRecvThread(){
 							LOGD("Packet source matches p2p endpoint partially: %s:%u", packet.address->ToString().c_str(), packet.port);
 							srcEndpointID=p2p.id;
 						}
-					}catch(out_of_range& ex){}
+					}catch(out_of_range&){}
 				}
 			}else{
 				IPv6Address *src6=dynamic_cast<IPv6Address *>(packet.address);
@@ -2716,7 +2716,7 @@ Endpoint* VoIPController::GetEndpointForPacket(const PendingOutgoingPacket& pkt)
 	if(pkt.endpoint){
 		try{
 			endpoint=&endpoints.at(pkt.endpoint);
-		}catch(out_of_range& x){
+		}catch(out_of_range&){
 			LOGW("Unable to send packet via nonexistent endpoint %" PRIu64, pkt.endpoint);
 			return NULL;
 		}
