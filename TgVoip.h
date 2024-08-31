@@ -1,6 +1,7 @@
 #ifndef __TGVOIP_H
 #define __TGVOIP_H
 
+#include <cstdint>
 #include <functional>
 #include <vector>
 #include <string>
